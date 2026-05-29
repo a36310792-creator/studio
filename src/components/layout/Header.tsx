@@ -1,14 +1,104 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Menu, Home, Settings, Film, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import Link from 'next/link';
 
 interface HeaderProps {
   onSearchClick?: () => void;
 }
 
+const CATEGORIES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller'];
+
 export const Header = ({ onSearchClick }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-center px-5 py-6 bg-background/80 backdrop-blur-2xl border-b border-white/5">
+      {/* Sidebar Menu (Absolute positioned left) */}
+      <div className="absolute left-5">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full bg-[#121212] hover:bg-white/10 text-[#8b95a5] hover:text-primary w-9 h-9 border-none transition-all"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="bg-[#050505] border-white/5 p-0 w-72">
+            <SheetHeader className="p-6 border-b border-white/5">
+              <SheetTitle className="text-left">
+                <div className="flex flex-col">
+                  <h1 className="text-2xl font-black tracking-tighter uppercase italic">
+                    <span className="text-white">MP4</span>
+                    <span className="text-primary">VEGA</span>
+                  </h1>
+                  <p className="text-[10px] text-[#555] font-bold uppercase tracking-widest mt-1">Premium Streaming</p>
+                </div>
+              </SheetTitle>
+            </SheetHeader>
+            
+            <div className="flex flex-col py-4">
+              <div className="px-6 py-2">
+                <p className="text-[10px] font-black text-[#444] uppercase tracking-[2px] mb-4">Main Navigation</p>
+                <nav className="space-y-1">
+                  <Link 
+                    href="/" 
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Home className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
+                      <span className="font-bold text-sm">Home</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[#222]" />
+                  </Link>
+                  <Link 
+                    href="/admin/login" 
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Settings className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
+                      <span className="font-bold text-sm">Admin Settings</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[#222]" />
+                  </Link>
+                </nav>
+              </div>
+
+              <div className="px-6 py-6 border-t border-white/5 mt-4">
+                <p className="text-[10px] font-black text-[#444] uppercase tracking-[2px] mb-4">Categories</p>
+                <div className="grid grid-cols-1 gap-1">
+                  {CATEGORIES.map((cat) => (
+                    <Link 
+                      key={cat}
+                      href="/"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 group transition-all text-sm font-bold text-[#8b95a5] hover:text-white"
+                    >
+                      <Film className="w-4 h-4 text-[#333] group-hover:text-primary" />
+                      {cat}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute bottom-8 left-0 right-0 px-6">
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                <p className="text-[11px] font-bold text-[#8b95a5] leading-relaxed">
+                  Enjoy the latest 4K content with <span className="text-primary">MP4VEGA</span>. Fast downloads, no ads.
+                </p>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
       {/* Centered Logo with Glowing Effect */}
       <div className="flex flex-col items-center">
         <h1 className="text-3xl font-black tracking-tighter uppercase italic select-none">
