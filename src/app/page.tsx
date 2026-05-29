@@ -1,11 +1,9 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
-import { CineSuggest } from '@/components/movie/CineSuggest';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon } from 'lucide-react';
@@ -98,7 +96,6 @@ export default function Home() {
 
   useEffect(() => {
     if (navTab === 'discover') {
-      // Shuffle movies for discovery
       const shuffled = [...movies].sort(() => 0.5 - Math.random());
       setDiscoverMovies(shuffled.slice(0, 6));
     }
@@ -167,8 +164,6 @@ export default function Home() {
                 </button>
               ))}
             </div>
-
-            <CineSuggest />
           </>
         )}
 

@@ -6,8 +6,8 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-5 bg-background/80 backdrop-blur-xl">
       <div className="flex items-center gap-1">
-        <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-0.5">
-          Lumina<span className="text-primary">Stream</span>
+        <h1 className="text-xl font-black tracking-tighter uppercase italic">
+          MP4<span className="text-primary">VEGA</span>
         </h1>
       </div>
       <div className="flex items-center gap-3">
