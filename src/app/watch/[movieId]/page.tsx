@@ -40,7 +40,6 @@ export default function WatchPage() {
   const router = useRouter();
   const playerRef = useRef<any>(null);
   const videoNode = useRef<HTMLVideoElement | null>(null);
-  const [playerReady, setPlayerReady] = useState(false);
   const [imaLoaded, setImaLoaded] = useState(false);
 
   const movieRef = useMemo(() => {
@@ -48,7 +47,7 @@ export default function WatchPage() {
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: movie, loading } = useDoc<Movie>(movieRef);
+  const { data: movie } = useDoc<Movie>(movieRef);
 
   useEffect(() => {
     if (!videoNode.current || !movie || !imaLoaded) return;
@@ -77,19 +76,17 @@ export default function WatchPage() {
       // @ts-ignore
       player.ima(imaOptions);
 
-      // FALLBACK LOGIC: If ads fail or take too long, play the movie immediately
+      // FALLBACK: If ads fail, skip immediately to movie
       const handleAdFail = () => {
-        console.log('Ad failed or timed out. Skipping to movie...');
         player.play().catch(() => {});
       };
 
       player.on('adserror', handleAdFail);
       player.on('adtimeout', handleAdFail);
       
-      // Auto-init fallback
+      // Auto-init fail-safe
       const failSafe = setTimeout(() => {
-        if (!player.paused()) return;
-        handleAdFail();
+        if (player.paused()) handleAdFail();
       }, 5000);
 
       player.on('readyforpreroll', () => {
@@ -99,20 +96,13 @@ export default function WatchPage() {
         player.ima.requestAds();
       });
 
-      return () => {
-        clearTimeout(failSafe);
-      };
+      return () => clearTimeout(failSafe);
     } catch (e) {
-      console.error('IMA Plugin initialization error:', e);
       player.play().catch(() => {});
     }
 
-    setPlayerReady(true);
-
     return () => {
-      if (player) {
-        player.dispose();
-      }
+      if (player) player.dispose();
     };
   }, [movie, imaLoaded]);
 
@@ -163,8 +153,13 @@ export default function WatchPage() {
           </div>
         </div>
 
+        {/* PRIMARY BANNER AD: Exactly one as requested, placed naturally below player */}
+        <div className="mb-8">
+          <AdBanner id="watch-main-banner" hrefs={ROTATION_LINKS} className="w-full" />
+        </div>
+
         {/* Status Hub */}
-        <div className="bg-[#0a0a0a] rounded-[32px] border border-white/5 p-6 mb-6">
+        <div className="bg-[#0a0a0a] rounded-[32px] border border-white/5 p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
@@ -194,10 +189,6 @@ export default function WatchPage() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <AdBanner id="watch-mid-ads" hrefs={ROTATION_LINKS} className="w-full" />
-        </div>
-
         {/* Server Nodes */}
         <div className="space-y-4">
           <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[3px] ml-1">Optimized Server Nodes</h3>
@@ -225,10 +216,6 @@ export default function WatchPage() {
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="mt-8">
-          <AdBanner id="watch-bottom-ads" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
       </main>
 
