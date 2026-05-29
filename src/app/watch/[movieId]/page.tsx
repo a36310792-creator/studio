@@ -29,6 +29,21 @@ const ROTATION_LINKS = [
 
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
+/**
+ * Detects if a URL should be rendered in an iframe.
+ */
+function isIframeUrl(url: string): boolean {
+  if (!url) return false;
+  return (
+    url.includes('youtube.com/embed') || 
+    url.includes('drive.google.com') || 
+    url.includes('vimeo.com') || 
+    url.includes('dailymotion.com') ||
+    url.includes('ok.ru/videoembed') ||
+    url.includes('facebook.com/plugins/video')
+  );
+}
+
 export default function WatchPage() {
   const { movieId } = useParams();
   const db = useFirestore();
@@ -44,27 +59,30 @@ export default function WatchPage() {
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: movie } = useDoc<Movie>(movieRef);
+  const { data: movie, loading: docLoading } = useDoc<Movie>(movieRef);
+
+  const watchUrl = movie?.watchUrl?.trim() || (docLoading ? '' : FALLBACK_VIDEO);
+  const useIframe = isIframeUrl(watchUrl);
 
   // Force hide loader after a short fail-safe timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 1500);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (!videoNode.current || !movie) return;
-
-    // Clean up existing player
-    if (playerRef.current) {
-      playerRef.current.dispose();
-      playerRef.current = null;
+    // If we're using an iframe or don't have a URL yet, don't init Video.js
+    if (useIframe || !watchUrl || !videoNode.current) {
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+      return;
     }
 
-    const videoUrl = movie.watchUrl?.trim() || FALLBACK_VIDEO;
-
+    // Initialize Video.js for direct links
     const player = videojs(videoNode.current, {
       autoplay: false,
       controls: true,
@@ -73,21 +91,16 @@ export default function WatchPage() {
       preload: 'auto',
       playbackRates: [0.5, 1, 1.5, 2],
       sources: [{
-        src: videoUrl,
-        type: videoUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
+        src: watchUrl,
+        type: watchUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
       }]
     });
 
     playerRef.current = player;
 
-    // Handle Content Loading Errors
     player.on('error', () => {
       const error = player.error();
       setPlayerError(error?.message || "Streaming node connection failed.");
-      setShowLoader(false);
-    });
-
-    player.on('ready', () => {
       setShowLoader(false);
     });
 
@@ -101,7 +114,7 @@ export default function WatchPage() {
         playerRef.current = null;
       }
     };
-  }, [movie]);
+  }, [watchUrl, useIframe]);
 
   const handleAction = () => {
     window.open(ROTATION_LINKS[0], '_blank');
@@ -145,14 +158,24 @@ export default function WatchPage() {
             </div>
           )}
 
-          <div data-vjs-player>
-            <video
-              ref={videoNode}
-              className="video-js vjs-big-play-centered vjs-theme-city"
-              poster={movie?.posterUrl}
-              playsInline
+          {useIframe ? (
+            <iframe 
+              src={watchUrl}
+              className="w-full h-full border-0"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+              onLoad={() => setShowLoader(false)}
             />
-          </div>
+          ) : (
+            <div data-vjs-player>
+              <video
+                ref={videoNode}
+                className="video-js vjs-big-play-centered vjs-theme-city"
+                poster={movie?.posterUrl}
+                playsInline
+              />
+            </div>
+          )}
         </div>
 
         {/* Dynamic Ad Placement */}
