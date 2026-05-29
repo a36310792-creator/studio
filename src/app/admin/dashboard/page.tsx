@@ -28,9 +28,20 @@ const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
 
 export default function AdminDashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((u) => {
+      setUser(u);
+      setAuthLoading(false);
+      if (!u) router.push('/admin/login');
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
   
   const moviesQuery = useMemo(() => {
     if (!db) return null;
@@ -56,12 +67,7 @@ export default function AdminDashboard() {
     directDownloadUrl: ''
   });
 
-  useEffect(() => {
-    if (!authLoading && !user) router.push('/admin/login');
-  }, [user, authLoading, router]);
-
   const handleLogout = async () => {
-    const auth = (await import('@/firebase')).getAuth();
     await signOut(auth);
     router.push('/admin/login');
   };
