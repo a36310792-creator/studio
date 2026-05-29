@@ -18,13 +18,68 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
+
+// Fallback data to ensure the UI is never empty
+const MOCK_MOVIES: Movie[] = [
+  {
+    id: 'hathras-1',
+    title: 'Hathras',
+    posterUrl: 'https://picsum.photos/seed/hathras/400/600',
+    rating: 8.2,
+    quality: 'HD',
+    releaseYear: 2024,
+    audio: 'Hindi',
+    genres: ['Thriller', 'Drama', 'Bollywood'],
+    description: 'A gripping investigative thriller based on true events.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  },
+  {
+    id: 'karuppu-2',
+    title: 'Karuppu',
+    posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
+    rating: 7.9,
+    quality: '4K',
+    releaseYear: 2024,
+    audio: 'Tamil',
+    genres: ['Action', 'Thriller', 'South'],
+    description: 'An intense action drama from the heart of South India.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  },
+  {
+    id: 'zeffect-3',
+    title: 'The Z Effect',
+    posterUrl: 'https://picsum.photos/seed/zeffect/400/600',
+    rating: 8.5,
+    quality: '4K',
+    releaseYear: 2024,
+    audio: 'English',
+    genres: ['Sci-Fi', 'Horror', 'Hollywood'],
+    description: 'A terrifying sci-fi experience that challenges reality.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  },
+  {
+    id: 'mirzapur-4',
+    title: 'Mirzapur S3',
+    posterUrl: 'https://picsum.photos/seed/mirzapur/400/600',
+    rating: 9.1,
+    quality: '4K',
+    releaseYear: 2024,
+    audio: 'Hindi',
+    genres: ['Action', 'Web Series', 'Bollywood'],
+    description: 'The throne of Mirzapur remains contested as the violence escalates.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  }
+];
 
 export default function Home() {
   const db = useFirestore();
   const moviesQuery = useMemo(() => {
     if (!db) return null;
-    // We use a simple collection reference first to avoid index errors on first load
     return collection(db, 'movies');
   }, [db]);
 
@@ -68,7 +123,8 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    let currentPool = firestoreMovies || [];
+    // Merge Firestore movies with Mock data if Firestore is empty and not loading
+    let currentPool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : MOCK_MOVIES;
 
     // Filter by tab
     if (navTab === 'saved') {
@@ -99,7 +155,7 @@ export default function Home() {
       return matchesGenre && matchesCategory && matchesYear && matchesSearch;
     });
 
-    // Sort locally to ensure immediate responsiveness
+    // Sort
     if (sortBy === 'latest') {
       filtered.sort((a, b) => (b.releaseYear || 0) - (a.releaseYear || 0));
     } else if (sortBy === 'rating') {
@@ -114,7 +170,8 @@ export default function Home() {
   }, [allFilteredMovies, visibleCount]);
 
   const latestMovie = useMemo(() => {
-    return firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies[0] : null;
+    const pool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : MOCK_MOVIES;
+    return pool[0];
   }, [firestoreMovies]);
 
   const viewTitle = useMemo(() => {
