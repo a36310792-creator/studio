@@ -23,6 +23,7 @@ import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
 
 const WATCH_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
+const WATCH_PLAYER_AD_LINK = "https://commendtwisted.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 /**
@@ -55,6 +56,7 @@ export default function WatchPage() {
   
   const [showLoader, setShowLoader] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
+  const [showAdOverlay, setShowAdOverlay] = useState(true);
 
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -77,6 +79,11 @@ export default function WatchPage() {
 
   const handleAction = () => {
     window.open(WATCH_AD_LINK, '_blank');
+  };
+
+  const handleFirstClickAd = () => {
+    window.open(WATCH_PLAYER_AD_LINK, '_blank');
+    setShowAdOverlay(false);
   };
 
   return (
@@ -122,29 +129,40 @@ export default function WatchPage() {
           )}
 
           {watchUrl && !docLoading && (
-            useIframe ? (
-              <iframe 
-                src={watchUrl}
-                className="w-full h-full border-0"
-                allowFullScreen
-                allow="autoplay; encrypted-media; picture-in-picture"
-                onLoad={() => setShowLoader(false)}
-                onError={() => setPlayerError("Protocol failure: Secure iframe node blocked.")}
-              />
-            ) : (
-              <video
-                src={watchUrl}
-                poster={movie?.posterUrl}
-                controls
-                controlsList="nodownload"
-                playsInline
-                disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-full object-contain bg-black"
-                onLoadedData={() => setShowLoader(false)}
-                onError={() => setPlayerError("Media decoding failure. Please check the source.")}
-              />
-            )
+            <div className="relative w-full h-full">
+              {useIframe ? (
+                <iframe 
+                  src={watchUrl}
+                  className="w-full h-full border-0"
+                  allowFullScreen
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  onLoad={() => setShowLoader(false)}
+                  onError={() => setPlayerError("Protocol failure: Secure iframe node blocked.")}
+                />
+              ) : (
+                <video
+                  src={watchUrl}
+                  poster={movie?.posterUrl}
+                  controls
+                  controlsList="nodownload"
+                  playsInline
+                  disablePictureInPicture
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="w-full h-full object-contain bg-black"
+                  onLoadedData={() => setShowLoader(false)}
+                  onError={() => setPlayerError("Media decoding failure. Please check the source.")}
+                />
+              )}
+
+              {/* FIRST-CLICK AD OVERLAY */}
+              {!showLoader && !playerError && showAdOverlay && (
+                <div 
+                  onClick={handleFirstClickAd}
+                  className="absolute inset-0 z-[40] cursor-pointer bg-transparent"
+                  aria-hidden="true"
+                />
+              )}
+            </div>
           )}
         </div>
 
