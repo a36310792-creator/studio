@@ -7,9 +7,8 @@ import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { CineSuggest } from '@/components/movie/CineSuggest';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, Film, Search, Settings } from 'lucide-react';
+import { TrendingUp, Film, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
 
 const DEFAULT_MOVIES: Movie[] = [
   {
@@ -91,7 +90,6 @@ export default function Home() {
       <NewReleaseToast movieName="The Z Effect - 4K Release Live!" />
 
       <main>
-        {/* Search Bar */}
         <div className="px-5 mb-6">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555] group-focus-within:text-primary transition-colors" />
@@ -104,7 +102,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Category Tabs */}
         <div className="flex gap-2.5 px-5 mb-6 overflow-x-auto no-scrollbar py-2">
           {tabs.map((tab) => (
             <button
@@ -149,14 +146,6 @@ export default function Home() {
           )}
         </section>
       </main>
-
-      {/* Floating Admin Button */}
-      <Link 
-        href="/admin/login" 
-        className="fixed right-6 bottom-24 w-12 h-12 bg-primary/20 backdrop-blur-xl border border-primary/30 rounded-full flex items-center justify-center text-primary shadow-lg z-[90] hover:scale-110 active:scale-95 transition-all"
-      >
-        <Settings className="w-6 h-6" />
-      </Link>
 
       {selectedMovie && (
         <MovieDetails 
