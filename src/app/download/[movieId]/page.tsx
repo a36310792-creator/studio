@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Server } from 'lucide-react';
+import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Server, Lock, Unlock, ExternalLink, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -36,23 +36,10 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
     description: 'An intense action drama from the heart of South India.',
     watchUrl: '#',
     directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
-  },
-  {
-    id: 'zeffect-3',
-    title: 'The Z Effect',
-    posterUrl: 'https://picsum.photos/seed/zeffect/400/600',
-    rating: 8.5,
-    quality: '4K',
-    releaseYear: 2024,
-    audio: 'English',
-    genres: ['Sci-Fi', 'Horror', 'Hollywood'],
-    description: 'A terrifying sci-fi experience that challenges reality.',
-    watchUrl: '#',
-    directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
   }
 ];
 
-const EXTERNAL_DOWNLOAD_URL = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
+const ADSTERRA_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
@@ -65,14 +52,12 @@ export default function DownloadGateway() {
   }, [db, movieId]);
 
   const { data: firestoreMovie, loading: firestoreLoading } = useDoc<Movie>(movieRef);
-  const [countdown, setCountdown] = useState(10);
-  const [isReady, setIsReady] = useState(false);
+  const [countdown, setCountdown] = useState(8);
+  const [step, setStep] = useState(0); // 0: scanning, 1: step 1, 2: step 2, 3: ready
   const [forceLoad, setForceLoad] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setForceLoad(true);
-    }, 2000); 
+    const timer = setTimeout(() => setForceLoad(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -82,27 +67,23 @@ export default function DownloadGateway() {
   }, [firestoreMovie, movieId]);
 
   useEffect(() => {
-    if (countdown > 0) {
+    if (step === 0 && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
-    } else {
-      setIsReady(true);
+    } else if (step === 0 && countdown === 0) {
+      setStep(1);
     }
-  }, [countdown]);
+  }, [countdown, step]);
 
-  useEffect(() => {
-    if (!firestoreLoading && !movie && forceLoad) {
-      router.push('/');
-    }
-  }, [movie, firestoreLoading, forceLoad, router]);
+  const handleStepVerify = (nextStep: number) => {
+    window.open(ADSTERRA_LINK, '_blank');
+    setStep(nextStep);
+  };
 
   if (firestoreLoading && !movie && !forceLoad) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-[10px] font-black text-primary uppercase tracking-widest animate-pulse">Initializing Secure Gateway...</p>
-        </div>
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
       </div>
     );
   }
@@ -117,27 +98,111 @@ export default function DownloadGateway() {
       </header>
 
       <main className="flex-1 px-6 pt-8 flex flex-col items-center text-center">
-        <div className="w-24 h-24 bg-primary/10 rounded-[32px] border border-primary/20 flex items-center justify-center mb-8 relative shadow-[0_0_50px_rgba(0,229,255,0.1)]">
-          {!isReady ? (
-            <div className="text-4xl font-black text-primary tabular-nums animate-pulse">{countdown}</div>
-          ) : (
-            <ShieldCheck className="w-12 h-12 text-primary animate-in zoom-in duration-500" />
-          )}
-          <div className="absolute -inset-4 bg-primary/5 blur-[40px] rounded-full -z-10"></div>
+        {/* Step Indicator */}
+        <div className="w-full flex justify-between px-10 mb-8 items-center relative">
+          <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-white/5 -translate-y-1/2 z-0"></div>
+          <div className="absolute top-1/2 left-0 h-[2px] bg-primary -translate-y-1/2 z-0 transition-all duration-700" style={{ width: `${(step/3)*100}%` }}></div>
+          
+          {[0, 1, 2, 3].map((s) => (
+            <div key={s} className={`w-8 h-8 rounded-full border-2 z-10 flex items-center justify-center text-[10px] font-black transition-all duration-500 ${
+              step >= s ? 'bg-primary border-primary text-black scale-110 shadow-[0_0_15px_rgba(0,229,255,0.4)]' : 'bg-[#111] border-white/10 text-[#444]'
+            }`}>
+              {step > s ? <ShieldCheck className="w-4 h-4" /> : s}
+            </div>
+          ))}
+        </div>
+
+        <div className="w-24 h-24 bg-primary/10 rounded-[32px] border border-primary/20 flex items-center justify-center mb-6 relative group overflow-hidden">
+          {step === 0 && <div className="text-4xl font-black text-primary tabular-nums animate-pulse">{countdown}</div>}
+          {step === 1 && <Lock className="w-10 h-10 text-primary animate-pulse" />}
+          {step === 2 && <Lock className="w-10 h-10 text-primary animate-pulse" />}
+          {step === 3 && <Unlock className="w-12 h-12 text-primary animate-in zoom-in duration-500" />}
+          
+          <div className={`absolute inset-0 bg-primary/20 blur-[20px] opacity-0 group-hover:opacity-100 transition-opacity`}></div>
         </div>
 
         <h2 className="text-2xl font-black mb-2 leading-tight">
-          {isReady ? 'Links Verified!' : 'Generating Secure Links'}
+          {step === 0 && 'Security Scanning...'}
+          {step === 1 && 'Step 1: Authorization'}
+          {step === 2 && 'Step 2: Final Verify'}
+          {step === 3 && 'Access Granted!'}
         </h2>
+        
         <p className="text-[#8b95a5] text-[13px] font-bold mb-8 max-w-[280px]">
-          {isReady 
-            ? 'Encryption complete. High-speed servers are now active.' 
-            : `Please wait ${countdown} seconds while we scan the cloud servers for security.`}
+          {step === 0 && `Connecting to secure CDN servers (${countdown}s)`}
+          {step === 1 && 'Unlock the download gateway by completing the first verification.'}
+          {step === 2 && 'Almost there! One more step to generate high-speed links.'}
+          {step === 3 && 'Cloud servers are ready. Choose your preferred quality below.'}
         </p>
 
-        <div className="w-full bg-[#111] border border-white/5 rounded-[24px] p-5 mb-8 text-left">
-          <div className="flex gap-4 items-center mb-5">
-            <div className="w-14 h-20 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-lg">
+        {/* Action Area */}
+        <div className="w-full space-y-4">
+          {step === 1 && (
+            <Button 
+              onClick={() => handleStepVerify(2)}
+              className="w-full h-16 bg-white/5 border border-primary/30 text-primary font-black text-lg rounded-2xl shadow-[0_0_20px_rgba(0,229,255,0.1)] hover:bg-primary hover:text-black transition-all flex items-center justify-center gap-3 group animate-in slide-in-from-bottom-4"
+            >
+              <Sparkles className="w-6 h-6 group-hover:animate-spin" />
+              VERIFY STEP 1
+              <ExternalLink className="w-4 h-4 opacity-50" />
+            </Button>
+          )}
+
+          {step === 2 && (
+            <Button 
+              onClick={() => handleStepVerify(3)}
+              className="w-full h-16 bg-primary/10 border border-primary text-primary font-black text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.2)] hover:bg-primary hover:text-black transition-all flex items-center justify-center gap-3 group animate-in slide-in-from-bottom-4"
+            >
+              <Zap className="w-6 h-6 animate-pulse" />
+              VERIFY STEP 2
+              <ExternalLink className="w-4 h-4 opacity-50" />
+            </Button>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4 animate-in slide-in-from-bottom-8 duration-700">
+              <Button 
+                className="w-full h-16 bg-gradient-to-r from-primary to-cyan-400 text-black font-black text-lg rounded-2xl shadow-[0_15px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex justify-between px-6"
+                asChild
+              >
+                <a href={ADSTERRA_LINK} target="_blank" rel="noopener noreferrer">
+                  <div className="flex items-center gap-3">
+                    <Download className="w-6 h-6" />
+                    <span>1080p Ultra HD</span>
+                  </div>
+                  <Zap className="w-5 h-5 fill-current" />
+                </a>
+              </Button>
+
+              <Button 
+                variant="outline"
+                className="w-full h-14 bg-white/5 border-white/10 text-white font-black text-[14px] rounded-2xl hover:border-primary/50 transition-all flex justify-between px-6"
+                asChild
+              >
+                <a href={ADSTERRA_LINK} target="_blank" rel="noopener noreferrer">
+                  <span>720p Recommended</span>
+                  <span className="text-primary/70">900 MB</span>
+                </a>
+              </Button>
+
+              <Button 
+                variant="outline"
+                className="w-full h-14 bg-white/5 border-white/10 text-white font-black text-[14px] rounded-2xl hover:border-primary/50 transition-all flex justify-between px-6"
+                asChild
+              >
+                <a href={ADSTERRA_LINK} target="_blank" rel="noopener noreferrer">
+                  <span>480p Low Data</span>
+                  <span className="text-[#555]">350 MB</span>
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Movie Context Card */}
+        <div className="w-full mt-10 bg-[#111] border border-white/5 rounded-[24px] p-5 text-left">
+          <div className="flex gap-4 items-center">
+            <div className="w-14 h-20 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
               <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
             </div>
             <div className="min-w-0">
@@ -145,94 +210,22 @@ export default function DownloadGateway() {
               <p className="text-[10px] text-primary font-black uppercase mt-1 tracking-widest">
                 {movie.quality} • {movie.releaseYear} • {movie.audio}
               </p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-black py-2 border-b border-white/5">
-              <span className="text-[#444] uppercase tracking-tighter">Server Location</span>
-              <span className="text-white flex items-center gap-1.5">
-                <Server className="w-3 h-3 text-primary" />
-                Global CDN (Ultra)
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-black py-2">
-              <span className="text-[#444] uppercase tracking-tighter">Security Scan</span>
-              <span className="text-green-500 uppercase flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" />
-                Verified Safe
-              </span>
+              <div className="flex items-center gap-2 mt-2">
+                <ShieldCheck className="w-3 h-3 text-green-500" />
+                <span className="text-[9px] font-bold text-green-500/80 uppercase">Scanned & Secure</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {isReady ? (
-          <div className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-700">
-            {/* 1080p Premium Button */}
-            <Button 
-              className="w-full h-16 bg-gradient-to-r from-primary to-cyan-400 text-black font-black text-lg rounded-2xl shadow-[0_15px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex justify-between px-6"
-              asChild
-            >
-              <a href={EXTERNAL_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
-                <div className="flex items-center gap-3">
-                  <Download className="w-6 h-6" />
-                  <span>1080p Download</span>
-                </div>
-                <Zap className="w-5 h-5 fill-current" />
-              </a>
-            </Button>
-
-            {/* 720p Recommended Button */}
-            <Button 
-              variant="outline"
-              className="w-full h-14 bg-white/5 border-white/10 text-white font-black text-[14px] rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all flex justify-between px-6"
-              asChild
-            >
-              <a href={EXTERNAL_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
-                <span>720p Download</span>
-                <span className="text-primary/70">Recommended</span>
-              </a>
-            </Button>
-
-            {/* 480p Mobile Button */}
-            <Button 
-              variant="outline"
-              className="w-full h-14 bg-white/5 border-white/10 text-white font-black text-[14px] rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all flex justify-between px-6"
-              asChild
-            >
-              <a href={EXTERNAL_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
-                <span>480p Download</span>
-                <span className="text-[#555]">Low Data</span>
-              </a>
-            </Button>
-
-            <AdBanner id="download-bottom-banner" className="w-full mt-8" />
-
-            <p className="text-[10px] text-[#444] font-black uppercase tracking-[2px] pt-4">
-              Links expire in 120 minutes
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-6 w-full max-w-[280px]">
-            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-1000 ease-linear shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-                style={{ width: `${(10 - countdown) * 10}%` }}
-              ></div>
-            </div>
-            <div className="flex items-center gap-2 text-primary">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-[11px] font-black uppercase tracking-widest">Scanning Databases...</span>
-            </div>
-          </div>
-        )}
+        <AdBanner id="download-bottom-banner" className="w-full mt-8" />
       </main>
 
       <footer className="px-6 py-8 mt-auto">
         <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-4 flex gap-4">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
           <p className="text-[10px] text-[#8b95a5] font-bold leading-relaxed text-left">
-            ADVISORY: If the download fails to initialize, please ensure your VPN is disabled or try opening this page in a private browsing window.
+            NOTE: You must complete both verification steps to access the cloud servers. If the process hangs, please refresh and disable any ad-blockers.
           </p>
         </div>
       </footer>
