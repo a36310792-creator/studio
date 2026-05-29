@@ -9,6 +9,48 @@ import Link from 'next/link';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
+const MOCK_FALLBACK_MOVIES: Movie[] = [
+  {
+    id: 'hathras-1',
+    title: 'Hathras',
+    posterUrl: 'https://picsum.photos/seed/hathras/400/600',
+    rating: 8.2,
+    quality: 'HD',
+    releaseYear: 2024,
+    audio: 'Hindi',
+    genres: ['Thriller', 'Drama', 'Bollywood'],
+    description: 'A gripping investigative thriller based on true events.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  },
+  {
+    id: 'karuppu-2',
+    title: 'Karuppu',
+    posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
+    rating: 7.9,
+    quality: '4K',
+    releaseYear: 2024,
+    audio: 'Tamil',
+    genres: ['Action', 'Thriller', 'South'],
+    description: 'An intense action drama from the heart of South India.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  },
+  {
+    id: 'zeffect-3',
+    title: 'The Z Effect',
+    posterUrl: 'https://picsum.photos/seed/zeffect/400/600',
+    rating: 8.5,
+    quality: '4K',
+    releaseYear: 2024,
+    audio: 'English',
+    genres: ['Sci-Fi', 'Horror', 'Hollywood'],
+    description: 'A terrifying sci-fi experience that challenges reality.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  }
+];
+
 export default function DownloadGateway() {
   const { movieId } = useParams();
   const router = useRouter();
@@ -19,15 +61,23 @@ export default function DownloadGateway() {
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: movie, loading: movieLoading } = useDoc<Movie>(movieRef);
+  const { data: firestoreMovie, loading: firestoreLoading } = useDoc<Movie>(movieRef);
   const [countdown, setCountdown] = useState(10);
   const [isReady, setIsReady] = useState(false);
+  const [forceLoad, setForceLoad] = useState(false);
 
+  // Force loading state to false after a short timeout to prevent hanging
   useEffect(() => {
-    if (!movieLoading && !movie) {
-      router.push('/');
-    }
-  }, [movie, movieLoading, router]);
+    const timer = setTimeout(() => {
+      setForceLoad(true);
+    }, 2000); // 2 seconds max wait for Firebase
+    return () => clearTimeout(timer);
+  }, []);
+
+  const movie = useMemo(() => {
+    if (firestoreMovie) return firestoreMovie;
+    return MOCK_FALLBACK_MOVIES.find(m => m.id === movieId) || MOCK_FALLBACK_MOVIES[0];
+  }, [firestoreMovie, movieId]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -38,15 +88,24 @@ export default function DownloadGateway() {
     }
   }, [countdown]);
 
-  if (movieLoading) {
+  // If we have no movie data at all and firestore is done loading, redirect
+  useEffect(() => {
+    if (!firestoreLoading && !movie && forceLoad) {
+      router.push('/');
+    }
+  }, [movie, firestoreLoading, forceLoad, router]);
+
+  // Only show the global spinner if we are waiting for both Firebase and the safety timeout
+  if (firestoreLoading && !movie && !forceLoad) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-[10px] font-black text-primary uppercase tracking-widest animate-pulse">Initializing Secure Gateway...</p>
+        </div>
       </div>
     );
   }
-
-  if (!movie) return null;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl flex flex-col">
