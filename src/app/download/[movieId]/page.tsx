@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Lock, Unlock, Fingerprint, MonitorPlay } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, Download, ShieldCheck, Loader2, Zap, Lock, Unlock, Fingerprint, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -32,8 +31,9 @@ export default function DownloadGateway() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
   
-  const [countdown, setCountdown] = useState(8);
-  const [status, setStatus] = useState<'scanning' | 'locked' | 'verifying' | 'unlocked'>('scanning');
+  // Reduced initial scanning for faster "instant" feel
+  const [countdown, setCountdown] = useState(3);
+  const [status, setStatus] = useState<'scanning' | 'locked' | 'unlocked'>('scanning');
   const [adClicks, setAdClicks] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -59,10 +59,11 @@ export default function DownloadGateway() {
 
     setTimeout(() => {
       setIsProcessing(false);
-      if (nextClickCount >= 2) {
+      // Faster unlock requirement
+      if (nextClickCount >= 1) {
         setStatus('unlocked');
       }
-    }, 2000);
+    }, 1500);
   };
 
   return (
@@ -79,7 +80,7 @@ export default function DownloadGateway() {
         <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Secure Tunnel Access</h1>
       </header>
 
-      <main className="flex-1 px-6 pt-10 flex flex-col items-center text-center">
+      <main className="flex-1 px-6 pt-10 flex flex-col items-center text-center animate-in fade-in duration-500">
         <div className="w-28 h-28 mb-8 relative group">
           <div className={`absolute inset-0 bg-primary/20 rounded-[40px] blur-[20px] transition-all duration-700 ${status === 'unlocked' ? 'opacity-100 scale-125' : 'opacity-0 scale-50'}`}></div>
           <div className={`w-full h-full bg-[#0a0a0a] rounded-[40px] border flex items-center justify-center transition-all duration-500 relative z-10 ${
@@ -87,7 +88,6 @@ export default function DownloadGateway() {
           }`}>
             {status === 'scanning' && <Fingerprint className="w-12 h-12 text-primary animate-pulse" />}
             {status === 'locked' && <Lock className="w-12 h-12 text-[#333]" />}
-            {status === 'verifying' && <Loader2 className="w-12 h-12 text-primary animate-spin" />}
             {status === 'unlocked' && <Unlock className="w-14 h-14 text-primary animate-in zoom-in duration-500" />}
             
             {status === 'scanning' && (
@@ -130,12 +130,12 @@ export default function DownloadGateway() {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>DECRYPTING {adClicks === 1 ? '75%' : '40%'}</span>
+                  <span>DECRYPTING 75%</span>
                 </>
               ) : (
                 <>
                   <Zap className={`w-6 h-6 ${adClicks > 0 ? 'animate-pulse' : ''}`} />
-                  <span>{adClicks === 0 ? 'UNLOCK CONTENT' : 'CONTINUE VERIFY'}</span>
+                  <span>UNLOCK CONTENT</span>
                 </>
               )}
             </Button>
