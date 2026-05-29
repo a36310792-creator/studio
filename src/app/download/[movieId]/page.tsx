@@ -8,9 +8,9 @@ import {
   Star, 
   Download, 
   Calendar, 
-  Globe, 
   MonitorPlay, 
-  ShieldCheck 
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -45,7 +45,7 @@ export default function MovieDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative font-body overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-44 shadow-2xl relative font-body overflow-x-hidden">
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
       
@@ -53,13 +53,14 @@ export default function MovieDetailsPage() {
       <div className="absolute top-5 left-5 z-[2010]">
         <button 
           onClick={() => router.push('/')}
-          className="bg-black/50 border border-white/10 text-white w-10 h-10 rounded-full backdrop-blur-xl flex items-center justify-center hover:bg-primary hover:text-black transition-all"
+          className="bg-black/50 border border-white/10 text-white w-10 h-10 rounded-full backdrop-blur-xl flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-lg"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="w-full h-[60vh] relative">
+      {/* Hero Poster Section */}
+      <div className="w-full h-[55vh] relative">
         {movie?.posterUrl && (
           <img 
             src={movie.posterUrl} 
@@ -67,69 +68,83 @@ export default function MovieDetailsPage() {
             alt={movie.title} 
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-[#050505]"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-[#050505]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/60 via-transparent to-transparent"></div>
       </div>
 
-      <main className="px-6 -mt-24 relative z-[2005]">
-        <h1 className="text-[32px] font-black text-white mb-3 tracking-tight leading-tight uppercase italic">
-          {movie?.title || (loading ? 'Loading Details...' : 'Media Entry')}
-        </h1>
-        
-        <div className="flex flex-wrap gap-2.5 mb-6">
-          <span className="bg-primary text-black px-3 py-1 rounded-md font-black text-[11px] uppercase shadow-lg shadow-primary/20">
-            {movie?.quality || '4K'}
-          </span>
-          <span className="bg-white/5 backdrop-blur-md px-3 py-1 rounded-md font-bold text-[11px] text-[#ffc107] flex items-center gap-1.5 border border-white/5">
-            <Star className="w-3.5 h-3.5 fill-current" />
-            {movie?.rating?.toFixed(1) || '8.5'} IMDb
-          </span>
-          <span className="bg-white/5 backdrop-blur-md px-3 py-1 rounded-md font-bold text-[11px] text-[#8b95a5] flex items-center gap-1.5 border border-white/5">
-            <Calendar className="w-3.5 h-3.5" />
-            {movie?.releaseYear || '2024'}
-          </span>
+      {/* Structured Content Area */}
+      <main className="px-6 -mt-16 relative z-[2005] flex flex-col gap-7">
+        <div className="space-y-3">
+          <h1 className="text-[30px] font-black text-white leading-tight uppercase italic drop-shadow-2xl">
+            {movie?.title || (loading ? 'SYNCING DATA...' : 'MEDIA ENTRY')}
+          </h1>
+          
+          <div className="flex flex-wrap gap-2">
+            <span className="bg-primary text-black px-3 py-1 rounded-md font-black text-[10px] uppercase shadow-lg shadow-primary/10">
+              {movie?.quality || '4K'}
+            </span>
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md font-bold text-[10px] text-[#ffc107] flex items-center gap-1.5 backdrop-blur-md">
+              <Star className="w-3 h-3 fill-current" />
+              {movie?.rating?.toFixed(1) || '8.5'}
+            </span>
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md font-bold text-[10px] text-[#8b95a5] flex items-center gap-1.5 backdrop-blur-md">
+              <Calendar className="w-3 h-3" />
+              {movie?.releaseYear || '2024'}
+            </span>
+            {movie?.audio && (
+              <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md font-bold text-[10px] text-[#8b95a5] flex items-center gap-1.5 backdrop-blur-md">
+                <Globe className="w-3 h-3" />
+                {movie.audio}
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="mb-6">
-          <AdBanner id="details-top" hrefs={ROTATION_LINKS} className="w-full" />
+        {/* Top Promotional Unit */}
+        <div className="w-full">
+          <AdBanner id="details-top-fixed" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 mb-8">
+        {/* Primary Action Funnel */}
+        <div className="flex flex-col gap-3.5">
           <Button 
             onClick={handleWatch}
-            className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+            className="w-full h-15 py-4 bg-primary text-black font-black rounded-2xl shadow-[0_8px_30px_rgba(0,229,255,0.25)] hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-base italic uppercase"
           >
-            <MonitorPlay className="w-6 h-6" />
+            <MonitorPlay className="w-5 h-5" />
             WATCH ONLINE HD
           </Button>
           
           <Button 
             onClick={handleDownload}
             variant="outline"
-            className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+            className="w-full h-15 py-4 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-base italic uppercase"
           >
-            <Download className="w-6 h-6 text-primary" />
+            <Download className="w-5 h-5 text-primary" />
             DIRECT DOWNLOAD LINKS
           </Button>
         </div>
 
-        <div className="bg-[#0a0a0a] rounded-3xl p-6 border border-white/5 mb-8">
-          <div className="flex items-center gap-2 mb-4">
+        {/* Information Security Context */}
+        <div className="bg-[#0a0a0a] rounded-[24px] p-5 border border-white/5 shadow-2xl">
+          <div className="flex items-center gap-2 mb-3">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-black text-white/50 uppercase tracking-[2px]">Encrypted Server Status</span>
+            <span className="text-[10px] font-black text-white/30 uppercase tracking-[2.5px]">Security Layer: Active</span>
           </div>
-          <p className="text-[#8b95a5] text-[14px] leading-relaxed italic">
-            {movie?.description || 'Enjoy premium high-speed streaming and direct downloads with our secure, end-to-end encrypted tunneling technology.'}
+          <p className="text-[#8b95a5] text-[13.5px] leading-relaxed italic opacity-90 font-medium">
+            {movie?.description || 'Experience ultra-fast edge delivery through our encrypted server nodes. No bandwidth limits applied to your current session.'}
           </p>
         </div>
 
-        <div className="pb-10">
-          <AdBanner id="details-bottom" hrefs={ROTATION_LINKS} className="w-full" />
+        {/* Secondary Promotional Unit */}
+        <div className="w-full">
+          <AdBanner id="details-bottom-fixed" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 z-[2020] bg-black/90 backdrop-blur-xl border-t border-primary/20 p-2 max-w-[420px] mx-auto">
-        <AdBanner id="details-sticky" hrefs={ROTATION_LINKS} className="w-full" />
+      {/* Global Sticky Footer Monetization */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-[2020] bg-black/95 backdrop-blur-3xl border-t border-primary/20 p-2.5 max-w-[420px] shadow-[0_-15px_50px_rgba(0,0,0,0.9)]">
+        <AdBanner id="details-sticky-footer" hrefs={ROTATION_LINKS} className="w-full" />
       </div>
     </div>
   );
