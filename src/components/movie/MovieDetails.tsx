@@ -1,7 +1,8 @@
+
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Star, Download, Info, Calendar, Globe, MonitorPlay, Zap, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Star, Download, Calendar, Globe, MonitorPlay, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -21,8 +22,13 @@ const ROTATION_LINKS = [
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   const router = useRouter();
 
-  const handleAction = () => {
-    // Navigate to Page 3 (Secure Gateway)
+  const handleWatch = () => {
+    // Navigate to Page 4 (Watch Hub)
+    router.push(`/watch/${movie.id}`);
+  };
+
+  const handleDownload = () => {
+    // Navigate to Page 3 (Secure Gateway / Download Gateway)
     router.push(`/movie/${movie.id}`);
   };
 
@@ -81,15 +87,15 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
 
             <div className="grid grid-cols-1 gap-4 mb-8">
               <Button 
-                onClick={handleAction}
-                className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+                onClick={handleWatch}
+                className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
               >
                 <MonitorPlay className="w-6 h-6" />
                 WATCH ONLINE HD
               </Button>
               
               <Button 
-                onClick={handleAction}
+                onClick={handleDownload}
                 variant="outline"
                 className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
               >
