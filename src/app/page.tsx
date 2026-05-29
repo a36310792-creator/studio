@@ -6,7 +6,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -69,6 +69,7 @@ const DEFAULT_MOVIES: Movie[] = [
 
 export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [activeGenre, setActiveGenre] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedYear, setSelectedYear] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,10 +112,8 @@ export default function Home() {
     }
   }, [navTab, movies]);
 
-  const tabs = [
-    'All', 'Action', 'Horror', 'Anime', 'Sci-Fi', 
-    'Bollywood', 'Web Series', 'Hollywood', 'South', 'Animation', 'Cartoon'
-  ];
+  const genres = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi'];
+  const categories = ['All', 'Bollywood', 'Hollywood', 'South', 'Web Series', 'Animation', 'Cartoon'];
   
   const years = useMemo(() => {
     const startYear = new Date().getFullYear();
@@ -132,6 +131,11 @@ export default function Home() {
     }
 
     return currentPool.filter(movie => {
+      const matchesGenre = 
+        navTab !== 'home' || 
+        activeGenre === 'All' || 
+        movie.genres.includes(activeGenre);
+
       const matchesCategory = 
         navTab !== 'home' || 
         activeCategory === 'All' || 
@@ -143,9 +147,9 @@ export default function Home() {
 
       const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
 
-      return matchesCategory && matchesYear && matchesSearch;
+      return matchesGenre && matchesCategory && matchesYear && matchesSearch;
     });
-  }, [activeCategory, selectedYear, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
+  }, [activeGenre, activeCategory, selectedYear, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
 
   const latestMovie = useMemo(() => {
     return movies.length > 0 ? movies[0] : null;
@@ -154,11 +158,21 @@ export default function Home() {
   const viewTitle = useMemo(() => {
     if (navTab === 'saved') return { label: 'Saved Collection', icon: <BookmarkIcon className="w-5 h-5 text-primary" /> };
     if (navTab === 'discover') return { label: 'Pick for You', icon: <Sparkles className="w-5 h-5 text-primary" /> };
+    
+    let label = 'Trending Content';
+    if (activeGenre !== 'All' && activeCategory !== 'All') {
+      label = `${activeGenre} in ${activeCategory}`;
+    } else if (activeGenre !== 'All') {
+      label = `${activeGenre} Highlights`;
+    } else if (activeCategory !== 'All') {
+      label = `${activeCategory} Collection`;
+    }
+
     return { 
-      label: activeCategory === 'All' ? 'Trending Content' : `${activeCategory} Highlights`,
+      label,
       icon: <TrendingUp className="w-5 h-5 text-primary" /> 
     };
-  }, [navTab, activeCategory]);
+  }, [navTab, activeGenre, activeCategory]);
 
   const handleSearchIconClick = () => {
     if (navTab !== 'home') {
@@ -173,12 +187,19 @@ export default function Home() {
 
   const handleSidebarCategorySelect = (category: string) => {
     setNavTab('home');
-    setActiveCategory(category);
+    if (genres.includes(category)) {
+      setActiveGenre(category);
+      setActiveCategory('All');
+    } else {
+      setActiveCategory(category);
+      setActiveGenre('All');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSidebarHomeClick = () => {
     setNavTab('home');
+    setActiveGenre('All');
     setActiveCategory('All');
     setSelectedYear('All');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -215,33 +236,58 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex gap-2.5 px-5 mb-3 overflow-x-auto no-scrollbar py-2">
-              {tabs.map((tab) => (
+            {/* Row 1: Genres */}
+            <div className="px-5 mb-1.5 flex items-center gap-2">
+              <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Genres</div>
+              <div className="flex-1 h-px bg-white/5"></div>
+            </div>
+            <div className="flex gap-2.5 px-5 mb-4 overflow-x-auto no-scrollbar py-1">
+              {genres.map((genre) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveCategory(tab)}
-                  className={`px-5 py-2.5 rounded-2xl text-[12px] font-black whitespace-nowrap transition-all border ${
-                    activeCategory === tab 
-                      ? "bg-primary text-black border-primary shadow-[0_5px_15px_rgba(0,229,255,0.2)]" 
+                  key={genre}
+                  onClick={() => setActiveGenre(genre)}
+                  className={`px-4 py-2 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${
+                    activeGenre === genre 
+                      ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
                       : "bg-[#121212] text-[#8b95a5] border-white/5 hover:border-white/20"
                   }`}
                 >
-                  {tab}
+                  {genre}
                 </button>
               ))}
             </div>
 
-            <div className="px-5 mb-6 flex items-center gap-3">
-              <div className="flex-1 flex items-center gap-2 bg-[#121212] border border-white/5 rounded-2xl px-4 h-12">
-                <Calendar className="w-4 h-4 text-primary" />
+            {/* Row 2: Categories + Year Dropdown */}
+            <div className="px-5 mb-1.5 flex items-center gap-2">
+              <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Categories</div>
+              <div className="flex-1 h-px bg-white/5"></div>
+            </div>
+            <div className="flex items-center gap-3 px-5 mb-8">
+              <div className="flex-1 flex gap-2 overflow-x-auto no-scrollbar py-1 pr-2 border-r border-white/5">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-4 py-2 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${
+                      activeCategory === cat 
+                        ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
+                        : "bg-[#121212] text-[#8b95a5] border-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="w-24 shrink-0">
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="bg-transparent border-none p-0 h-auto text-[13px] font-bold text-white focus:ring-0">
+                  <SelectTrigger className="bg-[#121212] border-white/5 h-9 rounded-xl text-[11px] font-black text-white focus:ring-primary/30">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#121212] border-white/10 text-white">
+                  <SelectContent className="bg-[#121212] border-white/10 text-white min-w-[120px]">
                     {years.map(year => (
-                      <SelectItem key={year} value={year} className="focus:bg-primary focus:text-black font-bold">
-                        {year === 'All' ? 'Release Year: All' : year}
+                      <SelectItem key={year} value={year} className="focus:bg-primary focus:text-black font-bold text-[12px]">
+                        {year === 'All' ? 'Year: All' : year}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -269,13 +315,21 @@ export default function Home() {
 
         <section className="px-5 min-h-[400px]">
           <div className="flex justify-between items-center mb-5">
-            <h3 className="text-[18px] font-black flex items-center gap-2">
+            <h3 className="text-[16px] font-black flex items-center gap-2">
               {viewTitle.icon}
               {viewTitle.label}
               {selectedYear !== 'All' && navTab === 'home' && (
-                <span className="text-primary/60 text-[14px]">({selectedYear})</span>
+                <span className="text-primary/60 text-[13px]">({selectedYear})</span>
               )}
             </h3>
+            {(activeGenre !== 'All' || activeCategory !== 'All' || selectedYear !== 'All') && navTab === 'home' && (
+               <button 
+                onClick={() => { setActiveGenre('All'); setActiveCategory('All'); setSelectedYear('All'); }}
+                className="text-[10px] font-black text-[#555] hover:text-white transition-colors underline underline-offset-4"
+               >
+                 RESET FILTERS
+               </button>
+            )}
           </div>
 
           {displayedMovies.length > 0 ? (
