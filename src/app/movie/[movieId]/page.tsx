@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -39,8 +38,16 @@ export default function MovieGateway() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
 
-  const handleAction = () => {
+  const handleMonetizationAction = () => {
     window.open(SMART_LINK, '_blank');
+  };
+
+  const handleDownloadAction = () => {
+    if (movie?.directDownloadUrl) {
+      window.open(movie.directDownloadUrl, '_blank');
+    } else {
+      window.open(SMART_LINK, '_blank');
+    }
   };
 
   return (
@@ -83,16 +90,16 @@ export default function MovieGateway() {
             <div className="p-4 rounded-2xl bg-white/5 border border-white/5 mb-6">
               <div className="flex justify-between items-center text-[10px] font-black text-[#555] uppercase mb-2">
                 <span>Selected Media</span>
-                <span className="text-primary">4K STREAMING</span>
+                <span className="text-primary">SECURE ACCESS</span>
               </div>
               <h3 className="text-lg font-black truncate italic uppercase">
-                {movie?.title || 'Loading Metadata...'}
+                {movie?.title || 'Syncing Metadata...'}
               </h3>
             </div>
 
             <div className="space-y-4">
               <Button 
-                onClick={handleAction}
+                onClick={handleMonetizationAction}
                 className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.2)] hover:scale-[1.01] transition-all"
               >
                 <Zap className="w-5 h-5 fill-current" />
@@ -100,7 +107,7 @@ export default function MovieGateway() {
               </Button>
               
               <Button 
-                onClick={handleAction}
+                onClick={handleDownloadAction}
                 variant="outline"
                 className="w-full h-14 bg-white/5 border-primary/20 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all"
               >
@@ -127,7 +134,7 @@ export default function MovieGateway() {
             ].map((node, i) => (
               <button 
                 key={i}
-                onClick={handleAction}
+                onClick={handleMonetizationAction}
                 className="flex items-center justify-between p-4 rounded-2xl bg-[#121212] border border-white/5 hover:border-primary/30 transition-all group"
               >
                 <div className="flex items-center gap-4">

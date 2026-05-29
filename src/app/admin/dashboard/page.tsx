@@ -28,42 +28,13 @@ const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'C
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
 
-const MOCK_FALLBACK: Movie[] = [
-  {
-    id: 'hathras-1',
-    title: 'Hathras',
-    posterUrl: 'https://picsum.photos/seed/hathras/400/600',
-    rating: 8.2,
-    quality: 'HD',
-    releaseYear: 2024,
-    audio: 'Hindi',
-    genres: ['Thriller', 'Drama', 'Bollywood'],
-    description: 'A gripping investigative thriller based on true events.',
-    watchUrl: '#',
-    directDownloadUrl: '#'
-  },
-  {
-    id: 'karuppu-2',
-    title: 'Karuppu',
-    posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
-    rating: 7.9,
-    quality: '4K',
-    releaseYear: 2024,
-    audio: 'Tamil',
-    genres: ['Action', 'Thriller', 'South'],
-    description: 'An intense action drama from the heart of South India.',
-    watchUrl: '#',
-    directDownloadUrl: '#'
-  }
-];
-
 export default function AdminDashboard() {
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
   
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [localMovies, setLocalMovies] = useState<Movie[]>(MOCK_FALLBACK);
+  const [localMovies, setLocalMovies] = useState<Movie[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isFetching, setIsFetching] = useState(false);
@@ -73,11 +44,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     const localSession = localStorage.getItem('admin_session');
     
-    // Safety timer to end loading if auth takes too long
-    const safetyTimer = setTimeout(() => {
-      if (isAuthLoading) setIsAuthLoading(false);
-    }, 2500);
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user && localSession !== 'true') {
         router.push('/admin/login');
@@ -89,11 +55,8 @@ export default function AdminDashboard() {
       }
     });
 
-    return () => {
-      unsubscribe();
-      clearTimeout(safetyTimer);
-    };
-  }, [auth, router, isAuthLoading]);
+    return () => unsubscribe();
+  }, [auth, router]);
 
   // Firestore Sync
   const moviesQuery = useMemo(() => {
@@ -103,12 +66,9 @@ export default function AdminDashboard() {
 
   const { data: firestoreMovies, loading: firestoreLoading } = useCollection<Movie>(moviesQuery);
 
-  // Synchronize local state with firestore or fallback
   useEffect(() => {
-    if (!firestoreLoading) {
-      if (firestoreMovies && firestoreMovies.length > 0) {
-        setLocalMovies(firestoreMovies);
-      }
+    if (!firestoreLoading && firestoreMovies) {
+      setLocalMovies(firestoreMovies);
     }
   }, [firestoreMovies, firestoreLoading]);
 
@@ -172,8 +132,6 @@ export default function AdminDashboard() {
             }));
           });
         }
-        // Optimistic UI
-        setLocalMovies(prev => prev.map(m => m.id === editingMovie.id ? { ...m, ...movieData } : m));
         setEditingMovie(null);
       } else {
         if (db) {
@@ -186,9 +144,6 @@ export default function AdminDashboard() {
             }));
           });
         }
-        // Optimistic UI update
-        const id = 'temp-' + Date.now();
-        setLocalMovies(prev => [...prev, { ...movieData, id } as Movie]);
         setIsAdding(false);
       }
       
@@ -204,7 +159,6 @@ export default function AdminDashboard() {
 
   const deleteMovie = async (id: string) => {
     if (!confirm('Are you sure you want to delete this movie?')) return;
-    
     if (db) {
       const movieRef = doc(db, 'movies', id);
       deleteDoc(movieRef).catch(async () => {
@@ -214,7 +168,6 @@ export default function AdminDashboard() {
         }));
       });
     }
-    setLocalMovies(prev => prev.filter(m => m.id !== id));
   };
 
   if (isAuthLoading) {
@@ -240,7 +193,6 @@ export default function AdminDashboard() {
       <main className="p-5">
         {!isAdding && !editingMovie ? (
           <div className="space-y-6">
-            {/* Stats Section */}
             <div className="grid grid-cols-2 gap-3 mb-6">
                <div className="bg-[#121212] border border-white/5 rounded-2xl p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -378,7 +330,7 @@ export default function AdminDashboard() {
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
               />
               <Input 
-                placeholder="Direct Download Link" 
+                placeholder="Direct Download Link (directDownloadUrl)" 
                 value={formData.directDownloadUrl} 
                 onChange={e => setFormData({...formData, directDownloadUrl: e.target.value})} 
                 className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary shadow-[0_0_15px_rgba(0,229,255,0.05)]"
