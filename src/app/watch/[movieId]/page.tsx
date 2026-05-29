@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
@@ -11,7 +11,8 @@ import {
   Server,
   Lock,
   Activity,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,33 +21,41 @@ import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
 
 const WATCH_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
+/**
+ * Robustly detects if a URL should be rendered in an iframe or a video tag.
+ */
 function isIframeUrl(url: string): boolean {
   if (!url) return false;
   const lowercaseUrl = url.toLowerCase();
-  const videoExtensions = ['.mp4', '.m3u8', '.webm', '.mkv', '.mov', '.avi'];
+  
+  // Direct video file extensions that standard HTML5 <video> can usually play
+  const videoExtensions = ['.mp4', '.m3u8', '.webm', '.ogv', '.ogg', '.mp3', '.wav'];
   const hasVideoExtension = videoExtensions.some(ext => lowercaseUrl.split('?')[0].endsWith(ext));
+  
+  // If it has a direct video extension, it is NOT an iframe
   if (hasVideoExtension) return false;
+
+  // Patterns that definitely indicate an embed platform or web player page
   const knownEmbedPatterns = [
-    'youtube.com', 'drive.google.com', 'vimeo.com', 'dailymotion.com',
+    'youtube.com', 'youtu.be', 'drive.google.com', 'vimeo.com', 'dailymotion.com',
     'ok.ru', 'facebook.com', 'embed', '/e/', '/v/', 'vidsrc', 'streamtape',
-    'mixdrop', 'upstream', 'fembed', 'dood', 'html', 'php'
+    'mixdrop', 'upstream', 'fembed', 'dood', 'player', 'view', 'watch', 'html', 'php'
   ];
+
   if (knownEmbedPatterns.some(pattern => lowercaseUrl.includes(pattern))) return true;
-  return lowercaseUrl.startsWith('http');
+
+  // Default: If it doesn't look like a direct video file, treat it as a player page (iframe)
+  return true;
 }
 
 export default function WatchPage() {
   const { movieId } = useParams();
   const db = useFirestore();
   const router = useRouter();
-  const playerRef = useRef<any>(null);
-  const videoNode = useRef<HTMLVideoElement | null>(null);
   
   const [showLoader, setShowLoader] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
@@ -60,55 +69,17 @@ export default function WatchPage() {
 
   const rawUrl = movie?.watchUrl?.trim();
   const watchUrl = rawUrl || (docLoading ? '' : FALLBACK_VIDEO);
-  const useIframe = isIframeUrl(watchUrl);
+  
+  // Memoize detection to avoid flickering
+  const useIframe = useMemo(() => isIframeUrl(watchUrl), [watchUrl]);
 
   useEffect(() => {
+    // Artificial delay to ensure shimmer states feel premium
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    setPlayerError(null);
-    if (useIframe || !watchUrl || !videoNode.current) {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-      return;
-    }
-
-    try {
-      const player = videojs(videoNode.current, {
-        autoplay: false,
-        controls: true,
-        responsive: true,
-        fluid: true,
-        preload: 'auto',
-        sources: [{
-          src: watchUrl,
-          type: watchUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
-        }]
-      });
-      playerRef.current = player;
-      player.on('error', () => {
-        setPlayerError("Streaming node unresponsive. Handshake failed.");
-        setShowLoader(false);
-      });
-      player.on('loadeddata', () => setShowLoader(false));
-    } catch (e) {
-      setPlayerError("Decoder initialization failed.");
-      setShowLoader(false);
-    }
-
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-    };
-  }, [watchUrl, useIframe]);
 
   const handleAction = () => {
     window.open(WATCH_AD_LINK, '_blank');
@@ -119,6 +90,7 @@ export default function WatchPage() {
       <AdFloating hrefs={[WATCH_AD_LINK]} side="right" />
       <AdFloating hrefs={[WATCH_AD_LINK]} side="left" />
 
+      {/* Persistent Header */}
       <header className="sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-2xl p-6 border-b border-white/5 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-all hover:scale-110 active:scale-90">
           <ArrowLeft className="w-6 h-6" />
@@ -133,21 +105,24 @@ export default function WatchPage() {
       </header>
 
       <main className="p-5 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        {/* Unified Player Section */}
         <div className="mb-8 rounded-[32px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video group">
-          {(showLoader || docLoading) && !playerError && (
+          {/* Shimmer / Loader State */}
+          {(showLoader || docLoading) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
               <Skeleton className="absolute inset-0 shimmer" />
               <div className="relative z-30 flex flex-col items-center">
-                <Activity className="w-10 h-10 text-primary animate-pulse mb-4" />
-                <span className="text-[10px] font-black text-primary uppercase tracking-[4px] cyan-glow-text">Syncing Server...</span>
+                <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[4px] cyan-glow-text">Syncing Node...</span>
               </div>
             </div>
           )}
           
+          {/* Error State */}
           {playerError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-8 text-center backdrop-blur-xl">
               <AlertCircle className="w-14 h-14 text-red-500 mb-4 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]" />
-              <div role="heading" aria-level={3} className="text-lg font-black uppercase mb-2 italic">Node Disconnected</div>
+              <div className="text-lg font-black uppercase mb-2 italic">Node Unresponsive</div>
               <p className="text-[11px] text-[#555] font-bold mb-6 leading-relaxed max-w-[240px]">{playerError}</p>
               <Button onClick={() => window.location.reload()} className="h-12 px-10 rounded-2xl bg-primary text-black font-black uppercase shadow-lg shadow-primary/20">
                 RETRY HANDSHAKE
@@ -155,26 +130,32 @@ export default function WatchPage() {
             </div>
           )}
 
-          {useIframe ? (
-            <iframe 
-              src={watchUrl}
-              className="w-full h-full border-0"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
-              onLoad={() => setShowLoader(false)}
-            />
-          ) : (
-            <div data-vjs-player className="w-full h-full">
+          {/* Active Player Node */}
+          {watchUrl && !docLoading && (
+            useIframe ? (
+              <iframe 
+                src={watchUrl}
+                className="w-full h-full border-0"
+                allowFullScreen
+                allow="autoplay; encrypted-media; picture-in-picture"
+                onLoad={() => setShowLoader(false)}
+                onError={() => setPlayerError("Protocol failure: Secure iframe node blocked.")}
+              />
+            ) : (
               <video
-                ref={videoNode}
-                className="video-js vjs-big-play-centered"
+                src={watchUrl}
                 poster={movie?.posterUrl}
+                controls
+                className="w-full h-full object-contain"
+                onLoadedData={() => setShowLoader(false)}
+                onError={() => setPlayerError("Decoding failure: Direct stream node unresponsive.")}
                 playsInline
               />
-            </div>
+            )
           )}
         </div>
 
+        {/* Media Metadata Card */}
         <div className="bg-[#0a0a0a] rounded-[40px] border border-white/5 p-7 mb-10 shadow-inner">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -182,12 +163,12 @@ export default function WatchPage() {
                 <MonitorPlay className="w-7 h-7" />
               </div>
               <div className="flex-1 min-w-0">
-                <div role="heading" aria-level={2} className="text-sm font-black uppercase tracking-tight text-white truncate italic">
+                <div className="text-sm font-black uppercase tracking-tight text-white truncate italic">
                   {movie?.title || <Skeleton className="h-5 w-40 shimmer" />}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <Activity className="w-3.5 h-3.5 text-green-500 animate-pulse" />
-                  <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Quantum Encryption Active</span>
+                  <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Secure Handshake Active</span>
                 </div>
               </div>
             </div>
@@ -204,13 +185,14 @@ export default function WatchPage() {
           </div>
         </div>
 
+        {/* Alternative Node Grid (Ad Monetized) */}
         <div className="space-y-5">
-          <div role="heading" aria-level={3} className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Elite Node Grid</div>
+          <div className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Alternative Nodes</div>
           <div className="grid grid-cols-1 gap-4">
             {[
-              { name: 'US-PREMIUM (AD-FREE)', speed: '2.4 GB/s', icon: <Wifi className="w-5 h-5 text-primary" /> },
-              { name: 'ASIA-VIP DIRECT', speed: '1.8 GB/s', icon: <Server className="w-5 h-5" /> },
-              { name: 'EURO-FAST STREAM', speed: '2.1 GB/s', icon: <Lock className="w-5 h-5" /> }
+              { name: 'US-PREMIUM (ULTRA)', speed: '2.8 GB/s', icon: <Wifi className="w-5 h-5 text-primary" /> },
+              { name: 'ASIA-VIP DIRECT', speed: '2.2 GB/s', icon: <Server className="w-5 h-5" /> },
+              { name: 'EURO-FAST TUNNEL', speed: '2.5 GB/s', icon: <Lock className="w-5 h-5" /> }
             ].map((node, i) => (
               <button 
                 key={i}
