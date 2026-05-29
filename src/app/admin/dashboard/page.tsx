@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,14 +10,12 @@ import { type Movie } from '@/components/movie/MovieCard';
 import Link from 'next/link';
 
 const AVAILABLE_GENRES = [
-  'Action', 
-  'Horror', 
-  'Anime', 
-  'Sci-Fi', 
-  'Thriller', 
   'Bollywood', 
+  'Web Series', 
   'Hollywood', 
-  'Web Series'
+  'South', 
+  'Animation', 
+  'Cartoon'
 ];
 
 export default function AdminDashboard() {
@@ -82,7 +80,7 @@ export default function AdminDashboard() {
       posterUrl: '', 
       rating: 0, 
       quality: 'HD', 
-      releaseYear: 2026, 
+      releaseYear: new Date().getFullYear(), 
       audio: 'Hindi', 
       genres: [], 
       description: '',
@@ -187,20 +185,25 @@ export default function AdminDashboard() {
                 required 
               />
               <div className="grid grid-cols-2 gap-3">
+                <div className="relative group">
+                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
+                   <Input 
+                    placeholder="Release Year" 
+                    type="number" 
+                    value={formData.releaseYear} 
+                    onChange={e => setFormData({...formData, releaseYear: parseInt(e.target.value)})} 
+                    className="bg-black border-white/5 h-12 rounded-xl pl-9"
+                    required
+                  />
+                </div>
                 <Input 
-                  placeholder="Year" 
-                  type="number" 
-                  value={formData.releaseYear} 
-                  onChange={e => setFormData({...formData, releaseYear: parseInt(e.target.value)})} 
-                  className="bg-black border-white/5 h-12 rounded-xl"
-                />
-                <Input 
-                  placeholder="Rating" 
+                  placeholder="Rating (0-10)" 
                   type="number" 
                   step="0.1" 
                   value={formData.rating} 
                   onChange={e => setFormData({...formData, rating: parseFloat(e.target.value)})} 
                   className="bg-black border-white/5 h-12 rounded-xl"
+                  required
                 />
               </div>
 
@@ -230,12 +233,14 @@ export default function AdminDashboard() {
                   value={formData.quality} 
                   onChange={e => setFormData({...formData, quality: e.target.value as any})} 
                   className="bg-black border-white/5 h-12 rounded-xl"
+                  required
                 />
                 <Input 
                   placeholder="Audio" 
                   value={formData.audio} 
                   onChange={e => setFormData({...formData, audio: e.target.value})} 
                   className="bg-black border-white/5 h-12 rounded-xl"
+                  required
                 />
               </div>
               <Textarea 
@@ -243,6 +248,7 @@ export default function AdminDashboard() {
                 value={formData.description} 
                 onChange={e => setFormData({...formData, description: e.target.value})} 
                 className="bg-black border-white/5 rounded-xl min-h-[100px]"
+                required
               />
               <Button type="submit" className="w-full h-14 bg-primary text-black font-black rounded-2xl shadow-lg">
                 <Check className="w-5 h-5 mr-2" /> {editingMovie ? 'UPDATE CHANGES' : 'PUBLISH NOW'}

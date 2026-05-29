@@ -6,8 +6,15 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DEFAULT_MOVIES: Movie[] = [
   {
@@ -18,7 +25,7 @@ const DEFAULT_MOVIES: Movie[] = [
     quality: 'HD',
     releaseYear: 2026,
     audio: 'Hindi Dubbed',
-    genres: ['Action', 'Thriller'],
+    genres: ['Web Series'],
     description: 'A deep investigative journey into the mysteries of Hathras, following a team of journalists uncovering hidden truths in the heart of rural India.',
     watchUrl: '#'
   },
@@ -30,7 +37,7 @@ const DEFAULT_MOVIES: Movie[] = [
     quality: '4K',
     releaseYear: 2026,
     audio: 'Multi Audio',
-    genres: ['Horror', 'Mystery'],
+    genres: ['South'],
     description: 'An ancient spirit awakens in the dark forests of southern India. When a group of hikers goes missing, only the locals know what truly haunts the trees.',
     watchUrl: '#'
   },
@@ -40,9 +47,9 @@ const DEFAULT_MOVIES: Movie[] = [
     posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
     rating: 6.8,
     quality: 'CAM',
-    releaseYear: 2026,
+    releaseYear: 2025,
     audio: 'Dual Audio',
-    genres: ['Anime', 'Fantasy'],
+    genres: ['Animation'],
     description: 'A modern retelling of the legends, blending traditional storytelling with cutting-edge futuristic animation in a world where gods and machines coexist.',
     watchUrl: '#'
   },
@@ -52,9 +59,9 @@ const DEFAULT_MOVIES: Movie[] = [
     posterUrl: 'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
     rating: 9.1,
     quality: 'HD',
-    releaseYear: 2026,
+    releaseYear: 2024,
     audio: 'English Sub',
-    genres: ['Sci-Fi', 'Action'],
+    genres: ['Hollywood'],
     description: 'In the year 2099, a biological breakthrough turns into a global catastrophe. One soldier must navigate the wasteland to deliver the only known cure.',
     watchUrl: '#'
   }
@@ -63,6 +70,7 @@ const DEFAULT_MOVIES: Movie[] = [
 export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedYear, setSelectedYear] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [navTab, setNavTab] = useState('home');
@@ -103,7 +111,13 @@ export default function Home() {
     }
   }, [navTab, movies]);
 
-  const tabs = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller', 'Bollywood', 'Hollywood', 'Web Series'];
+  const tabs = ['All', 'Bollywood', 'Web Series', 'Hollywood', 'South', 'Animation', 'Cartoon'];
+  
+  const years = useMemo(() => {
+    const startYear = new Date().getFullYear();
+    const range = Array.from({ length: 17 }, (_, i) => (startYear - i).toString());
+    return ['All', ...range];
+  }, []);
 
   const displayedMovies = useMemo(() => {
     let currentPool = movies;
@@ -120,11 +134,15 @@ export default function Home() {
         activeCategory === 'All' || 
         movie.genres.includes(activeCategory);
 
+      const matchesYear = 
+        selectedYear === 'All' || 
+        movie.releaseYear.toString() === selectedYear;
+
       const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
 
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesYear && matchesSearch;
     });
-  }, [activeCategory, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
+  }, [activeCategory, selectedYear, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
 
   const latestMovie = useMemo(() => {
     return movies.length > 0 ? movies[0] : null;
@@ -159,6 +177,7 @@ export default function Home() {
   const handleSidebarHomeClick = () => {
     setNavTab('home');
     setActiveCategory('All');
+    setSelectedYear('All');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -193,7 +212,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex gap-2.5 px-5 mb-6 overflow-x-auto no-scrollbar py-2">
+            <div className="flex gap-2.5 px-5 mb-3 overflow-x-auto no-scrollbar py-2">
               {tabs.map((tab) => (
                 <button
                   key={tab}
@@ -207,6 +226,24 @@ export default function Home() {
                   {tab}
                 </button>
               ))}
+            </div>
+
+            <div className="px-5 mb-6 flex items-center gap-3">
+              <div className="flex-1 flex items-center gap-2 bg-[#121212] border border-white/5 rounded-2xl px-4 h-12">
+                <Calendar className="w-4 h-4 text-primary" />
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="bg-transparent border-none p-0 h-auto text-[13px] font-bold text-white focus:ring-0">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#121212] border-white/10 text-white">
+                    {years.map(year => (
+                      <SelectItem key={year} value={year} className="focus:bg-primary focus:text-black font-bold">
+                        {year === 'All' ? 'Release Year: All' : year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </>
         )}
@@ -232,6 +269,9 @@ export default function Home() {
             <h3 className="text-[18px] font-black flex items-center gap-2">
               {viewTitle.icon}
               {viewTitle.label}
+              {selectedYear !== 'All' && navTab === 'home' && (
+                <span className="text-primary/60 text-[14px]">({selectedYear})</span>
+              )}
             </h3>
           </div>
 
@@ -258,7 +298,7 @@ export default function Home() {
                   ? `No matches for "${searchQuery}"` 
                   : navTab === 'saved' 
                     ? 'Start bookmarking your favorite content!' 
-                    : 'Try selecting a different category.'}
+                    : 'Try selecting a different year or category.'}
               </p>
             </div>
           )}

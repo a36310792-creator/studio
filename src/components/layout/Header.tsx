@@ -18,14 +18,12 @@ interface HeaderProps {
 }
 
 const CATEGORIES = [
-  'Action', 
-  'Horror', 
-  'Anime', 
-  'Sci-Fi', 
-  'Thriller', 
   'Bollywood', 
+  'Web Series', 
   'Hollywood', 
-  'Web Series'
+  'South', 
+  'Animation', 
+  'Cartoon'
 ];
 
 export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderProps) => {
