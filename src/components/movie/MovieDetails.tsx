@@ -1,12 +1,17 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe } from 'lucide-react';
+import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
+
+interface MovieDetailsProps {
+  movie: Movie;
+  onClose: () => void;
+}
 
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
@@ -19,6 +24,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
+      <AdFloating hrefs={ROTATION_LINKS} side="left" />
       
       <div className="absolute top-5 left-5 z-[2010]">
         <button 
@@ -42,7 +48,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
       <div className="px-6 -mt-32 relative z-[2005] max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-1">
-            <h1 className="text-[32px] md:text-5xl font-black text-white mb-3 tracking-tight leading-tight">
+            <h1 className="text-[32px] md:text-5xl font-black text-white mb-3 tracking-tight leading-tight uppercase italic">
               {movie.title}
             </h1>
             
@@ -64,12 +70,11 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </span>
             </div>
 
-            {/* Ad 1: Below movie metadata/poster area */}
             <div className="mb-6">
               <AdBanner id="details-top-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-8">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
                 <Info className="w-5 h-5 text-primary" />
                 Description
@@ -79,65 +84,33 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </p>
             </div>
 
-            {/* Ad 2: Below description */}
             <div className="mb-8">
               <AdBanner id="details-desc-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
-            {/* Ad 3: Above download buttons */}
-            <div className="mb-6">
-              <AdBanner id="details-above-btns-rot" hrefs={ROTATION_LINKS} className="w-full" />
-            </div>
-
-            <div className="mb-10">
+            <div className="grid grid-cols-1 gap-4 mb-10">
+              <Link href={`/watch/${movie.id}`}>
+                <Button 
+                  className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+                >
+                  <MonitorPlay className="w-6 h-6" />
+                  WATCH ONLINE HD
+                </Button>
+              </Link>
+              
               <Link href={`/download/${movie.id}`}>
                 <Button 
-                  className="w-full h-14 bg-gradient-to-r from-primary to-cyan-500 text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all"
+                  variant="outline"
+                  className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
                 >
-                  <PlayCircle className="w-5 h-5 mr-2" />
-                  FINAL DOWNLOAD / WATCH NOW
+                  <Download className="w-6 h-6 text-primary" />
+                  DIRECT DOWNLOAD LINKS
                 </Button>
               </Link>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 mb-12">
-              <div className="flex items-center gap-3 mb-2">
-                <Download className="w-6 h-6 text-primary" />
-                <h3 className="text-xl font-black text-white uppercase tracking-wider">Download Links</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-4">
-                <Link href={`/download/${movie.id}`}>
-                  <Button 
-                    className="w-full h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all text-left"
-                  >
-                    <span className="text-[14px]">480p SD - Low Size</span>
-                    <span className="text-[12px] opacity-60 group-hover:opacity-100 uppercase">350 MB</span>
-                  </Button>
-                </Link>
-                
-                <Link href={`/download/${movie.id}`}>
-                  <Button 
-                    className="w-full h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all text-left"
-                  >
-                    <span className="text-[14px]">720p HD - Recommended</span>
-                    <span className="text-[12px] opacity-60 group-hover:opacity-100 uppercase">900 MB</span>
-                  </Button>
-                </Link>
-                
-                <Link href={`/download/${movie.id}`}>
-                  <Button 
-                    className="w-full h-14 bg-gradient-to-r from-primary to-cyan-400 text-black hover:brightness-110 rounded-2xl flex justify-between px-6 font-black group transition-all shadow-[0_10px_30px_rgba(0,229,255,0.3)] text-left"
-                  >
-                    <span className="text-[14px]">1080p Full HD - Ultra</span>
-                    <span className="text-[12px] text-black/60 uppercase">2.4 GB</span>
-                  </Button>
-                </Link>
-              </div>
-              
-              <p className="text-[11px] text-center text-[#555] font-bold italic">
-                Note: All links are verified and scanned for security.
-              </p>
+            <div className="mb-6">
+              <AdBanner id="details-above-btns-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
             <div className="pb-10">
@@ -147,7 +120,6 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
         </div>
       </div>
 
-      {/* Ad 5: Sticky bottom ad */}
       <div className="fixed bottom-0 left-0 right-0 z-[2020] bg-black/90 backdrop-blur-xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
         <AdBanner id="details-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </div>
