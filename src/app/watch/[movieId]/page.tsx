@@ -12,13 +12,12 @@ import Script from 'next/script';
 import { useDoc, useFirestore, useCollection } from '@/firebase';
 import { doc, collection, limit, query } from 'firebase/firestore';
 
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
-// Fallback high-quality sample video
+const VAST_AD_TAG = "https://youradexchange.com/video/select.php?r=11371326";
 const FALLBACK_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 export default function WatchOnline() {
@@ -42,7 +41,9 @@ export default function WatchOnline() {
   
   const [playbackState, setPlaybackState] = useState<'idle' | 'loading' | 'playing'>('idle');
   const [scriptsLoaded, setScriptsLoaded] = useState({
-    videojs: false
+    videojs: false,
+    ima: false,
+    contribAds: false
   });
 
   const handlePlayClick = () => {
@@ -53,16 +54,14 @@ export default function WatchOnline() {
   };
 
   useEffect(() => {
-    if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current && movie) {
+    if (playbackState === 'playing' && scriptsLoaded.videojs && scriptsLoaded.ima && scriptsLoaded.contribAds && videoNodeRef.current && movie) {
       const vjs = (window as any).videojs;
       if (!vjs) return;
 
-      // Dispose existing player if it exists to avoid re-initialization errors
       if (playerRef.current) {
         playerRef.current.dispose();
       }
 
-      // Validate video source
       const videoSrc = movie.watchUrl && movie.watchUrl !== '#' 
         ? movie.watchUrl 
         : FALLBACK_VIDEO_URL;
@@ -79,6 +78,15 @@ export default function WatchOnline() {
         }]
       });
 
+      // Initialize IMA
+      if (player.ima) {
+        player.ima({
+          adTagUrl: VAST_AD_TAG,
+          showCountdown: true,
+          debug: false
+        });
+      }
+
       playerRef.current = player;
 
       return () => {
@@ -88,7 +96,7 @@ export default function WatchOnline() {
         }
       };
     }
-  }, [playbackState, scriptsLoaded.videojs, movie]);
+  }, [playbackState, scriptsLoaded, movie]);
 
   if (movieLoading && !movie) {
     return (
@@ -101,11 +109,29 @@ export default function WatchOnline() {
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden">
       <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.css" rel="stylesheet" />
       
+      {/* Load core Video.js */}
       <Script 
         src="https://vjs.zencdn.net/8.10.0/video.min.js" 
         strategy="lazyOnload" 
         onLoad={() => setScriptsLoaded(prev => ({...prev, videojs: true}))} 
+      />
+
+      {/* Load IMA SDK and Plugins */}
+      <Script 
+        src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
+        strategy="lazyOnload" 
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-ads/7.0.0/videojs-contrib-ads.min.js" 
+        strategy="lazyOnload"
+        onLoad={() => setScriptsLoaded(prev => ({...prev, contribAds: true}))} 
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.js" 
+        strategy="lazyOnload"
+        onLoad={() => setScriptsLoaded(prev => ({...prev, ima: true}))} 
       />
 
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
@@ -212,7 +238,7 @@ export default function WatchOnline() {
               className="h-16 bg-white/5 border border-white/10 rounded-[24px] flex flex-col items-center justify-center gap-0.5 hover:bg-primary hover:text-black transition-all group"
               asChild
             >
-              <a href={SMART_LINK} target="_blank">
+              <a href="https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf" target="_blank">
                 <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic transition-all">VIP Server</span>
                 <span className="text-[9px] opacity-40 uppercase font-bold">Fast Mirror</span>
               </a>
@@ -221,7 +247,7 @@ export default function WatchOnline() {
               className="h-16 bg-white/5 border border-white/10 rounded-[24px] flex flex-col items-center justify-center gap-0.5 hover:bg-red-500/20 hover:border-red-500/50 transition-all group"
               asChild
             >
-              <a href={SMART_LINK} target="_blank">
+              <a href="https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf" target="_blank">
                 <span className="text-[11px] font-black uppercase tracking-wider text-red-500/80 group-hover:text-red-500">Report</span>
                 <span className="text-[9px] opacity-40 uppercase font-bold">Broken?</span>
               </a>
