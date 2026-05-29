@@ -19,6 +19,7 @@ const ROTATION_LINKS = [
 
 const VAST_AD_TAG = "https://youradexchange.com/video/select.php?r=11371326";
 const FALLBACK_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function WatchOnline() {
   const { movieId } = useParams();
@@ -48,13 +49,15 @@ export default function WatchOnline() {
   });
 
   const handlePlayClick = () => {
+    // Sequential high-revenue flow
+    window.open(SMART_LINK, '_blank');
+    
     setPlaybackState('loading');
     
-    // UI Safety Timeout: Force the UI to 'playing' state (revealing the player)
-    // if the ad system takes too long to respond. This prevents the spinner from hanging.
+    // Safety fallback: Skip ad phase if loading hangs for more than 3.5s
     adTimeoutRef.current = setTimeout(() => {
       setPlaybackState('playing');
-    }, 4000);
+    }, 3500);
   };
 
   useEffect(() => {
@@ -101,7 +104,7 @@ export default function WatchOnline() {
               showCountdown: true,
               debug: false,
               adWillAutoPlay: true,
-              adsResponseTimeout: 3000, // IMA internal timeout for VAST response
+              adsResponseTimeout: 3000,
             });
           } catch (e) {
             console.error('Failed to initialize IMA:', e);
@@ -109,27 +112,24 @@ export default function WatchOnline() {
             player.play().catch(() => {});
           }
         } else {
-          // If IMA scripts aren't ready, just play the movie
           setPlaybackState('playing');
           player.play().catch(() => {});
         }
       });
 
-      // CRITICAL: Handle ad errors (Blockers, Network, CORS)
+      // Catch Adblocker or Network errors and skip ad immediately
       player.on('adserror', (err: any) => {
-        console.warn('IMA Ads error (likely blocked or network error):', err);
+        console.warn('IMA Ads error - Bypassing to content:', err);
         if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
         setPlaybackState('playing');
-        player.play().catch(() => {}); // Immediately start main content
+        player.play().catch(() => {});
       });
 
-      // Handle cases where the ad starts successfully
       player.on('adstart', () => {
         if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
-        setPlaybackState('playing'); // Reveal player area for the ad
+        setPlaybackState('playing');
       });
 
-      // Ensure content plays after ad finishes or is skipped
       player.on(['adend', 'adskip', 'contentresume'], () => {
         setPlaybackState('playing');
         player.play().catch(() => {});
@@ -191,9 +191,9 @@ export default function WatchOnline() {
       <main className="p-0">
         <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_10px_60px_rgba(0,0,0,0.9)] border-y border-white/5">
           {playbackState === 'idle' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-30 transition-all duration-700">
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-30">
               {movie?.posterUrl && (
-                <div className="absolute inset-0 transition-transform duration-1000 group-hover:scale-105">
+                <div className="absolute inset-0">
                   <img 
                     src={movie.posterUrl} 
                     className="w-full h-full object-cover opacity-40 grayscale-[0.3]" 
@@ -273,7 +273,7 @@ export default function WatchOnline() {
               </div>
             </div>
             
-            <p className="text-[13px] text-[#8b95a5] leading-relaxed relative z-10 font-medium line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
+            <p className="text-[13px] text-[#8b95a5] leading-relaxed relative z-10 font-medium">
               {movie?.description || 'Establishing metadata connection for high-speed streaming results...'}
             </p>
           </div>
@@ -283,8 +283,8 @@ export default function WatchOnline() {
               className="h-16 bg-white/5 border border-white/10 rounded-[28px] flex flex-col items-center justify-center gap-0.5 hover:bg-primary hover:text-black transition-all group shadow-lg active:scale-95"
               asChild
             >
-              <a href="https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf" target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic">VIP Server 1</span>
+              <a href={SMART_LINK} target="_blank">
+                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic">Unlock High Speed Server</span>
                 <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest">Instant Mirror</span>
               </a>
             </Button>
@@ -292,7 +292,7 @@ export default function WatchOnline() {
               className="h-16 bg-white/5 border border-white/10 rounded-[28px] flex flex-col items-center justify-center gap-0.5 hover:bg-white/10 hover:border-primary/50 transition-all group shadow-lg active:scale-95"
               asChild
             >
-              <a href="https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf" target="_blank">
+              <a href={SMART_LINK} target="_blank">
                 <span className="text-[11px] font-black uppercase tracking-wider">Report Error</span>
                 <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest text-red-500/80">Buffer/Lag?</span>
               </a>
@@ -312,9 +312,9 @@ export default function WatchOnline() {
           <div className="grid grid-cols-2 gap-5">
             {relatedMovies?.map((m) => (
               <Link key={m.id} href={`/watch/${m.id}`} className="group relative">
-                <div className="relative aspect-[2/3] rounded-[28px] overflow-hidden border border-white/5 group-hover:border-primary/50 transition-all duration-700 shadow-2xl">
+                <div className="relative aspect-[2/3] rounded-[28px] overflow-hidden border border-white/5 group-hover:border-primary/50 transition-all shadow-2xl">
                   <img src={m.posterUrl} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" alt="" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 transition-opacity"></div>
                   <div className="absolute inset-x-0 bottom-0 p-5 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-500">
                     <span className="text-[11px] font-black text-white truncate block uppercase tracking-tight italic">{m.title}</span>
                     <span className="text-[9px] text-primary font-black mt-1.5 block tracking-widest">{m.quality} • {m.releaseYear}</span>

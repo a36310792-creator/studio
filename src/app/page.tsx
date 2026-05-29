@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
@@ -86,6 +87,7 @@ const MOCK_MOVIES: Movie[] = [
 
 export default function Home() {
   const db = useFirestore();
+  const router = useRouter();
   const moviesQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'movies');
@@ -97,7 +99,6 @@ export default function Home() {
   const [selectedYear, setSelectedYear] = useState('All');
   const [sortBy, setSortBy] = useState('latest');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -181,6 +182,11 @@ export default function Home() {
     return pool[0];
   }, [firestoreMovies]);
 
+  const handleMovieClick = (movie: Movie) => {
+    // Navigate directly to the dedicated watch page
+    router.push(`/watch/${movie.id}`);
+  };
+
   const viewTitle = useMemo(() => {
     if (navTab === 'saved') return { label: 'Saved Collection', icon: <BookmarkIcon className="w-5 h-5 text-primary" /> };
     if (navTab === 'discover') return { label: 'Pick for You', icon: <Sparkles className="w-5 h-5 text-primary" /> };
@@ -245,7 +251,7 @@ export default function Home() {
       {navTab === 'home' && latestMovie && (
         <NewReleaseToast 
           movieName={`${latestMovie.title} - Now Streaming!`} 
-          onWatch={() => setSelectedMovie(latestMovie)}
+          onWatch={() => handleMovieClick(latestMovie)}
         />
       )}
 
@@ -369,7 +375,7 @@ export default function Home() {
                   <MovieCard 
                     key={movie.id} 
                     movie={movie} 
-                    onSelect={setSelectedMovie}
+                    onSelect={handleMovieClick}
                     onToggleBookmark={toggleBookmark}
                     isBookmarked={bookmarkedIds.includes(movie.id)}
                   />
@@ -387,7 +393,7 @@ export default function Home() {
                   <MovieCard 
                     key={movie.id} 
                     movie={movie} 
-                    onSelect={setSelectedMovie}
+                    onSelect={handleMovieClick}
                     onToggleBookmark={toggleBookmark}
                     isBookmarked={bookmarkedIds.includes(movie.id)}
                   />
@@ -435,13 +441,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      {selectedMovie && (
-        <MovieDetails 
-          movie={selectedMovie} 
-          onClose={() => setSelectedMovie(null)} 
-        />
-      )}
 
       <BottomNav activeTab={navTab} onTabChange={(tab) => { setNavTab(tab); setVisibleCount(10); }} />
     </div>
