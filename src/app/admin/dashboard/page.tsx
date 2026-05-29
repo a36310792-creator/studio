@@ -1,16 +1,24 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { type Movie } from '@/components/movie/MovieCard';
 import Link from 'next/link';
 
-const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller'];
+const AVAILABLE_GENRES = [
+  'Action', 
+  'Horror', 
+  'Anime', 
+  'Sci-Fi', 
+  'Thriller', 
+  'Bollywood', 
+  'Hollywood', 
+  'Web Series'
+];
 
 export default function AdminDashboard() {
   const [movies, setMovies] = useState<Movie[]>([]);

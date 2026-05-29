@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Menu, Home, Settings, Film, ChevronRight } from 'lucide-react';
+import { Search, Menu, Home, Settings, Film, ChevronRight, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -7,16 +7,28 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from '@/components/ui/sheet';
 import Link from 'next/link';
 
 interface HeaderProps {
   onSearchClick?: () => void;
+  onCategorySelect?: (category: string) => void;
+  onHomeClick?: () => void;
 }
 
-const CATEGORIES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller'];
+const CATEGORIES = [
+  'Action', 
+  'Horror', 
+  'Anime', 
+  'Sci-Fi', 
+  'Thriller', 
+  'Bollywood', 
+  'Hollywood', 
+  'Web Series'
+];
 
-export const Header = ({ onSearchClick }: HeaderProps) => {
+export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-center px-5 py-6 bg-background/80 backdrop-blur-2xl border-b border-white/5">
       {/* Sidebar Menu (Absolute positioned left) */}
@@ -48,26 +60,41 @@ export const Header = ({ onSearchClick }: HeaderProps) => {
               <div className="px-6 py-2">
                 <p className="text-[10px] font-black text-[#444] uppercase tracking-[2px] mb-4">Main Navigation</p>
                 <nav className="space-y-1">
-                  <Link 
-                    href="/" 
-                    className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Home className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
-                      <span className="font-bold text-sm">Home</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#222]" />
-                  </Link>
-                  <Link 
-                    href="/admin/login" 
-                    className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Settings className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
-                      <span className="font-bold text-sm">Admin Settings</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#222]" />
-                  </Link>
+                  <SheetClose asChild>
+                    <button 
+                      onClick={onHomeClick}
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Home className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
+                        <span className="font-bold text-sm text-white">Home</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#222]" />
+                    </button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link 
+                      href="/admin/login" 
+                      className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Settings className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
+                        <span className="font-bold text-sm text-white">Admin Settings</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#222]" />
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <button 
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 group transition-all text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <MessageSquare className="w-5 h-5 text-[#8b95a5] group-hover:text-primary" />
+                        <span className="font-bold text-sm text-white">Request Movie</span>
+                      </div>
+                      <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-black uppercase">Soon</span>
+                    </button>
+                  </SheetClose>
                 </nav>
               </div>
 
@@ -75,14 +102,15 @@ export const Header = ({ onSearchClick }: HeaderProps) => {
                 <p className="text-[10px] font-black text-[#444] uppercase tracking-[2px] mb-4">Categories</p>
                 <div className="grid grid-cols-1 gap-1">
                   {CATEGORIES.map((cat) => (
-                    <Link 
-                      key={cat}
-                      href="/"
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 group transition-all text-sm font-bold text-[#8b95a5] hover:text-white"
-                    >
-                      <Film className="w-4 h-4 text-[#333] group-hover:text-primary" />
-                      {cat}
-                    </Link>
+                    <SheetClose key={cat} asChild>
+                      <button 
+                        onClick={() => onCategorySelect?.(cat)}
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 group transition-all text-sm font-bold text-[#8b95a5] hover:text-white text-left"
+                      >
+                        <Film className="w-4 h-4 text-[#333] group-hover:text-primary" />
+                        {cat}
+                      </button>
+                    </SheetClose>
                   ))}
                 </div>
               </div>

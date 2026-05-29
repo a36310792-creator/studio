@@ -103,7 +103,7 @@ export default function Home() {
     }
   }, [navTab, movies]);
 
-  const tabs = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller'];
+  const tabs = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller', 'Bollywood', 'Hollywood', 'Web Series'];
 
   const displayedMovies = useMemo(() => {
     let currentPool = movies;
@@ -142,7 +142,6 @@ export default function Home() {
   const handleSearchIconClick = () => {
     if (navTab !== 'home') {
       setNavTab('home');
-      // Delay focus slightly to allow the home tab elements to render
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
@@ -151,9 +150,25 @@ export default function Home() {
     }
   };
 
+  const handleSidebarCategorySelect = (category: string) => {
+    setNavTab('home');
+    setActiveCategory(category);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSidebarHomeClick = () => {
+    setNavTab('home');
+    setActiveCategory('All');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
-      <Header onSearchClick={handleSearchIconClick} />
+      <Header 
+        onSearchClick={handleSearchIconClick} 
+        onCategorySelect={handleSidebarCategorySelect}
+        onHomeClick={handleSidebarHomeClick}
+      />
       
       {navTab === 'home' && latestMovie && (
         <NewReleaseToast 
