@@ -6,13 +6,13 @@
   :root {
     --background: 0 0% 2%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 7%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 2%;
     --popover-foreground: 0 0% 100%;
     --primary: 186 100% 50%;
     --primary-foreground: 186 100% 6%;
-    --secondary: 0 0% 10%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 100%;
     --muted: 215 15% 65%;
     --muted-foreground: 215 15% 65%;
@@ -20,10 +20,10 @@
     --accent-foreground: 186 100% 6%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
     --ring: 186 100% 50%;
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
 }
 
@@ -34,22 +34,27 @@
   body {
     @apply bg-background text-foreground font-body;
     -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
   }
 }
 
 .glass-nav {
-  background: rgba(20, 25, 30, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hero-gradient {
-  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(5,5,5,1) 0%, rgba(5,5,5,0.6) 40%, transparent 100%);
 }
 
 .cyan-glow {
-  box-shadow: 0 10px 30px rgba(0, 229, 255, 0.05);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.15);
+}
+
+.cyan-glow-text {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -58,4 +63,30 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: shimmer 2s infinite;
 }

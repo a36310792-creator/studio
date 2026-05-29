@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -10,21 +9,18 @@ import {
   Calendar, 
   MonitorPlay, 
   ShieldCheck,
-  Globe
+  Globe,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
 
-// Updated ad link for Movie Details Page
 const DETAILS_AD_LINK = "https://commendtwisted.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995";
-const ROTATION_LINKS = [
-  DETAILS_AD_LINK,
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed"
-];
 
 export default function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -43,106 +39,108 @@ export default function MovieDetailsPage() {
   };
 
   const handleDownload = () => {
-    // Trigger ad link in new tab
     window.open(DETAILS_AD_LINK, '_blank');
-    // Proceed to Gateway Page
     router.push(`/movie/${movieId}`);
   };
 
   const resolvedPoster = movie?.posterUrl || movie?.imageUrl || movie?.image || `https://picsum.photos/seed/${movieId}/1200/800`;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-44 shadow-2xl relative font-body overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-48 shadow-2xl relative font-body overflow-x-hidden">
       <AdFloating hrefs={[DETAILS_AD_LINK]} side="right" />
       <AdFloating hrefs={[DETAILS_AD_LINK]} side="left" />
       
       {/* Header with Fixed Back Button */}
-      <div className="absolute top-5 left-5 z-[2010]">
+      <div className="absolute top-6 left-6 z-[2010]">
         <button 
           onClick={() => router.push('/')}
-          className="bg-black/50 border border-white/10 text-white w-10 h-10 rounded-full backdrop-blur-xl flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-lg"
+          className="bg-black/60 border border-white/10 text-white w-12 h-12 rounded-2xl backdrop-blur-2xl flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-2xl active:scale-90"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-6 h-6" />
         </button>
       </div>
 
       {/* Hero Poster Section */}
-      <div className="w-full h-[55vh] relative">
-        <img 
-          src={resolvedPoster} 
-          className="w-full h-full object-cover" 
-          alt={movie?.title || 'Movie Poster'} 
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-[#050505]"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/60 via-transparent to-transparent"></div>
+      <div className="w-full h-[60vh] relative">
+        {loading ? (
+          <Skeleton className="w-full h-full shimmer" />
+        ) : (
+          <img 
+            src={resolvedPoster} 
+            className="w-full h-full object-cover animate-in fade-in duration-1000" 
+            alt={movie?.title || 'Movie Poster'} 
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/40 to-[#050505]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
       </div>
 
       {/* Structured Content Area */}
-      <main className="px-6 -mt-16 relative z-[2005] flex flex-col gap-7">
-        <div className="space-y-3">
-          <h1 className="text-[30px] font-black text-white leading-tight uppercase italic drop-shadow-2xl">
-            {movie?.title || (loading ? 'SYNCING DATA...' : 'MEDIA ENTRY')}
+      <main className="px-6 -mt-20 relative z-[2005] flex flex-col gap-8 animate-in slide-in-from-bottom-10 duration-700">
+        <div className="space-y-4">
+          <h1 className="text-[34px] font-black text-white leading-[1.1] uppercase italic tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
+            {movie?.title || (loading ? <Skeleton className="h-10 w-64 shimmer" /> : 'MEDIA ENTRY')}
           </h1>
           
-          <div className="flex flex-wrap gap-2">
-            <span className="bg-primary text-black px-3 py-1 rounded-md font-black text-[10px] uppercase shadow-lg shadow-primary/10">
-              {movie?.quality || '4K'}
+          <div className="flex flex-wrap gap-2.5">
+            <span className="bg-primary text-black px-4 py-1.5 rounded-xl font-black text-[11px] uppercase shadow-glow">
+              {movie?.quality || 'SYNCING'}
             </span>
-            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md font-bold text-[10px] text-[#ffc107] flex items-center gap-1.5 backdrop-blur-md">
-              <Star className="w-3 h-3 fill-current" />
-              {movie?.rating?.toFixed(1) || '8.5'}
+            <span className="bg-[#111] border border-white/5 px-3.5 py-1.5 rounded-xl font-black text-[11px] text-[#ffc107] flex items-center gap-2 backdrop-blur-xl">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              {movie?.rating?.toFixed(1) || '0.0'}
             </span>
-            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md font-bold text-[10px] text-[#8b95a5] flex items-center gap-1.5 backdrop-blur-md">
-              <Calendar className="w-3 h-3" />
-              {movie?.releaseYear || '2024'}
+            <span className="bg-[#111] border border-white/5 px-3.5 py-1.5 rounded-xl font-black text-[11px] text-[#666] flex items-center gap-2 backdrop-blur-xl">
+              <Calendar className="w-3.5 h-3.5" />
+              {movie?.releaseYear || '----'}
             </span>
             {movie?.audio && (
-              <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md font-bold text-[10px] text-[#8b95a5] flex items-center gap-1.5 backdrop-blur-md">
-                <Globe className="w-3 h-3" />
-                {movie.audio}
+              <span className="bg-[#111] border border-white/5 px-3.5 py-1.5 rounded-xl font-black text-[11px] text-[#666] flex items-center gap-2 backdrop-blur-xl">
+                <Globe className="w-3.5 h-3.5" />
+                {movie.audio.toUpperCase()}
               </span>
             )}
           </div>
         </div>
 
         {/* Action Funnel */}
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-4">
           <Button 
             onClick={handleWatch}
-            className="w-full h-15 py-4 bg-primary text-black font-black rounded-2xl shadow-[0_8px_30px_rgba(0,229,255,0.25)] hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-base italic uppercase"
+            className="w-full h-16 py-4 bg-primary text-black font-black rounded-2xl shadow-[0_12px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg italic uppercase"
           >
-            <MonitorPlay className="w-5 h-5" />
+            <MonitorPlay className="w-6 h-6" />
             WATCH ONLINE HD
           </Button>
           
           <Button 
             onClick={handleDownload}
             variant="outline"
-            className="w-full h-15 py-4 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-base italic uppercase"
+            className="w-full h-16 py-4 bg-[#0a0a0a] border-primary/20 text-white font-black rounded-2xl hover:bg-[#111] hover:border-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg italic uppercase"
           >
-            <Download className="w-5 h-5 text-primary" />
-            DIRECT DOWNLOAD LINKS
+            <Download className="w-6 h-6 text-primary" />
+            DIRECT DOWNLOAD
           </Button>
         </div>
 
         {/* Information Security Context */}
-        <div className="bg-[#0a0a0a] rounded-[24px] p-5 border border-white/5 shadow-2xl">
-          <div className="flex items-center gap-2 mb-3">
-            <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-black text-white/30 uppercase tracking-[2.5px]">Security Layer: Active</span>
+        <div className="bg-[#0a0a0a] rounded-[32px] p-7 border border-white/5 shadow-inner">
+          <div className="flex items-center gap-2.5 mb-4">
+            <ShieldCheck className="w-4.5 h-4.5 text-primary" />
+            <span className="text-[10px] font-black text-[#444] uppercase tracking-[3px]">Secure Protocol Active</span>
           </div>
-          <p className="text-[#8b95a5] text-[13.5px] leading-relaxed italic opacity-90 font-medium">
-            {movie?.description || 'Experience ultra-fast edge delivery through our encrypted server nodes. No bandwidth limits applied to your current session.'}
+          <p className="text-[#8b95a5] text-[14.5px] leading-relaxed italic font-medium opacity-90">
+            {movie?.description || (loading ? <Skeleton className="h-20 w-full shimmer" /> : 'Awaiting data synchronization from master server node.')}
           </p>
         </div>
 
-        <div className="w-full">
+        <div className="w-full mt-2">
           <AdBanner id="details-bottom-fixed" hrefs={[DETAILS_AD_LINK]} className="w-full" />
         </div>
       </main>
 
       {/* Global Sticky Footer Monetization */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-[2020] bg-black/95 backdrop-blur-3xl border-t border-primary/20 p-2.5 max-w-[420px] shadow-[0_-15px_50px_rgba(0,0,0,0.9)]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-[2020] bg-black/95 backdrop-blur-3xl border-t border-primary/10 p-3 max-w-[420px] shadow-[0_-15px_60px_rgba(0,0,0,1)]">
         <AdBanner id="details-sticky-footer" hrefs={[DETAILS_AD_LINK]} className="w-full" />
       </div>
     </div>

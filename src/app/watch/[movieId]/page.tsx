@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useRef, useState } from 'react';
@@ -15,6 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
@@ -23,9 +23,7 @@ import { type Movie } from '@/components/movie/MovieCard';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 
-// Updated specific ad link for Watch Page
 const WATCH_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
-
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 function isIframeUrl(url: string): boolean {
@@ -67,7 +65,7 @@ export default function WatchPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2000); // 2 second fail-safe timeout
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -95,12 +93,12 @@ export default function WatchPage() {
       });
       playerRef.current = player;
       player.on('error', () => {
-        setPlayerError("Streaming error: The media could not be loaded.");
+        setPlayerError("Streaming node unresponsive. Handshake failed.");
         setShowLoader(false);
       });
       player.on('loadeddata', () => setShowLoader(false));
     } catch (e) {
-      setPlayerError("Initialization failed.");
+      setPlayerError("Decoder initialization failed.");
       setShowLoader(false);
     }
 
@@ -117,16 +115,16 @@ export default function WatchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-24 shadow-2xl relative overflow-x-hidden font-body">
+    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden font-body">
       <AdFloating hrefs={[WATCH_AD_LINK]} side="right" />
       <AdFloating hrefs={[WATCH_AD_LINK]} side="left" />
 
-      <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl p-5 border-b border-white/5 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-colors">
+      <header className="sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-2xl p-6 border-b border-white/5 flex items-center justify-between">
+        <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-all hover:scale-110 active:scale-90">
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex flex-col items-center">
-          <h1 className="text-xl font-black italic tracking-tighter uppercase">
+          <h1 className="text-xl font-black italic tracking-tighter uppercase cyan-glow-text">
             <span className="text-white">STREAMING</span>
             <span className="text-primary">HUB</span>
           </h1>
@@ -134,22 +132,25 @@ export default function WatchPage() {
         <div className="w-6"></div>
       </header>
 
-      <main className="p-5">
-        <div className="mb-6 rounded-[24px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_30px_rgba(0,229,255,0.1)] relative aspect-video">
-          {showLoader && !playerError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20">
-              <Activity className="w-8 h-8 text-primary animate-spin mb-3" />
-              <span className="text-[10px] font-black text-primary uppercase">Initializing...</span>
+      <main className="p-5 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <div className="mb-8 rounded-[32px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video group">
+          {(showLoader || docLoading) && !playerError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
+              <Skeleton className="absolute inset-0 shimmer" />
+              <div className="relative z-30 flex flex-col items-center">
+                <Activity className="w-10 h-10 text-primary animate-pulse mb-4" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[4px] cyan-glow-text">Syncing Server...</span>
+              </div>
             </div>
           )}
           
           {playerError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-6 text-center">
-              <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
-              <h3 className="text-sm font-black uppercase mb-2">Streaming Error</h3>
-              <p className="text-[10px] text-[#555] font-bold mb-4">{playerError}</p>
-              <Button onClick={() => window.location.reload()} variant="outline" className="h-9 px-6 rounded-xl border-primary/20 text-primary">
-                RETRY
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-8 text-center backdrop-blur-xl">
+              <AlertCircle className="w-14 h-14 text-red-500 mb-4 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]" />
+              <h3 className="text-lg font-black uppercase mb-2 italic">Node Disconnected</h3>
+              <p className="text-[11px] text-[#555] font-bold mb-6 leading-relaxed max-w-[240px]">{playerError}</p>
+              <Button onClick={() => window.location.reload()} className="h-12 px-10 rounded-2xl bg-primary text-black font-black uppercase shadow-lg shadow-primary/20">
+                RETRY HANDSHAKE
               </Button>
             </div>
           )}
@@ -174,17 +175,19 @@ export default function WatchPage() {
           )}
         </div>
 
-        <div className="bg-[#0a0a0a] rounded-[32px] border border-white/5 p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                <MonitorPlay className="w-6 h-6" />
+        <div className="bg-[#0a0a0a] rounded-[40px] border border-white/5 p-7 mb-10 shadow-inner">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-glow">
+                <MonitorPlay className="w-7 h-7" />
               </div>
-              <div>
-                <h2 className="text-[12px] font-black uppercase tracking-widest text-white">{movie?.title || 'SYNCING...'}</h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Activity className="w-3 h-3 text-green-500 animate-pulse" />
-                  <span className="text-[9px] font-bold text-green-500 uppercase">Premium Encryption Active</span>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-black uppercase tracking-tight text-white truncate italic">
+                  {movie?.title || <Skeleton className="h-5 w-40 shimmer" />}
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <Activity className="w-3.5 h-3.5 text-green-500 animate-pulse" />
+                  <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Quantum Encryption Active</span>
                 </div>
               </div>
             </div>
@@ -193,49 +196,49 @@ export default function WatchPage() {
           <div className="space-y-4">
              <Button 
                 onClick={handleAction}
-                className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.2)] hover:scale-[1.01] transition-all"
+                className="w-full h-15 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_12px_35px_rgba(0,229,255,0.25)] hover:scale-[1.02] active:scale-95 transition-all uppercase italic"
               >
                 <Zap className="w-5 h-5 fill-current" />
-                UNLOCK HIGH SPEED DOWNLOAD
+                UNLOCK ELITE SERVER
               </Button>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[3px] ml-1">Optimized Server Nodes</h3>
-          <div className="grid grid-cols-1 gap-3">
+        <div className="space-y-5">
+          <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Elite Node Grid</h3>
+          <div className="grid grid-cols-1 gap-4">
             {[
-              { name: 'US-PREMIUM (AD-FREE)', speed: '1.4 GB/s', icon: <Wifi className="w-4 h-4 text-primary" /> },
-              { name: 'ASIA-VIP DIRECT', speed: '980 MB/s', icon: <Server className="w-4 h-4" /> },
-              { name: 'EURO-FAST STREAM', speed: '1.1 GB/s', icon: <Lock className="w-4 h-4" /> }
+              { name: 'US-PREMIUM (AD-FREE)', speed: '2.4 GB/s', icon: <Wifi className="w-5 h-5 text-primary" /> },
+              { name: 'ASIA-VIP DIRECT', speed: '1.8 GB/s', icon: <Server className="w-5 h-5" /> },
+              { name: 'EURO-FAST STREAM', speed: '2.1 GB/s', icon: <Lock className="w-5 h-5" /> }
             ].map((node, i) => (
               <button 
                 key={i}
                 onClick={handleAction}
-                className="flex items-center justify-between p-4 rounded-2xl bg-[#121212] border border-white/5 hover:border-primary/40 transition-all group"
+                className="flex items-center justify-between p-5 rounded-[28px] bg-[#0a0a0a] border border-white/5 hover:border-primary/40 hover:bg-[#111] transition-all group active:scale-98"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#333] group-hover:text-primary transition-all">
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[#333] group-hover:text-primary group-hover:bg-primary/5 transition-all">
                     {node.icon}
                   </div>
                   <div className="text-left">
-                    <p className="text-[12px] font-black text-white group-hover:text-primary transition-colors italic uppercase">{node.name}</p>
-                    <p className="text-[9px] font-bold text-[#444] mt-0.5">{node.speed}</p>
+                    <p className="text-[13px] font-black text-white group-hover:text-primary transition-colors italic uppercase tracking-tight">{node.name}</p>
+                    <p className="text-[10px] font-bold text-[#444] mt-1 uppercase">{node.speed}</p>
                   </div>
                 </div>
-                <Zap className="w-4 h-4 text-[#222] group-hover:text-primary transition-colors" />
+                <Zap className="w-5 h-5 text-[#151515] group-hover:text-primary transition-colors" />
               </button>
             ))}
           </div>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-14 mb-10">
           <AdBanner id="watch-bottom-banner" hrefs={[WATCH_AD_LINK]} className="w-full" />
         </div>
       </main>
 
-      <footer className="p-8 text-center">
-        <p className="text-[9px] text-[#222] font-black uppercase tracking-widest leading-relaxed">
+      <footer className="p-10 text-center opacity-30">
+        <p className="text-[9px] text-white font-black uppercase tracking-[3px] leading-relaxed">
           Tunnel protocol active. AES-256 server-side encryption enabled for all active streams.
         </p>
       </footer>

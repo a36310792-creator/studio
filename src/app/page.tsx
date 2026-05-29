@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -13,6 +12,7 @@ import { AdFloating } from '@/components/ads/AdFloating';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -24,12 +24,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import Script from 'next/script';
 
-// Updated specific ad link for Home Page
 const HOME_AD_LINK = "https://commendtwisted.com/mygta0t4?key=1b3b930c08b87fb0f6d646f6149ac6f1";
-const ROTATION_LINKS = [
-  HOME_AD_LINK,
-  "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf"
-];
 
 export default function Home() {
   const db = useFirestore();
@@ -178,12 +173,8 @@ export default function Home() {
   const loadMore = () => setVisibleCount(prev => prev + 10);
 
   return (
-    <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
-      <Script 
-        id="aclib" 
-        src="//acscdn.com/script/aclib.js" 
-        strategy="lazyOnload" 
-      />
+    <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5 font-body">
+      <Script id="aclib" src="//acscdn.com/script/aclib.js" strategy="lazyOnload" />
       <AdPopup hrefs={[HOME_AD_LINK]} />
       <AdFloating hrefs={[HOME_AD_LINK]} side="right" />
       <AdFloating hrefs={[HOME_AD_LINK]} side="left" />
@@ -201,7 +192,7 @@ export default function Home() {
         />
       )}
 
-      <main>
+      <main className="animate-in fade-in duration-700">
         {navTab === 'home' && (
           <>
             <div className="px-5 mb-6">
@@ -212,12 +203,12 @@ export default function Home() {
                   placeholder="Search movies, series..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-[#121212] border-white/5 h-12 rounded-2xl pl-11 text-white placeholder:text-[#555] focus-visible:ring-primary/50 transition-all"
+                  className="bg-[#0a0a0a] border-white/5 h-14 rounded-2xl pl-12 text-white placeholder:text-[#444] focus-visible:ring-primary/30 transition-all text-sm font-bold"
                 />
               </div>
             </div>
 
-            <div className="px-5 mb-6">
+            <div className="px-5 mb-8">
               <AdBanner id="home-top-banner" hrefs={[HOME_AD_LINK]} className="w-full" />
             </div>
 
@@ -226,13 +217,13 @@ export default function Home() {
                 <button
                   key={genre}
                   onClick={() => { setActiveGenre(genre); setVisibleCount(10); }}
-                  className={`px-4 py-2 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${
+                  className={`px-5 py-2.5 rounded-2xl text-[11px] font-black whitespace-nowrap transition-all border ${
                     activeGenre === genre 
-                      ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
-                      : "bg-[#121212] text-[#8b95a5] border-white/5 hover:border-white/20"
+                      ? "bg-primary text-black border-primary shadow-[0_8px_20px_rgba(0,229,255,0.2)] scale-105" 
+                      : "bg-[#111] text-[#8b95a5] border-white/5 hover:border-white/20 hover:bg-[#151515]"
                   }`}
                 >
-                  {genre}
+                  {genre.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -243,26 +234,26 @@ export default function Home() {
                   <button
                     key={cat}
                     onClick={() => { setActiveCategory(cat); setVisibleCount(10); }}
-                    className={`px-4 py-2 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${
+                    className={`px-4 py-2.5 rounded-2xl text-[10px] font-black whitespace-nowrap transition-all border ${
                       activeCategory === cat 
-                        ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
-                        : "bg-[#121212] text-[#8b95a5] border-white/5 hover:border-white/20"
+                        ? "bg-primary/10 text-primary border-primary/30" 
+                        : "bg-[#111] text-[#666] border-white/5 hover:text-white"
                   }`}
                   >
-                    {cat}
+                    {cat.toUpperCase()}
                   </button>
                 ))}
               </div>
               
               <div className="w-24 shrink-0">
                 <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setVisibleCount(10); }}>
-                  <SelectTrigger className="bg-[#121212] border-white/5 h-9 rounded-xl text-[11px] font-black text-white focus:ring-primary/30">
-                    <SelectValue placeholder="Year" />
+                  <SelectTrigger className="bg-[#111] border-white/5 h-10 rounded-2xl text-[10px] font-black text-white focus:ring-primary/20">
+                    <SelectValue placeholder="YEAR" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#121212] border-white/10 text-white min-w-[120px]">
+                  <SelectContent className="bg-[#111] border-white/10 text-white">
                     {years.map(year => (
-                      <SelectItem key={year} value={year} className="focus:bg-primary focus:text-black font-bold text-[12px]">
-                        {year === 'All' ? 'Year: All' : year}
+                      <SelectItem key={year} value={year} className="focus:bg-primary focus:text-black font-bold text-[11px]">
+                        {year === 'All' ? 'YEAR: ALL' : year}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -273,38 +264,44 @@ export default function Home() {
         )}
 
         <section className="px-5 min-h-[400px]">
-          <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col gap-4 mb-8">
             <div className="flex justify-between items-center">
-              <h3 className="text-[16px] font-black flex items-center gap-2">
+              <h3 className="text-[17px] font-black flex items-center gap-2 tracking-tight italic">
                 {viewTitle.icon}
-                {viewTitle.label}
+                <span className="uppercase">{viewTitle.label}</span>
               </h3>
             </div>
             
-            <div className="flex items-center justify-between bg-[#121212]/50 p-2 rounded-2xl border border-white/5">
-               <div className="flex items-center gap-2 px-2">
+            <div className="flex items-center justify-between bg-[#0a0a0a] p-2 rounded-2xl border border-white/5 shadow-inner">
+               <div className="flex items-center gap-2 px-3">
                  <ArrowDownWideNarrow className="w-4 h-4 text-primary" />
-                 <span className="text-[10px] font-black text-[#555] uppercase tracking-wider">Sort Content</span>
+                 <span className="text-[9px] font-black text-[#555] uppercase tracking-[2px]">Sort Library</span>
                </div>
                <Select value={sortBy} onValueChange={setSortBy}>
-                 <SelectTrigger className="bg-transparent border-none h-8 w-[140px] text-[11px] font-black text-white focus:ring-0">
+                 <SelectTrigger className="bg-transparent border-none h-9 w-[150px] text-[10px] font-black text-white focus:ring-0">
                    <SelectValue />
                  </SelectTrigger>
-                 <SelectContent className="bg-[#121212] border-white/10 text-white">
-                   <SelectItem value="latest" className="focus:bg-primary focus:text-black font-bold text-[11px]">LATEST ADDED</SelectItem>
-                   <SelectItem value="rating" className="focus:bg-primary focus:text-black font-bold text-[11px]">HIGHEST RATED</SelectItem>
+                 <SelectContent className="bg-[#111] border-white/10 text-white">
+                   <SelectItem value="latest" className="focus:bg-primary focus:text-black font-bold text-[10px] uppercase">Latest Added</SelectItem>
+                   <SelectItem value="rating" className="focus:bg-primary focus:text-black font-bold text-[10px] uppercase">Highest Rated</SelectItem>
                  </SelectContent>
                </Select>
             </div>
           </div>
 
           {firestoreLoading ? (
-            <div className="py-20 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="grid grid-cols-2 gap-[15px]">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="w-full aspect-[2/3] rounded-2xl shimmer" />
+                  <Skeleton className="h-4 w-3/4 rounded-full shimmer" />
+                  <Skeleton className="h-3 w-1/2 rounded-full shimmer" />
+                </div>
+              ))}
             </div>
           ) : displayedMovies.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
+              <div className="grid grid-cols-2 gap-[15px]">
                 {displayedMovies.map((movie) => (
                   <MovieCard 
                     key={movie.id} 
@@ -317,37 +314,37 @@ export default function Home() {
               </div>
               
               {allFilteredMovies.length > visibleCount && (
-                <div className="mt-12 mb-8 flex justify-center">
+                <div className="mt-14 mb-8 flex justify-center">
                   <Button 
                     onClick={loadMore}
                     variant="outline"
-                    className="h-12 px-10 rounded-2xl bg-[#121212] border-white/5 text-white font-black text-[12px] hover:bg-primary hover:text-black hover:border-primary transition-all shadow-xl"
+                    className="h-14 px-12 rounded-2xl bg-[#0a0a0a] border-primary/20 text-white font-black text-[12px] hover:bg-primary hover:text-black hover:border-primary transition-all shadow-[0_0_30px_rgba(0,229,255,0.1)] group"
                   >
-                    LOAD MORE MOVIES
-                    <ChevronDown className="w-4 h-4 ml-2" />
+                    EXPLORE MORE
+                    <ChevronDown className="w-4 h-4 ml-2 group-hover:translate-y-1 transition-transform" />
                   </Button>
                 </div>
               )}
             </>
           ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-center px-10 border-2 border-dashed border-white/5 rounded-[32px]">
-              <Film className="w-16 h-16 text-[#222] mb-4" />
-              <h4 className="text-white font-bold text-lg mb-1">
-                {navTab === 'saved' ? 'Your list is empty' : 'No movies found'}
+            <div className="py-24 flex flex-col items-center justify-center text-center px-10 border border-white/5 rounded-[40px] bg-[#0a0a0a]/50">
+              <Film className="w-20 h-20 text-[#151515] mb-6" />
+              <h4 className="text-white font-black text-xl mb-2 italic uppercase">
+                {navTab === 'saved' ? 'Empty Vault' : 'No Signal Found'}
               </h4>
-              <p className="text-[#555] text-sm">
+              <p className="text-[#555] text-xs font-bold uppercase tracking-wider max-w-[200px] leading-relaxed">
                 {searchQuery 
-                  ? `No matches for "${searchQuery}"` 
+                  ? `Zero matches for "${searchQuery.toUpperCase()}"` 
                   : navTab === 'saved' 
-                    ? 'Start bookmarking your favorite content!' 
-                    : 'The library is currently being updated.'}
+                    ? 'Begin bookmarking your elite content.' 
+                    : 'Awaiting new server synchronization.'}
               </p>
             </div>
           )}
         </section>
       </main>
 
-      <div className="px-5 mt-6 mb-12">
+      <div className="px-5 mt-10 mb-12">
         <AdBanner id="home-bottom-sponsored" hrefs={[HOME_AD_LINK]} className="w-full" />
       </div>
 
