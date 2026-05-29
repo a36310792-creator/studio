@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
+import { useRouter } from 'next/navigation';
 
 interface MovieDetailsProps {
   movie: Movie;
@@ -18,11 +18,12 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
-
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
+  const router = useRouter();
+
   const handleAction = () => {
-    window.open(SMART_LINK, '_blank');
+    // Navigate to Page 3 (Secure Gateway)
+    router.push(`/movie/${movie.id}`);
   };
 
   return (
@@ -81,7 +82,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
             <div className="grid grid-cols-1 gap-4 mb-8">
               <Button 
                 onClick={handleAction}
-                className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+                className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
               >
                 <MonitorPlay className="w-6 h-6" />
                 WATCH ONLINE HD
