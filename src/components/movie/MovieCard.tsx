@@ -1,8 +1,6 @@
-
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { Star, Bookmark, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +8,8 @@ export interface Movie {
   id: string;
   title: string;
   posterUrl: string;
+  imageUrl?: string; // Fallback field
+  image?: string;     // Fallback field
   rating: number;
   quality: 'HD' | '4K' | 'CAM';
   releaseYear: number;
@@ -29,17 +29,19 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie, onSelect, onToggleBookmark, isBookmarked }: MovieCardProps) => {
+  // Resolve image URL with fallbacks
+  const resolvedPoster = movie.posterUrl || movie.imageUrl || movie.image || `https://picsum.photos/seed/${movie.id}/400/600`;
+
   return (
     <div 
       onClick={() => onSelect(movie)}
       className="group relative flex flex-col bg-[#111] rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.05] hover:z-10 aspect-[2/3.2] cursor-pointer shadow-lg hover:shadow-primary/20"
     >
-      <Image
-        src={movie.posterUrl}
+      <img
+        src={resolvedPoster}
         alt={movie.title}
-        fill
-        className="object-cover transition-transform duration-500 group-hover:scale-110"
-        sizes="(max-width: 768px) 50vw, 33vw"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        loading="lazy"
       />
       
       {/* Top Badges */}
@@ -74,7 +76,7 @@ export const MovieCard = ({ movie, onSelect, onToggleBookmark, isBookmarked }: M
       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3 transition-opacity duration-300">
         <div className="self-end bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-[6px] text-[#FFC107] text-[10px] font-bold flex items-center gap-1 mb-1.5">
           <Star className="w-2.5 h-2.5 fill-current" />
-          {movie.rating.toFixed(1)}
+          {movie.rating?.toFixed(1) || '0.0'}
         </div>
         <h3 className="text-[13px] font-extrabold truncate text-white mb-0.5 group-hover:text-primary transition-colors">{movie.title}</h3>
         <div className="flex justify-between items-center text-[9px] text-[#8b95a5] font-bold uppercase">

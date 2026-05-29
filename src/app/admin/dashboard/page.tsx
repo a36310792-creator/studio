@@ -226,31 +226,34 @@ export default function AdminDashboard() {
               </div>
               
               <div className="space-y-3">
-                {localMovies.map(movie => (
-                  <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
-                    <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
-                      <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
-                    </div>
-                    <div className="flex-1 min-w-0 py-1">
-                      <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
-                      <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
-                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
-                          className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => deleteMovie(movie.id)} 
-                          className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                {localMovies.map(movie => {
+                  const poster = movie.posterUrl || movie.imageUrl || movie.image || `https://picsum.photos/seed/${movie.id}/400/600`;
+                  return (
+                    <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
+                      <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                        <img src={poster} className="w-full h-full object-cover" alt="" />
+                      </div>
+                      <div className="flex-1 min-w-0 py-1">
+                        <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
+                        <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
+                        <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
+                            className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => deleteMovie(movie.id)} 
+                            className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -330,7 +333,7 @@ export default function AdminDashboard() {
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
               />
               <Input 
-                placeholder="Direct Download Link (directDownloadUrl)" 
+                placeholder="Direct Download Link" 
                 value={formData.directDownloadUrl} 
                 onChange={e => setFormData({...formData, directDownloadUrl: e.target.value})} 
                 className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary shadow-[0_0_15px_rgba(0,229,255,0.05)]"

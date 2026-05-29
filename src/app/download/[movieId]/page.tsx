@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -44,6 +43,8 @@ export default function MovieDetailsPage() {
     router.push(`/movie/${movieId}`);
   };
 
+  const resolvedPoster = movie?.posterUrl || movie?.imageUrl || movie?.image || `https://picsum.photos/seed/${movieId}/1200/800`;
+
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-44 shadow-2xl relative font-body overflow-x-hidden">
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
@@ -61,13 +62,11 @@ export default function MovieDetailsPage() {
 
       {/* Hero Poster Section */}
       <div className="w-full h-[55vh] relative">
-        {movie?.posterUrl && (
-          <img 
-            src={movie.posterUrl} 
-            className="w-full h-full object-cover" 
-            alt={movie.title} 
-          />
-        )}
+        <img 
+          src={resolvedPoster} 
+          className="w-full h-full object-cover" 
+          alt={movie?.title || 'Movie Poster'} 
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-[#050505]"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/60 via-transparent to-transparent"></div>
       </div>
