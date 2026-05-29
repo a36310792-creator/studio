@@ -1,17 +1,17 @@
-"use client";
 
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useMemo } from 'react';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { CineSuggest } from '@/components/movie/CineSuggest';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
-import { AdminPanel } from '@/components/admin/AdminPanel';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, ChevronRight, PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { TrendingUp, Film, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
-const MOCK_MOVIES: Movie[] = [
+const ALL_MOVIES: Movie[] = [
   {
     id: '1',
     title: 'Hathras Season 1',
@@ -20,6 +20,8 @@ const MOCK_MOVIES: Movie[] = [
     quality: 'HD',
     releaseYear: 2026,
     audio: 'Hindi Dubbed',
+    genres: ['Action', 'Thriller'],
+    description: 'A deep investigative journey into the mysteries of Hathras, following a team of journalists uncovering hidden truths in the heart of rural India.'
   },
   {
     id: '2',
@@ -29,6 +31,8 @@ const MOCK_MOVIES: Movie[] = [
     quality: '4K',
     releaseYear: 2026,
     audio: 'Multi Audio',
+    genres: ['Horror', 'Mystery'],
+    description: 'An ancient spirit awakens in the dark forests of southern India. When a group of hikers goes missing, only the locals know what truly haunts the trees.'
   },
   {
     id: '3',
@@ -38,6 +42,8 @@ const MOCK_MOVIES: Movie[] = [
     quality: 'CAM',
     releaseYear: 2026,
     audio: 'Dual Audio',
+    genres: ['Anime', 'Fantasy'],
+    description: 'A modern retelling of the legends, blending traditional storytelling with cutting-edge futuristic animation in a world where gods and machines coexist.'
   },
   {
     id: '4',
@@ -47,57 +53,81 @@ const MOCK_MOVIES: Movie[] = [
     quality: 'HD',
     releaseYear: 2026,
     audio: 'English Sub',
+    genres: ['Sci-Fi', 'Action'],
+    description: 'In the year 2099, a biological breakthrough turns into a global catastrophe. One soldier must navigate the wasteland to deliver the only known cure.'
+  },
+  {
+    id: '5',
+    title: 'Midnight Shadows',
+    posterUrl: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+    rating: 7.9,
+    quality: '4K',
+    releaseYear: 2025,
+    audio: 'Hindi',
+    genres: ['Horror', 'Thriller'],
+    description: 'When the sun goes down, the city reveals its true nature. A paranormal investigator takes on their most dangerous case yet in a haunted skyscraper.'
+  },
+  {
+    id: '6',
+    title: 'Saber Legacy',
+    posterUrl: 'https://images.unsplash.com/photo-1533481406255-7a696cb39ca8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+    rating: 8.2,
+    quality: 'HD',
+    releaseYear: 2026,
+    audio: 'Japanese',
+    genres: ['Anime', 'Action'],
+    description: 'The final chapter in the Saber saga. A young apprentice must master the ancient techniques before the dark empire consumes the last free kingdom.'
   }
 ];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('trending');
-  const [showAdmin, setShowAdmin] = useState(false);
+  const [activeTab, setActiveTab] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const tabs = [
-    { id: 'trending', label: '🔥 Trending' },
-    { id: 'movies', label: '🎬 Movies' },
-    { id: 'web-series', label: '📺 Web Series' },
-    { id: 'anime', label: '✨ Anime' },
-  ];
+  const tabs = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi'];
+
+  const filteredMovies = useMemo(() => {
+    return ALL_MOVIES.filter(movie => {
+      const matchesTab = activeTab === 'All' || movie.genres.includes(activeTab);
+      const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesTab && matchesSearch;
+    });
+  }, [activeTab, searchQuery]);
 
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
       <Header />
       
-      <NewReleaseToast movieName="Avatar: The Way of Water" />
-
-      {/* Admin Toggle (For Demo) */}
-      <div className="px-5 mb-4 flex justify-end">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setShowAdmin(!showAdmin)}
-          className="text-primary hover:bg-primary/10 font-bold text-[11px] gap-1.5"
-        >
-          <PlusCircle className="w-3.5 h-3.5" />
-          {showAdmin ? 'Close Admin' : 'Add Movie'}
-        </Button>
-      </div>
+      <NewReleaseToast movieName="The Z Effect - 4K Release Live!" />
 
       <main>
-        {/* Admin Panel Component */}
-        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+        {/* Search Bar Section */}
+        <div className="px-5 mb-6">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555] group-focus-within:text-primary transition-colors" />
+            <Input 
+              placeholder="Search movies, series..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-[#121212] border-white/5 h-12 rounded-2xl pl-11 text-white placeholder:text-[#555] focus-visible:ring-primary/50 transition-all"
+            />
+          </div>
+        </div>
 
-        {/* Scrollable Tabs */}
+        {/* Scrollable Category Tabs */}
         <div className="flex gap-2.5 px-5 mb-6 overflow-x-auto no-scrollbar py-2">
           {tabs.map((tab) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-[12px] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeTab === tab.id 
-                  ? "bg-primary text-black" 
-                  : "bg-[#1a1a1a] text-[#8b95a5]"
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-5 py-2.5 rounded-2xl text-[12px] font-black whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+                activeTab === tab 
+                  ? "bg-primary text-black border-primary shadow-[0_5px_15px_rgba(0,229,255,0.2)]" 
+                  : "bg-[#121212] text-[#8b95a5] border-white/5 hover:border-white/20"
               }`}
             >
-              {tab.label}
+              {tab === 'All' ? '🍿 ' : ''}{tab}
             </button>
           ))}
         </div>
@@ -107,23 +137,35 @@ export default function Home() {
 
         {/* Content Section */}
         <section className="px-5">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[16px] font-bold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Latest Updates
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="text-[18px] font-black flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              {activeTab === 'All' ? 'Trending Content' : `${activeTab} Highlights`}
             </h3>
-            <button className="text-[12px] font-bold text-primary flex items-center gap-1 hover:underline">
-              View All <ChevronRight className="w-4 h-4" />
-            </button>
+            {filteredMovies.length > 0 && (
+              <span className="text-[11px] font-bold text-[#555] uppercase tracking-wider">
+                {filteredMovies.length} results
+              </span>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-[15px]">
-            {MOCK_MOVIES.map((movie) => (
-              <div key={movie.id} onClick={() => setSelectedMovie(movie)} className="cursor-pointer">
-                <MovieCard movie={movie} />
-              </div>
-            ))}
-          </div>
+          {filteredMovies.length > 0 ? (
+            <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-700">
+              {filteredMovies.map((movie) => (
+                <MovieCard 
+                  key={movie.id} 
+                  movie={movie} 
+                  onSelect={setSelectedMovie} 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 flex flex-col items-center justify-center text-center px-10">
+              <Film className="w-16 h-16 text-[#222] mb-4" />
+              <h4 className="text-white font-bold text-lg mb-1">No results found</h4>
+              <p className="text-[#555] text-sm">Try searching for something else or browse another category.</p>
+            </div>
+          )}
         </section>
       </main>
 

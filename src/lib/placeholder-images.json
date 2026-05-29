@@ -4,31 +4,31 @@
       "id": "hero-avatar",
       "description": "Avatar: The Way of Water movie poster backdrop",
       "imageUrl": "https://picsum.photos/seed/avatar2/1200/600",
-      "imageHint": "avatar sci-fi"
-    },
-    {
-      "id": "movie-1",
-      "description": "Sci-fi action movie poster",
-      "imageUrl": "https://picsum.photos/seed/scifi1/400/600",
       "imageHint": "sci-fi movie"
     },
     {
-      "id": "movie-2",
-      "description": "Dark thriller movie poster",
-      "imageUrl": "https://picsum.photos/seed/thriller1/400/600",
-      "imageHint": "thriller movie"
+      "id": "action-1",
+      "description": "Action movie poster",
+      "imageUrl": "https://picsum.photos/seed/action1/400/600",
+      "imageHint": "action movie"
     },
     {
-      "id": "movie-3",
-      "description": "Animated feature poster",
+      "id": "horror-1",
+      "description": "Horror movie poster",
+      "imageUrl": "https://picsum.photos/seed/horror1/400/600",
+      "imageHint": "horror movie"
+    },
+    {
+      "id": "anime-1",
+      "description": "Anime series poster",
       "imageUrl": "https://picsum.photos/seed/anime1/400/600",
       "imageHint": "anime movie"
     },
     {
-      "id": "movie-4",
-      "description": "Epic fantasy show poster",
-      "imageUrl": "https://picsum.photos/seed/fantasy1/400/600",
-      "imageHint": "fantasy series"
+      "id": "thriller-1",
+      "description": "Thriller movie poster",
+      "imageUrl": "https://picsum.photos/seed/thriller1/400/600",
+      "imageHint": "thriller movie"
     }
   ]
 }
