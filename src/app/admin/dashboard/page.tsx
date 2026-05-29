@@ -58,7 +58,7 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, [auth, router]);
 
-  // Firestore Sync - Live updates
+  // Firestore Sync - Live updates from the database
   const moviesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'movies'), orderBy('title', 'asc'));
@@ -114,7 +114,6 @@ export default function AdminDashboard() {
     if (!db) return;
     setIsSubmitting(true);
     
-    // Standardize data fields for permanent Firestore storage
     const movieData = { 
       title: formData.title || 'Untitled',
       posterUrl: formData.posterUrl || '',
@@ -152,7 +151,6 @@ export default function AdminDashboard() {
         setIsAdding(false);
       }
       
-      // Reset form after successful initiation
       setFormData({ 
         title: '', posterUrl: '', rating: 0, quality: 'HD', 
         releaseYear: new Date().getFullYear(), audio: 'Hindi', 
@@ -164,14 +162,17 @@ export default function AdminDashboard() {
   };
 
   const deleteMovie = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this movie?')) return;
+    if (!id) return;
+    if (!confirm('Are you sure you want to delete this movie permanently from the library?')) return;
+    
     if (db) {
       const movieRef = doc(db, 'movies', id);
+      // Initiation of deleteDoc - updates local cache instantly via onSnapshot listener
       deleteDoc(movieRef).catch(async () => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: movieRef.path,
           operation: 'delete'
-        }));
+        } satisfies any));
       });
     }
   };
@@ -247,7 +248,7 @@ export default function AdminDashboard() {
                         <div className="flex-1 min-w-0 py-1">
                           <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
                           <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
-                          <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-2 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
                               className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
