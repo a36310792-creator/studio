@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { type Movie } from '@/components/movie/MovieCard';
 import Link from 'next/link';
 
+const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller'];
+
 export default function AdminDashboard() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -42,6 +44,15 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('lumina_auth');
     router.push('/admin/login');
+  };
+
+  const toggleGenre = (genre: string) => {
+    const currentGenres = formData.genres || [];
+    if (currentGenres.includes(genre)) {
+      setFormData({ ...formData, genres: currentGenres.filter(g => g !== genre) });
+    } else {
+      setFormData({ ...formData, genres: [...currentGenres, genre] });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -156,6 +167,27 @@ export default function AdminDashboard() {
                   className="bg-black border-white/5 h-12 rounded-xl"
                 />
               </div>
+
+              <div>
+                <label className="text-[10px] font-black text-[#555] uppercase tracking-[1px] mb-2 block">Genres / Categories</label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_GENRES.map(genre => (
+                    <button
+                      key={genre}
+                      type="button"
+                      onClick={() => toggleGenre(genre)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                        formData.genres?.includes(genre)
+                          ? "bg-primary text-black border-primary"
+                          : "bg-black text-[#8b95a5] border-white/5"
+                      }`}
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <Input 
                   placeholder="Quality (HD/4K)" 
