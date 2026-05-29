@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 
 export default function AdminLogin() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -17,13 +17,13 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Mock authentication
+    // Updated authentication logic with requested credentials
     setTimeout(() => {
-      if (username === 'admin' && password === 'admin123') {
+      if (email === 'a36310792@gmail.com' && password === '45652515##') {
         localStorage.setItem('lumina_auth', 'true');
         router.push('/admin/dashboard');
       } else {
-        alert('Invalid credentials! Use admin/admin123');
+        alert('Invalid credentials! Access denied.');
       }
       setIsLoading(false);
     }, 800);
@@ -51,11 +51,12 @@ export default function AdminLogin() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="relative group">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#555] group-focus-within:text-primary transition-colors" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#555] group-focus-within:text-primary transition-colors" />
             <Input 
-              placeholder="Username" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Admin Email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="bg-black border-white/5 h-14 rounded-2xl pl-12 text-white font-bold"
               required
             />
