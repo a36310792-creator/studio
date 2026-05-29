@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe } from 'lucide-react';
+import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 
@@ -62,7 +62,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </span>
             </div>
 
-            <div className="space-y-4 mb-10">
+            <div className="space-y-4 mb-6">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
                 <Info className="w-5 h-5 text-primary" />
                 Description
@@ -70,6 +70,19 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               <p className="text-[#8b95a5] text-[15px] leading-relaxed">
                 {movie.description}
               </p>
+            </div>
+
+            {/* Prominent Action Button */}
+            <div className="mb-10">
+              <Button 
+                className="w-full h-14 bg-gradient-to-r from-primary to-cyan-500 text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all"
+                asChild
+              >
+                <a href={movie.watchUrl || "#"} target="_blank" rel="noopener noreferrer">
+                  <PlayCircle className="w-5 h-5 mr-2" />
+                  FINAL DOWNLOAD / WATCH NOW
+                </a>
+              </Button>
             </div>
 
             {/* Download Section */}
@@ -84,7 +97,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                   className="h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all"
                   asChild
                 >
-                  <a href="#">
+                  <a href={movie.watchUrl || "#"} target="_blank">
                     <span className="text-[14px]">480p SD - Low Size</span>
                     <span className="text-[12px] opacity-60 group-hover:opacity-100 uppercase">350 MB</span>
                   </a>
@@ -94,7 +107,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                   className="h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all"
                   asChild
                 >
-                  <a href="#">
+                  <a href={movie.watchUrl || "#"} target="_blank">
                     <span className="text-[14px]">720p HD - Recommended</span>
                     <span className="text-[12px] opacity-60 group-hover:opacity-100 uppercase">900 MB</span>
                   </a>
@@ -104,7 +117,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                   className="h-14 bg-gradient-to-r from-primary to-cyan-400 text-black hover:brightness-110 rounded-2xl flex justify-between px-6 font-black group transition-all shadow-[0_10px_30px_rgba(0,229,255,0.3)]"
                   asChild
                 >
-                  <a href="#">
+                  <a href={movie.watchUrl || "#"} target="_blank">
                     <span className="text-[14px]">1080p Full HD - Ultra</span>
                     <span className="text-[12px] text-black/60 uppercase">2.4 GB</span>
                   </a>

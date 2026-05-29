@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -20,7 +21,8 @@ const DEFAULT_MOVIES: Movie[] = [
     releaseYear: 2026,
     audio: 'Hindi Dubbed',
     genres: ['Action', 'Thriller'],
-    description: 'A deep investigative journey into the mysteries of Hathras, following a team of journalists uncovering hidden truths in the heart of rural India.'
+    description: 'A deep investigative journey into the mysteries of Hathras, following a team of journalists uncovering hidden truths in the heart of rural India.',
+    watchUrl: '#'
   },
   {
     id: '2',
@@ -31,7 +33,8 @@ const DEFAULT_MOVIES: Movie[] = [
     releaseYear: 2026,
     audio: 'Multi Audio',
     genres: ['Horror', 'Mystery'],
-    description: 'An ancient spirit awakens in the dark forests of southern India. When a group of hikers goes missing, only the locals know what truly haunts the trees.'
+    description: 'An ancient spirit awakens in the dark forests of southern India. When a group of hikers goes missing, only the locals know what truly haunts the trees.',
+    watchUrl: '#'
   },
   {
     id: '3',
@@ -42,7 +45,8 @@ const DEFAULT_MOVIES: Movie[] = [
     releaseYear: 2026,
     audio: 'Dual Audio',
     genres: ['Anime', 'Fantasy'],
-    description: 'A modern retelling of the legends, blending traditional storytelling with cutting-edge futuristic animation in a world where gods and machines coexist.'
+    description: 'A modern retelling of the legends, blending traditional storytelling with cutting-edge futuristic animation in a world where gods and machines coexist.',
+    watchUrl: '#'
   },
   {
     id: '4',
@@ -53,7 +57,8 @@ const DEFAULT_MOVIES: Movie[] = [
     releaseYear: 2026,
     audio: 'English Sub',
     genres: ['Sci-Fi', 'Action'],
-    description: 'In the year 2099, a biological breakthrough turns into a global catastrophe. One soldier must navigate the wasteland to deliver the only known cure.'
+    description: 'In the year 2099, a biological breakthrough turns into a global catastrophe. One soldier must navigate the wasteland to deliver the only known cure.',
+    watchUrl: '#'
   }
 ];
 

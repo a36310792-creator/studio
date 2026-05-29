@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,7 +26,8 @@ export default function AdminDashboard() {
     releaseYear: new Date().getFullYear(),
     audio: 'Hindi',
     genres: [],
-    description: ''
+    description: '',
+    watchUrl: ''
   });
 
   useEffect(() => {
@@ -66,7 +68,17 @@ export default function AdminDashboard() {
       saveMovies([newMovie, ...movies]);
       setIsAdding(false);
     }
-    setFormData({ title: '', posterUrl: '', rating: 0, quality: 'HD', releaseYear: 2026, audio: 'Hindi', genres: [], description: '' });
+    setFormData({ 
+      title: '', 
+      posterUrl: '', 
+      rating: 0, 
+      quality: 'HD', 
+      releaseYear: 2026, 
+      audio: 'Hindi', 
+      genres: [], 
+      description: '',
+      watchUrl: ''
+    });
   };
 
   const deleteMovie = (id: string) => {
@@ -147,6 +159,13 @@ export default function AdminDashboard() {
                 placeholder="Poster URL" 
                 value={formData.posterUrl} 
                 onChange={e => setFormData({...formData, posterUrl: e.target.value})} 
+                className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
+                required 
+              />
+              <Input 
+                placeholder="Watch/Download Link" 
+                value={formData.watchUrl} 
+                onChange={e => setFormData({...formData, watchUrl: e.target.value})} 
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
                 required 
               />

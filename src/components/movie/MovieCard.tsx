@@ -16,6 +16,7 @@ export interface Movie {
   audio: string;
   genres: string[];
   description: string;
+  watchUrl?: string;
   isBookmarked?: boolean;
 }
 
