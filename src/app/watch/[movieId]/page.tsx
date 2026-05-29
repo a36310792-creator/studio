@@ -48,22 +48,13 @@ export default function WatchOnline() {
   });
 
   const handlePlayClick = () => {
-    // Start playback sequence immediately
     setPlaybackState('loading');
     
-    // Safety timeout: If ad system fails to respond in 3 seconds, force movie playback
+    // UI Safety Timeout: Force the UI to 'playing' state (revealing the player)
+    // if the ad system takes too long to respond. This prevents the spinner from hanging.
     adTimeoutRef.current = setTimeout(() => {
-      if (playbackState !== 'playing') {
-        console.warn('Ad timeout reached, bypassing to movie playback.');
-        setPlaybackState('playing');
-      }
-    }, 3000);
-
-    // If scripts are already loaded, we can skip straight to playing state
-    // VideoJS will handle the IMA ad request on its own
-    if (scriptsLoaded.videojs && scriptsLoaded.ima && scriptsLoaded.contribAds) {
       setPlaybackState('playing');
-    }
+    }, 4000);
   };
 
   useEffect(() => {
@@ -77,15 +68,11 @@ export default function WatchOnline() {
   }, []);
 
   useEffect(() => {
-    // Re-initialize player when playbackState changes to 'playing' or when movie data arrives
     if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current && movie) {
       const vjs = (window as any).videojs;
       if (!vjs) return;
 
-      if (playerRef.current) {
-        // Only re-init if source changed or element changed
-        return;
-      }
+      if (playerRef.current) return;
 
       const videoSrc = movie.watchUrl && movie.watchUrl !== '#' 
         ? movie.watchUrl 
@@ -96,7 +83,7 @@ export default function WatchOnline() {
         controls: true,
         responsive: true,
         fluid: true,
-        preload: 'auto', // Optimize buffering
+        preload: 'auto',
         poster: movie.posterUrl,
         sources: [{
           src: videoSrc, 
@@ -107,26 +94,45 @@ export default function WatchOnline() {
       player.on('ready', () => {
         if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
         
-        // Initialize IMA only if all plugins are ready
         if (scriptsLoaded.ima && scriptsLoaded.contribAds && player.ima) {
-          player.ima({
-            adTagUrl: VAST_AD_TAG,
-            showCountdown: true,
-            debug: false,
-            // Fallback: If ad fails, start content
-            adWillAutoPlay: true,
-            adsResponseTimeout: 3000,
-          });
+          try {
+            player.ima({
+              adTagUrl: VAST_AD_TAG,
+              showCountdown: true,
+              debug: false,
+              adWillAutoPlay: true,
+              adsResponseTimeout: 3000, // IMA internal timeout for VAST response
+            });
+          } catch (e) {
+            console.error('Failed to initialize IMA:', e);
+            setPlaybackState('playing');
+            player.play().catch(() => {});
+          }
+        } else {
+          // If IMA scripts aren't ready, just play the movie
+          setPlaybackState('playing');
+          player.play().catch(() => {});
         }
       });
 
-      player.on('adserror', () => {
-        console.log('IMA Ads error, continuing to movie...');
-        player.play();
+      // CRITICAL: Handle ad errors (Blockers, Network, CORS)
+      player.on('adserror', (err: any) => {
+        console.warn('IMA Ads error (likely blocked or network error):', err);
+        if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
+        setPlaybackState('playing');
+        player.play().catch(() => {}); // Immediately start main content
       });
 
+      // Handle cases where the ad starts successfully
       player.on('adstart', () => {
         if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
+        setPlaybackState('playing'); // Reveal player area for the ad
+      });
+
+      // Ensure content plays after ad finishes or is skipped
+      player.on(['adend', 'adskip', 'contentresume'], () => {
+        setPlaybackState('playing');
+        player.play().catch(() => {});
       });
 
       playerRef.current = player;
@@ -183,11 +189,9 @@ export default function WatchOnline() {
       </header>
 
       <main className="p-0">
-        {/* Optimized Player Container */}
         <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_10px_60px_rgba(0,0,0,0.9)] border-y border-white/5">
           {playbackState === 'idle' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-30 transition-all duration-700">
-              {/* Instant Thumbnail Preview */}
               {movie?.posterUrl && (
                 <div className="absolute inset-0 transition-transform duration-1000 group-hover:scale-105">
                   <img 
@@ -232,7 +236,6 @@ export default function WatchOnline() {
             </div>
           )}
 
-          {/* Player reveal animation */}
           <div className={`w-full h-full transition-opacity duration-1000 ${playbackState === 'playing' ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'}`}>
              <div data-vjs-player className="w-full h-full">
               <video 
