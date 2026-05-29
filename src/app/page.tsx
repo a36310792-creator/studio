@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -7,7 +6,6 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { CineSuggest } from '@/components/movie/CineSuggest';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter, ArrowDownWideNarrow, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -190,8 +188,6 @@ export default function Home() {
                 />
               </div>
             </div>
-
-            <CineSuggest />
 
             <div className="px-5 mb-1.5 flex items-center gap-2">
               <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Genres</div>
