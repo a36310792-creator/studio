@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -20,7 +19,7 @@ import {
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
-// Fallback data to ensure the UI is never empty
+// Fallback data to ensure the UI is never empty and renders instantly
 const MOCK_MOVIES: Movie[] = [
   {
     id: 'hathras-1',
@@ -123,7 +122,8 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    // Merge Firestore movies with Mock data if Firestore is empty and not loading
+    // Merge Firestore movies with Mock data if Firestore is empty or loading
+    // This ensures the UI is never empty and renders instantly
     let currentPool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : MOCK_MOVIES;
 
     // Filter by tab
@@ -347,12 +347,7 @@ export default function Home() {
             </div>
           </div>
 
-          {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center">
-              <Loader2 className="w-10 h-10 text-primary animate-spin" />
-              <p className="text-[10px] font-black text-[#555] uppercase mt-4">Syncing with Cinema...</p>
-            </div>
-          ) : displayedMovies.length > 0 ? (
+          {displayedMovies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
                 {displayedMovies.map((movie) => (
@@ -392,6 +387,12 @@ export default function Home() {
                     ? 'Start bookmarking your favorite content!' 
                     : 'Try selecting a different year or category.'}
               </p>
+            </div>
+          )}
+          
+          {loading && (
+            <div className="mt-8 flex justify-center">
+              <Loader2 className="w-6 h-6 text-primary animate-spin" />
             </div>
           )}
         </section>
