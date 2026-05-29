@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Lock, Unlock, Fingerprint, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
@@ -12,22 +13,6 @@ import Link from 'next/link';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
-const MOCK_FALLBACK_MOVIES: Movie[] = [
-  {
-    id: 'hathras-1',
-    title: 'Hathras',
-    posterUrl: 'https://picsum.photos/seed/hathras/400/600',
-    rating: 8.2,
-    quality: 'HD',
-    releaseYear: 2024,
-    audio: 'Hindi',
-    genres: ['Thriller', 'Drama', 'Bollywood'],
-    description: 'A gripping investigative thriller based on true events.',
-    watchUrl: '#',
-    directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
-  }
-];
-
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
@@ -37,7 +22,7 @@ const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8ca
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const db = useFirestore();
   
   const movieRef = useMemo(() => {
@@ -45,17 +30,12 @@ export default function DownloadGateway() {
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: firestoreMovie } = useDoc<Movie>(movieRef);
+  const { data: movie } = useDoc<Movie>(movieRef);
   
   const [countdown, setCountdown] = useState(8);
   const [status, setStatus] = useState<'scanning' | 'locked' | 'verifying' | 'unlocked'>('scanning');
   const [adClicks, setAdClicks] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const movie = useMemo(() => {
-    if (firestoreMovie) return firestoreMovie;
-    return MOCK_FALLBACK_MOVIES.find(m => m.id === (movieId as string)) || MOCK_FALLBACK_MOVIES[0];
-  }, [firestoreMovie, movieId]);
 
   useEffect(() => {
     if (status === 'scanning') {
@@ -91,10 +71,9 @@ export default function DownloadGateway() {
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
       
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
-      <div className="absolute top-1/2 -right-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
 
       <header className="p-5 flex items-center gap-4 border-b border-white/5 bg-background/50 backdrop-blur-xl sticky top-0 z-50">
-        <button onClick={() => window.history.back()} className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
+        <button onClick={() => router.back()} className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
           <ArrowLeft className="w-5 h-5 text-primary" />
         </button>
         <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Secure Tunnel Access</h1>
@@ -171,7 +150,7 @@ export default function DownloadGateway() {
                 <Link href={`/watch/${movieId}`}>
                   <div className="flex items-center gap-3">
                     <MonitorPlay className="w-6 h-6" />
-                    <span>Stream in 4K HDR</span>
+                    <span>Access Fast Server</span>
                   </div>
                   <Zap className="w-5 h-5 fill-current" />
                 </Link>
@@ -185,7 +164,7 @@ export default function DownloadGateway() {
                 >
                   <a href={movie?.directDownloadUrl || SMART_LINK} target="_blank" rel="noopener noreferrer">
                     <Download className="w-3.5 h-3.5 mb-1" />
-                    <span>1080p Download</span>
+                    <span>Direct Mirror 1</span>
                   </a>
                 </Button>
 
@@ -196,7 +175,7 @@ export default function DownloadGateway() {
                 >
                   <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
                     <Download className="w-3.5 h-3.5 mb-1" />
-                    <span>720p Download</span>
+                    <span>Direct Mirror 2</span>
                   </a>
                 </Button>
               </div>
@@ -217,7 +196,7 @@ export default function DownloadGateway() {
               <div className="min-w-0">
                 <h3 className="font-black text-white truncate text-sm uppercase tracking-tight italic">{movie.title}</h3>
                 <p className="text-[10px] text-primary font-black uppercase mt-1 tracking-widest opacity-80">
-                  {movie.quality} • {movie.releaseYear} • {movie.audio}
+                  {movie.quality} • {movie.releaseYear}
                 </p>
                 <div className="flex items-center gap-2 mt-3">
                   <ShieldCheck className="w-3.5 h-3.5 text-green-500" />

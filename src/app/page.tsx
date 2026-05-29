@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -153,7 +154,7 @@ export default function Home() {
   }, [firestoreMovies]);
 
   const handleMovieClick = (movie: Movie) => {
-    // Navigation Flow: Step 1 -> Details Page (Page 2)
+    // Correct Flow: Step 1 (Home) -> Step 2 (Details)
     router.push(`/movie/${movie.id}`);
   };
 

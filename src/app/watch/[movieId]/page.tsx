@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, ShieldCheck, Sparkles, Zap, ExternalLink, MonitorPlay } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, ShieldCheck, Sparkles, Zap, ExternalLink, MonitorPlay, Server, Globe, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -20,6 +21,7 @@ const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8ca
 
 export default function WatchOnline() {
   const { movieId } = useParams();
+  const router = useRouter();
   const db = useFirestore();
   
   const movieRef = useMemo(() => {
@@ -41,11 +43,11 @@ export default function WatchOnline() {
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
 
       <header className="p-5 flex items-center gap-4 border-b border-white/5 bg-background/50 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/" className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
+        <button onClick={() => router.back()} className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
           <ArrowLeft className="w-5 h-5 text-primary" />
-        </Link>
+        </button>
         <div className="flex flex-col">
-          <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Fast Server Node: 04</h1>
+          <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Server Node: Premium</h1>
           <span className="text-[12px] font-bold truncate max-w-[200px]">{movie?.title || 'Initializing Hub...'}</span>
         </div>
       </header>
@@ -67,21 +69,21 @@ export default function WatchOnline() {
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 border border-primary/20">
               <MonitorPlay className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black italic uppercase text-white mb-2">High Speed Server Ready</h3>
-            <p className="text-[10px] text-white/50 font-black uppercase tracking-[4px] mb-6">4K HDR STREAMING ACTIVATED</p>
+            <h3 className="text-xl font-black italic uppercase text-white mb-2">Streaming Tunnel Ready</h3>
+            <p className="text-[10px] text-white/50 font-black uppercase tracking-[4px] mb-6">Ultra-Speed Direct Access</p>
             
             <Button 
-              className="w-full bg-primary text-black font-black text-sm h-12 rounded-xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:scale-105 active:scale-95 transition-all"
+              className="w-full bg-primary text-black font-black text-sm h-14 rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:scale-105 active:scale-95 transition-all"
               asChild
             >
               <a href={SMART_LINK} target="_blank">
-                ACCESS STREAM MIRROR <ExternalLink className="w-4 h-4 ml-2" />
+                ACCESS STREAM NODE <ExternalLink className="w-4 h-4 ml-2" />
               </a>
             </Button>
 
             <div className="flex items-center gap-2 mt-6 px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-primary/20">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[9px] font-black text-white/70 uppercase tracking-tighter italic">Secured CDN Handshake</span>
+              <span className="text-[9px] font-black text-white/70 uppercase tracking-tighter italic">Secured Handshake</span>
             </div>
           </div>
         </div>
@@ -97,22 +99,21 @@ export default function WatchOnline() {
             <div className="flex justify-between items-start mb-5 relative z-10">
               <div className="flex-1 min-w-0 pr-4">
                 <h2 className="text-2xl font-black italic uppercase text-white leading-tight tracking-tighter truncate">
-                  {movie?.title || 'Loading Media Details...'}
+                  {movie?.title || 'Syncing...'}
                 </h2>
                 <div className="flex flex-wrap gap-3 mt-2.5">
                   <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">{movie?.quality || 'HD'}</span>
                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.releaseYear || '---'}</span>
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.audio || '---'}</span>
                 </div>
               </div>
-              <div className="bg-primary text-black px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-[0_10px_20px_rgba(0,229,255,0.3)] shrink-0 animate-pulse">
+              <div className="bg-primary text-black px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-[0_10px_20px_rgba(0,229,255,0.3)] shrink-0">
                 <Zap className="w-4 h-4 fill-current" />
-                <span className="text-[10px] font-black uppercase tracking-tighter">Ultra 4K</span>
+                <span className="text-[10px] font-black uppercase tracking-tighter">Fast Node</span>
               </div>
             </div>
             
             <p className="text-[13px] text-[#8b95a5] leading-relaxed relative z-10 font-medium">
-              {movie?.description || 'Establishing metadata connection for high-speed streaming results...'}
+              {movie?.description || 'Establishing metadata connection for high-speed server results...'}
             </p>
           </div>
 
@@ -122,8 +123,8 @@ export default function WatchOnline() {
               asChild
             >
               <a href={SMART_LINK} target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic">Unlock High Speed Server</span>
-                <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest">Instant Mirror</span>
+                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic">Mirror Server 1</span>
+                <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest">Instant</span>
               </a>
             </Button>
             <Button 
@@ -131,8 +132,8 @@ export default function WatchOnline() {
               asChild
             >
               <a href={SMART_LINK} target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider">Report Error</span>
-                <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest text-red-500/80">Buffer/Lag?</span>
+                <span className="text-[11px] font-black uppercase tracking-wider">Mirror Server 2</span>
+                <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest">Reserved</span>
               </a>
             </Button>
           </div>
@@ -142,7 +143,7 @@ export default function WatchOnline() {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-primary" />
-              <h3 className="text-[16px] font-black uppercase tracking-[3px] italic">Premium Picks</h3>
+              <h3 className="text-[16px] font-black uppercase tracking-[3px] italic">Trending Now</h3>
             </div>
             <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4"></div>
           </div>
@@ -151,11 +152,10 @@ export default function WatchOnline() {
             {relatedMovies?.map((m) => (
               <Link key={m.id} href={`/movie/${m.id}`} className="group relative">
                 <div className="relative aspect-[2/3] rounded-[28px] overflow-hidden border border-white/5 group-hover:border-primary/50 transition-all shadow-2xl">
-                  <img src={m.posterUrl} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" alt="" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 transition-opacity"></div>
-                  <div className="absolute inset-x-0 bottom-0 p-5 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-500">
+                  <img src={m.posterUrl} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000" alt="" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70"></div>
+                  <div className="absolute inset-x-0 bottom-0 p-5">
                     <span className="text-[11px] font-black text-white truncate block uppercase tracking-tight italic">{m.title}</span>
-                    <span className="text-[9px] text-primary font-black mt-1.5 block tracking-widest">{m.quality} • {m.releaseYear}</span>
                   </div>
                 </div>
               </Link>
