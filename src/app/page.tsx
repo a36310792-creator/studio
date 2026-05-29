@@ -111,7 +111,10 @@ export default function Home() {
     }
   }, [navTab, movies]);
 
-  const tabs = ['All', 'Bollywood', 'Web Series', 'Hollywood', 'South', 'Animation', 'Cartoon'];
+  const tabs = [
+    'All', 'Action', 'Horror', 'Anime', 'Sci-Fi', 
+    'Bollywood', 'Web Series', 'Hollywood', 'South', 'Animation', 'Cartoon'
+  ];
   
   const years = useMemo(() => {
     const startYear = new Date().getFullYear();

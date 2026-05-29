@@ -10,12 +10,8 @@ import { type Movie } from '@/components/movie/MovieCard';
 import Link from 'next/link';
 
 const AVAILABLE_GENRES = [
-  'Bollywood', 
-  'Web Series', 
-  'Hollywood', 
-  'South', 
-  'Animation', 
-  'Cartoon'
+  'Action', 'Horror', 'Anime', 'Sci-Fi',
+  'Bollywood', 'Web Series', 'Hollywood', 'South', 'Animation', 'Cartoon'
 ];
 
 export default function AdminDashboard() {
