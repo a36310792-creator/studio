@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'MP4VEGA - Premium Movie Downloads',
@@ -26,6 +27,12 @@ export default function RootLayout({
           {children}
           <Toaster />
         </FirebaseClientProvider>
+        
+        {/* Anti-Adblock Protection - Loaded with lazyOnload to ensure no interference with player or core UI */}
+        <Script 
+          src="https://commendtwisted.com/11/f8/cd/11f8cdd1ff10792fecc6b0787fd19c7f.js" 
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
