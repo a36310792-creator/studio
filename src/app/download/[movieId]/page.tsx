@@ -41,13 +41,12 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
   }
 ];
 
-const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
-
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
+
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
@@ -60,7 +59,7 @@ export default function DownloadGateway() {
 
   const { data: firestoreMovie, loading: firestoreLoading } = useDoc<Movie>(movieRef);
   
-  const [countdown, setCountdown] = useState(6);
+  const [countdown, setCountdown] = useState(8);
   const [status, setStatus] = useState<'scanning' | 'locked' | 'verifying' | 'unlocked'>('scanning');
   const [adClicks, setAdClicks] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -83,7 +82,7 @@ export default function DownloadGateway() {
   }, [countdown, status]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setForceShow(true), 3000);
+    const timer = setTimeout(() => setForceShow(true), 2500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -101,7 +100,7 @@ export default function DownloadGateway() {
       if (nextClickCount >= 2) {
         setStatus('unlocked');
       }
-    }, 2500);
+    }, 2000);
   };
 
   if (firestoreLoading && !movie && !forceShow) {
@@ -114,8 +113,11 @@ export default function DownloadGateway() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl flex flex-col relative overflow-hidden">
+      {/* Ad 1: Top Popup Ad */}
       <AdPopup hrefs={ROTATION_LINKS} />
-      <AdFloating hrefs={ROTATION_LINKS} side="left" />
+      
+      {/* Ad 2: Floating Side Ad */}
+      <AdFloating hrefs={ROTATION_LINKS} side="right" />
       
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
       <div className="absolute top-1/2 -right-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
@@ -124,7 +126,7 @@ export default function DownloadGateway() {
         <Link href="/" className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
           <ArrowLeft className="w-5 h-5 text-primary" />
         </Link>
-        <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Secure Server Access</h1>
+        <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Secure Tunnel Access</h1>
       </header>
 
       <main className="flex-1 px-6 pt-10 flex flex-col items-center text-center">
@@ -148,20 +150,20 @@ export default function DownloadGateway() {
 
         <div className="space-y-2 mb-8">
           <h2 className="text-2xl font-black tracking-tight leading-none uppercase italic">
-            {status === 'scanning' && 'Initializing Tunnel...'}
-            {status === 'locked' && 'Links Encrypted'}
-            {status === 'unlocked' && 'Access Granted'}
+            {status === 'scanning' && 'Initializing CDN...'}
+            {status === 'locked' && 'Links Restricted'}
+            {status === 'unlocked' && 'Tunnel Verified'}
           </h2>
           <p className="text-[11px] text-[#8b95a5] font-black uppercase tracking-widest opacity-60">
-            {status === 'scanning' && 'Performing deep security scan'}
-            {status === 'locked' && adClicks === 0 && 'Verification required to view links'}
-            {status === 'locked' && adClicks === 1 && 'Final verification in progress...'}
-            {status === 'unlocked' && 'Direct high-speed links generated'}
+            {status === 'scanning' && 'Establishing encrypted handshake'}
+            {status === 'locked' && 'Verification required for premium links'}
+            {status === 'unlocked' && 'Direct high-speed mirrors ready'}
           </p>
         </div>
 
+        {/* Ad 3: Above unlock/download section */}
         <div className="w-full mb-8">
-          <AdBanner id="download-above-rot" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="download-above-unlock-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
         <div className="w-full relative z-10 min-h-[80px]">
@@ -179,12 +181,12 @@ export default function DownloadGateway() {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>VERIFYING {adClicks === 1 ? '50%' : '90%'}</span>
+                  <span>DECRYPTING {adClicks === 1 ? '75%' : '40%'}</span>
                 </>
               ) : (
                 <>
                   <Zap className={`w-6 h-6 ${adClicks > 0 ? 'animate-pulse' : ''}`} />
-                  <span>{adClicks === 0 ? 'UNLOCK DOWNLOAD' : 'CONTINUE UNLOCK'}</span>
+                  <span>{adClicks === 0 ? 'UNLOCK DOWNLOAD' : 'CONTINUE VERIFY'}</span>
                 </>
               )}
             </Button>
@@ -232,8 +234,9 @@ export default function DownloadGateway() {
           )}
         </div>
 
+        {/* Ad 4: Below download section */}
         <div className="w-full mt-8">
-          <AdBanner id="download-below-rot" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="download-below-section-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
         <div className="w-full mt-10 bg-[#0a0a0a] border border-white/5 rounded-3xl p-5 text-left group hover:border-primary/10 transition-all">
@@ -248,23 +251,17 @@ export default function DownloadGateway() {
               </p>
               <div className="flex items-center gap-2 mt-3">
                 <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-[9px] font-black text-green-500/60 uppercase tracking-tighter">Verified CDN Server</span>
+                <span className="text-[9px] font-black text-green-500/60 uppercase tracking-tighter">Secure High-Speed Mirror</span>
               </div>
             </div>
           </div>
         </div>
       </main>
 
+      {/* Ad 5: Bottom Sticky Ad */}
       <footer className="px-8 py-10 mt-auto bg-gradient-to-t from-black to-transparent">
-        <div className="bg-primary/5 border border-primary/10 rounded-[24px] p-5 flex gap-4 mb-6">
-          <AlertCircle className="w-5 h-5 text-primary shrink-0" />
-          <p className="text-[10px] text-[#8b95a5] font-bold leading-relaxed text-left">
-            Complete the verification sequence by interacting with the unlock button. This ensures link stability and high-speed delivery.
-          </p>
-        </div>
-        
         <div className="fixed bottom-0 left-0 right-0 z-[200] bg-black/95 border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
-          <AdBanner id="download-sticky-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="download-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
       </footer>
     </div>

@@ -5,6 +5,7 @@ import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe } from 'lu
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
+import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
 
 interface MovieDetailsProps {
@@ -12,16 +13,18 @@ interface MovieDetailsProps {
   onClose: () => void;
 }
 
-const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
-
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
+const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
+      <AdFloating hrefs={ROTATION_LINKS} side="right" />
+      
       <div className="absolute top-5 left-5 z-[2010]">
         <button 
           onClick={onClose}
@@ -66,6 +69,11 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </span>
             </div>
 
+            {/* Ad 1: Below movie metadata/poster area */}
+            <div className="mb-6">
+              <AdBanner id="details-top-rot" hrefs={ROTATION_LINKS} className="w-full" />
+            </div>
+
             <div className="space-y-4 mb-6">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
                 <Info className="w-5 h-5 text-primary" />
@@ -76,8 +84,14 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </p>
             </div>
 
+            {/* Ad 2: Below description */}
             <div className="mb-8">
-              <AdBanner id="details-new-rotation-desc" hrefs={ROTATION_LINKS} className="w-full" />
+              <AdBanner id="details-desc-rot" hrefs={ROTATION_LINKS} className="w-full" />
+            </div>
+
+            {/* Ad 3: Above download buttons */}
+            <div className="mb-6">
+              <AdBanner id="details-above-btns-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
             <div className="mb-10">
@@ -89,10 +103,6 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                   FINAL DOWNLOAD / WATCH NOW
                 </Button>
               </Link>
-            </div>
-
-            <div className="mb-8">
-              <AdBanner id="details-new-rotation-above" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 mb-12">
@@ -136,14 +146,15 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
             </div>
 
             <div className="pb-10">
-              <AdBanner id="details-new-rotation-bottom" hrefs={ROTATION_LINKS} className="w-full" />
+              <AdBanner id="details-final-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
           </div>
         </div>
       </div>
 
+      {/* Ad 5: Sticky bottom ad */}
       <div className="fixed bottom-0 left-0 right-0 z-[2020] bg-black/90 backdrop-blur-xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
-        <AdBanner id="details-sticky-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
+        <AdBanner id="details-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </div>
     </div>
   );
