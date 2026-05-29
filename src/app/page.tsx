@@ -32,7 +32,7 @@ const ROTATION_LINKS = [
 const MOCK_MOVIES: Movie[] = [
   {
     id: 'hathras-1',
-    title: 'Hathras',
+    title: 'Hathras (Sample)',
     posterUrl: 'https://picsum.photos/seed/hathras/400/600',
     rating: 8.2,
     quality: 'HD',
@@ -45,7 +45,7 @@ const MOCK_MOVIES: Movie[] = [
   },
   {
     id: 'karuppu-2',
-    title: 'Karuppu',
+    title: 'Karuppu (Sample)',
     posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
     rating: 7.9,
     quality: '4K',
@@ -67,7 +67,7 @@ export default function Home() {
     return query(collection(db, 'movies'), orderBy('title', 'asc'));
   }, [db]);
 
-  const { data: firestoreMovies, loading } = useCollection<Movie>(moviesQuery);
+  const { data: firestoreMovies, loading: firestoreLoading } = useCollection<Movie>(moviesQuery);
   
   const [activeGenre, setActiveGenre] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -107,9 +107,16 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    // If Firestore is loading, we might show mock data temporarily to avoid blank screen.
-    // If Firestore is empty (length 0), we fallback to mock data.
-    let currentPool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : (!loading && firestoreMovies?.length === 0 ? MOCK_MOVIES : (firestoreMovies || MOCK_MOVIES));
+    // Favor firestore data. Only show mock movies if the database is truly empty and not loading.
+    let currentPool: Movie[] = [];
+    
+    if (firestoreMovies && firestoreMovies.length > 0) {
+      currentPool = firestoreMovies;
+    } else if (firestoreLoading) {
+      currentPool = MOCK_MOVIES; // Show mocks while loading to prevent empty screen
+    } else {
+      currentPool = MOCK_MOVIES; // Fallback if database is empty
+    }
 
     if (navTab === 'saved') {
       currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
@@ -145,7 +152,7 @@ export default function Home() {
     }
 
     return filtered;
-  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, navTab, bookmarkedIds, sortBy, loading]);
+  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, firestoreLoading, navTab, bookmarkedIds, sortBy]);
 
   const displayedMovies = useMemo(() => {
     return allFilteredMovies.slice(0, visibleCount);

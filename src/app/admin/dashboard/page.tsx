@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata';
 import { useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -35,7 +35,6 @@ export default function AdminDashboard() {
   const router = useRouter();
   
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [localMovies, setLocalMovies] = useState<Movie[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isFetching, setIsFetching] = useState(false);
@@ -59,19 +58,13 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, [auth, router]);
 
-  // Firestore Sync
+  // Firestore Sync - Live updates
   const moviesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'movies'), orderBy('title', 'asc'));
   }, [db]);
 
   const { data: firestoreMovies, loading: firestoreLoading } = useCollection<Movie>(moviesQuery);
-
-  useEffect(() => {
-    if (!firestoreLoading && firestoreMovies) {
-      setLocalMovies(firestoreMovies);
-    }
-  }, [firestoreMovies, firestoreLoading]);
 
   const [formData, setFormData] = useState<Partial<Movie>>({
     title: '',
@@ -118,41 +111,48 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db) return;
     setIsSubmitting(true);
+    
+    // Standardize data fields for permanent Firestore storage
     const movieData = { 
-      ...formData,
-      // Ensure specific fields are saved with consistent keys
+      title: formData.title || 'Untitled',
       posterUrl: formData.posterUrl || '',
-      updatedAt: new Date().toISOString()
+      rating: Number(formData.rating) || 0,
+      quality: formData.quality || 'HD',
+      releaseYear: Number(formData.releaseYear) || new Date().getFullYear(),
+      audio: formData.audio || 'Hindi',
+      genres: formData.genres || [],
+      description: formData.description || '',
+      watchUrl: formData.watchUrl || '',
+      directDownloadUrl: formData.directDownloadUrl || '',
+      updatedAt: serverTimestamp()
     };
     
     try {
       if (editingMovie) {
-        if (db) {
-          const movieRef = doc(db, 'movies', editingMovie.id);
-          updateDoc(movieRef, movieData).catch(async () => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: movieRef.path,
-              operation: 'update',
-              requestResourceData: movieData
-            }));
-          });
-        }
+        const movieRef = doc(db, 'movies', editingMovie.id);
+        updateDoc(movieRef, movieData).catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: movieRef.path,
+            operation: 'update',
+            requestResourceData: movieData
+          }));
+        });
         setEditingMovie(null);
       } else {
-        if (db) {
-          const moviesRef = collection(db, 'movies');
-          addDoc(moviesRef, movieData).catch(async () => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: moviesRef.path,
-              operation: 'create',
-              requestResourceData: movieData
-            }));
-          });
-        }
+        const moviesRef = collection(db, 'movies');
+        addDoc(moviesRef, movieData).catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: moviesRef.path,
+            operation: 'create',
+            requestResourceData: movieData
+          }));
+        });
         setIsAdding(false);
       }
       
+      // Reset form after successful initiation
       setFormData({ 
         title: '', posterUrl: '', rating: 0, quality: 'HD', 
         releaseYear: new Date().getFullYear(), audio: 'Hindi', 
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
                     <Film className="w-4 h-4 text-primary" />
                     <span className="text-[10px] font-black text-[#444] uppercase">Total</span>
                   </div>
-                  <div className="text-2xl font-black">{localMovies.length}</div>
+                  <div className="text-2xl font-black">{firestoreMovies?.length || 0}</div>
                   <div className="text-[9px] font-bold text-[#555] mt-1 uppercase">Media Entries</div>
                </div>
                <div className="bg-[#121212] border border-white/5 rounded-2xl p-4">
@@ -228,38 +228,44 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px]">Library Management</h3>
-                <span className="text-[10px] font-bold text-primary/50 uppercase">{localMovies.length} Items</span>
+                <span className="text-[10px] font-bold text-primary/50 uppercase">{(firestoreMovies?.length || 0)} Items</span>
               </div>
               
               <div className="space-y-3">
-                {localMovies.map(movie => {
-                  const poster = movie.posterUrl || movie.imageUrl || movie.image || `https://picsum.photos/seed/${movie.id}/400/600`;
-                  return (
-                    <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
-                      <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
-                        <img src={poster} className="w-full h-full object-cover" alt="" />
-                      </div>
-                      <div className="flex-1 min-w-0 py-1">
-                        <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
-                        <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
-                        <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
-                            className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => deleteMovie(movie.id)} 
-                            className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                {firestoreLoading ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                  </div>
+                ) : (
+                  firestoreMovies?.map(movie => {
+                    const poster = movie.posterUrl || movie.imageUrl || movie.image || `https://picsum.photos/seed/${movie.id}/400/600`;
+                    return (
+                      <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
+                        <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                          <img src={poster} className="w-full h-full object-cover" alt="" />
+                        </div>
+                        <div className="flex-1 min-w-0 py-1">
+                          <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
+                          <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
+                          <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
+                              className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => deleteMovie(movie.id)} 
+                              className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
