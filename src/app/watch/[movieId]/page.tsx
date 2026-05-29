@@ -32,6 +32,8 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
+const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
 export default function WatchPage() {
   const { movieId } = useParams();
   const db = useFirestore();
@@ -41,6 +43,7 @@ export default function WatchPage() {
   
   const [imaLoaded, setImaLoaded] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
+  const [playerError, setPlayerError] = useState<string | null>(null);
 
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -49,18 +52,23 @@ export default function WatchPage() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
 
-  // FAIL-SAFE: Force remove loader after 1.5 seconds regardless of ad status
+  // FAIL-SAFE: Force remove loader after 2 seconds regardless of ad status
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 1500);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    // If we don't have the node or movie data, wait. 
-    // We don't wait for imaLoaded here because the player should init even if ads fail.
     if (!videoNode.current || !movie) return;
+
+    // Dispose existing player if it exists to avoid conflicts on data change
+    if (playerRef.current) {
+      playerRef.current.dispose();
+    }
+
+    const videoUrl = movie.watchUrl?.trim() || FALLBACK_VIDEO;
 
     const player = videojs(videoNode.current, {
       autoplay: false,
@@ -68,16 +76,24 @@ export default function WatchPage() {
       responsive: true,
       fluid: true,
       preload: 'auto',
+      playbackRates: [0.5, 1, 1.5, 2],
       sources: [{
-        src: movie.watchUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        type: 'video/mp4'
+        src: videoUrl,
+        type: videoUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
       }]
     });
 
     playerRef.current = player;
 
-    // Only attempt IMA initialization if the script actually loaded (imaLoaded is true)
-    // and if the player.ima function exists.
+    // Handle Media Errors
+    player.on('error', () => {
+      const error = player.error();
+      console.error('Video.js Error:', error);
+      setPlayerError(error?.message || "The media could not be loaded, either because the server or network failed or because the format is not supported.");
+      setShowLoader(false);
+    });
+
+    // IMA Ad Logic
     if (imaLoaded && (player as any).ima) {
       const imaOptions = {
         adTagUrl: VAST_TAG,
@@ -95,30 +111,25 @@ export default function WatchPage() {
         player.on('adserror', handleAdFail);
         player.on('adtimeout', handleAdFail);
         
-        // Secondary internal fail-safe
-        const internalFailSafe = setTimeout(() => {
-          if (player.paused()) handleAdFail();
-        }, 5000);
-
         player.on('readyforpreroll', () => {
           (player as any).ima.initializeAdDisplayContainer();
           (player as any).ima.requestAds();
         });
-
-        // Clear timer on success
-        player.on('adsready', () => clearTimeout(internalFailSafe));
       } catch (e) {
+        console.warn('IMA Initialization failed', e);
         player.play().catch(() => {});
       }
-    } else {
-      // If IMA isn't loaded or available, just play normally when clicked
-      player.on('ready', () => {
-        setShowLoader(false);
-      });
     }
 
+    player.on('ready', () => {
+      setShowLoader(false);
+    });
+
     return () => {
-      if (player) player.dispose();
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
     };
   }, [movie, imaLoaded]);
 
@@ -132,10 +143,7 @@ export default function WatchPage() {
         src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
         strategy="afterInteractive"
         onLoad={() => setImaLoaded(true)}
-        onError={() => {
-          setImaLoaded(false);
-          setShowLoader(false);
-        }}
+        onError={() => setImaLoaded(false)}
       />
       
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
@@ -156,17 +164,30 @@ export default function WatchPage() {
 
       <main className="p-5">
         <div className="mb-6 rounded-[24px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_30px_rgba(0,229,255,0.1)] relative aspect-video">
-          {showLoader && (
+          {showLoader && !playerError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 transition-opacity duration-300">
               <Activity className="w-8 h-8 text-primary animate-spin mb-3" />
               <span className="text-[10px] font-black text-primary uppercase tracking-[2px]">Initializing Secure Player...</span>
             </div>
           )}
+          
+          {playerError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-6 text-center">
+              <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
+              <h3 className="text-sm font-black uppercase text-white mb-2">Streaming Error</h3>
+              <p className="text-[10px] text-[#555] font-bold leading-relaxed mb-4">{playerError}</p>
+              <Button onClick={() => window.location.reload()} variant="outline" className="h-9 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-black">
+                RETRY CONNECTION
+              </Button>
+            </div>
+          )}
+
           <div data-vjs-player>
             <video
               ref={videoNode}
               className="video-js vjs-big-play-centered vjs-theme-city"
               poster={movie?.posterUrl}
+              playsInline
             />
           </div>
         </div>
