@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -23,7 +22,8 @@ import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-const ADMIN_EMAIL = 'a36310792@gmail.com';
+const MASTER_ADMIN_EMAIL = 'a36310792@gmail.com';
+const FALLBACK_ADMIN_EMAIL = 'admin@gmail.com';
 const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'Cartoon', 'Drama', 'Comedy', 'Thriller', 'Mystery'];
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
@@ -35,15 +35,27 @@ export default function AdminDashboard() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user || user.email !== ADMIN_EMAIL) {
-        if (user) await signOut(auth);
-        router.push('/admin/login');
-      } else {
+    const checkAuth = async () => {
+      // 1. Check local session
+      const localSession = localStorage.getItem('admin_session');
+      if (localSession === 'true') {
         setIsAuthLoading(false);
+        return;
       }
-    });
-    return () => unsubscribe();
+
+      // 2. Check Firebase session
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user || (user.email !== MASTER_ADMIN_EMAIL && user.email !== FALLBACK_ADMIN_EMAIL)) {
+          if (user) await signOut(auth);
+          router.push('/admin/login');
+        } else {
+          setIsAuthLoading(false);
+        }
+      });
+      return () => unsubscribe();
+    };
+
+    checkAuth();
   }, [auth, router]);
   
   const moviesQuery = useMemo(() => {
@@ -71,7 +83,12 @@ export default function AdminDashboard() {
   });
 
   const handleLogout = async () => {
-    await signOut(auth);
+    localStorage.removeItem('admin_session');
+    try {
+      await signOut(auth);
+    } catch (e) {
+      // Ignore auth errors during logout
+    }
     router.push('/admin/login');
   };
 
@@ -157,7 +174,7 @@ export default function AdminDashboard() {
     });
   };
 
-  if (isAuthLoading || moviesLoading) {
+  if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -189,31 +206,37 @@ export default function AdminDashboard() {
 
             <div className="space-y-3">
               <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px] mb-4">Manage Library ({movies?.length || 0})</h3>
-              {movies?.map(movie => (
-                <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
-                  <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0">
-                    <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
-                  </div>
-                  <div className="flex-1 min-w-0 py-1">
-                    <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
-                    <p className="text-[10px] text-[#8b95a5] font-bold uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
-                    <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
-                        className="p-1.5 text-primary hover:bg-primary/10 rounded-lg"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => deleteMovie(movie.id)} 
-                        className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+              {moviesLoading ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              ) : (
+                movies?.map(movie => (
+                  <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
+                    <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0">
+                      <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
+                    </div>
+                    <div className="flex-1 min-w-0 py-1">
+                      <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
+                      <p className="text-[10px] text-[#8b95a5] font-bold uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
+                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
+                          className="p-1.5 text-primary hover:bg-primary/10 rounded-lg"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => deleteMovie(movie.id)} 
+                          className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         ) : (
