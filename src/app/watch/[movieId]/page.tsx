@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, ShieldCheck, Loader2, Sparkles, Zap, ExternalLink, MonitorPlay } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Sparkles, Zap, ExternalLink, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -32,20 +32,9 @@ export default function WatchOnline() {
     return query(collection(db, 'movies'), limit(4));
   }, [db]);
 
-  const { data: movie, loading: movieLoading } = useDoc<Movie>(movieRef);
+  const { data: movie } = useDoc<Movie>(movieRef);
   const { data: relatedMovies } = useCollection<Movie>(relatedQuery);
   
-  if (movieLoading && !movie) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[3px] text-primary/40">Initializing Tunnel</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden">
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
@@ -57,7 +46,7 @@ export default function WatchOnline() {
         </Link>
         <div className="flex flex-col">
           <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Fast Server Node: 04</h1>
-          <span className="text-[12px] font-bold truncate max-w-[200px]">{movie?.title || 'Loading Media...'}</span>
+          <span className="text-[12px] font-bold truncate max-w-[200px]">{movie?.title || 'Initializing Hub...'}</span>
         </div>
       </header>
 
@@ -74,7 +63,7 @@ export default function WatchOnline() {
             </div>
           )}
           
-          <div className="relative z-40 flex flex-col items-center p-6 text-center animate-in fade-in zoom-in-95 duration-700">
+          <div className="relative z-40 flex flex-col items-center p-6 text-center">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 border border-primary/20">
               <MonitorPlay className="w-8 h-8" />
             </div>
@@ -108,12 +97,12 @@ export default function WatchOnline() {
             <div className="flex justify-between items-start mb-5 relative z-10">
               <div className="flex-1 min-w-0 pr-4">
                 <h2 className="text-2xl font-black italic uppercase text-white leading-tight tracking-tighter truncate">
-                  {movie?.title}
+                  {movie?.title || 'Loading Media Details...'}
                 </h2>
                 <div className="flex flex-wrap gap-3 mt-2.5">
-                  <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">{movie?.quality}</span>
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.releaseYear}</span>
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.audio}</span>
+                  <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">{movie?.quality || 'HD'}</span>
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.releaseYear || '---'}</span>
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.audio || '---'}</span>
                 </div>
               </div>
               <div className="bg-primary text-black px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-[0_10px_20px_rgba(0,229,255,0.3)] shrink-0 animate-pulse">

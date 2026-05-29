@@ -6,7 +6,6 @@ import { MovieDetails } from '@/components/movie/MovieDetails';
 import { type Movie } from '@/components/movie/MovieCard';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
 
 export default function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -18,28 +17,18 @@ export default function MovieDetailsPage() {
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: movie, loading } = useDoc<Movie>(movieRef);
+  const { data: movie } = useDoc<Movie>(movieRef);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      </div>
-    );
-  }
-
-  if (!movie) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
-        <h1 className="text-2xl font-black mb-4">Movie Not Found</h1>
-        <button onClick={() => router.back()} className="text-primary font-bold uppercase tracking-widest">Go Back</button>
-      </div>
-    );
-  }
-
+  // Render shell immediately, handle missing movie inside component
   return (
     <div className="min-h-screen bg-[#050505]">
-      <MovieDetails movie={movie} onClose={() => router.back()} />
+      {movie ? (
+        <MovieDetails movie={movie} onClose={() => router.back()} />
+      ) : (
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+           <p className="text-[10px] font-black text-primary/20 uppercase tracking-[5px] animate-pulse italic">Synchronizing Node...</p>
+        </div>
+      )}
     </div>
   );
 }

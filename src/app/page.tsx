@@ -75,7 +75,6 @@ export default function Home() {
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
-  const [forceShow, setForceShow] = useState(false);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,8 +83,6 @@ export default function Home() {
     if (saved) {
       setBookmarkedIds(JSON.parse(saved));
     }
-    const timer = setTimeout(() => setForceShow(true), 2000);
-    return () => clearTimeout(timer);
   }, []);
 
   const toggleBookmark = (e: React.MouseEvent, id: string) => {
@@ -399,12 +396,6 @@ export default function Home() {
                     ? 'Start bookmarking your favorite content!' 
                     : 'Try selecting a different year or category.'}
               </p>
-            </div>
-          )}
-          
-          {loading && !forceShow && (
-            <div className="mt-8 flex justify-center">
-              <Loader2 className="w-6 h-6 text-primary animate-spin" />
             </div>
           )}
           

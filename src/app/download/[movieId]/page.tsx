@@ -38,7 +38,6 @@ const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8ca
 export default function DownloadGateway() {
   const { movieId } = useParams();
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode') || 'download';
   const db = useFirestore();
   
   const movieRef = useMemo(() => {
@@ -46,13 +45,12 @@ export default function DownloadGateway() {
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: firestoreMovie, loading: firestoreLoading } = useDoc<Movie>(movieRef);
+  const { data: firestoreMovie } = useDoc<Movie>(movieRef);
   
   const [countdown, setCountdown] = useState(8);
   const [status, setStatus] = useState<'scanning' | 'locked' | 'verifying' | 'unlocked'>('scanning');
   const [adClicks, setAdClicks] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [forceShow, setForceShow] = useState(false);
 
   const movie = useMemo(() => {
     if (firestoreMovie) return firestoreMovie;
@@ -70,11 +68,6 @@ export default function DownloadGateway() {
     }
   }, [countdown, status]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setForceShow(true), 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleUnlockClick = () => {
     if (isProcessing) return;
 
@@ -91,14 +84,6 @@ export default function DownloadGateway() {
       }
     }, 2000);
   };
-
-  if (firestoreLoading && !movie && !forceShow) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl flex flex-col relative overflow-hidden">
@@ -179,7 +164,6 @@ export default function DownloadGateway() {
 
           {status === 'unlocked' && (
             <div className="space-y-4 animate-in slide-in-from-bottom-10 duration-700 w-full">
-              {/* Option to stream if watch mode or preferred */}
               <Button 
                 className="w-full h-16 bg-gradient-to-r from-primary to-cyan-400 text-black font-black text-lg rounded-2xl shadow-[0_15px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex justify-between px-6"
                 asChild
@@ -199,7 +183,7 @@ export default function DownloadGateway() {
                   className="h-14 bg-white/5 border-white/10 text-white font-black text-[12px] rounded-2xl hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-0.5"
                   asChild
                 >
-                  <a href={movie.directDownloadUrl || SMART_LINK} target="_blank" rel="noopener noreferrer">
+                  <a href={movie?.directDownloadUrl || SMART_LINK} target="_blank" rel="noopener noreferrer">
                     <Download className="w-3.5 h-3.5 mb-1" />
                     <span>1080p Download</span>
                   </a>
@@ -224,23 +208,25 @@ export default function DownloadGateway() {
           <AdBanner id="download-below-section-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
-        <div className="w-full mt-10 bg-[#0a0a0a] border border-white/5 rounded-3xl p-5 text-left group hover:border-primary/10 transition-all">
-          <div className="flex gap-4 items-center">
-            <div className="w-16 h-22 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
-              <img src={movie.posterUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-black text-white truncate text-sm uppercase tracking-tight italic">{movie.title}</h3>
-              <p className="text-[10px] text-primary font-black uppercase mt-1 tracking-widest opacity-80">
-                {movie.quality} • {movie.releaseYear} • {movie.audio}
-              </p>
-              <div className="flex items-center gap-2 mt-3">
-                <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-[9px] font-black text-green-500/60 uppercase tracking-tighter">Verified Content Node</span>
+        {movie && (
+          <div className="w-full mt-10 bg-[#0a0a0a] border border-white/5 rounded-3xl p-5 text-left group hover:border-primary/10 transition-all">
+            <div className="flex gap-4 items-center">
+              <div className="w-16 h-22 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
+                <img src={movie.posterUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-black text-white truncate text-sm uppercase tracking-tight italic">{movie.title}</h3>
+                <p className="text-[10px] text-primary font-black uppercase mt-1 tracking-widest opacity-80">
+                  {movie.quality} • {movie.releaseYear} • {movie.audio}
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                  <span className="text-[9px] font-black text-green-500/60 uppercase tracking-tighter">Verified Content Node</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
 
       <footer className="px-8 py-10 mt-auto bg-gradient-to-t from-black to-transparent">
