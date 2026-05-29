@@ -27,7 +27,8 @@ export default function AdminDashboard() {
     audio: 'Hindi',
     genres: [],
     description: '',
-    watchUrl: ''
+    watchUrl: '',
+    directDownloadUrl: ''
   });
 
   useEffect(() => {
@@ -77,7 +78,8 @@ export default function AdminDashboard() {
       audio: 'Hindi', 
       genres: [], 
       description: '',
-      watchUrl: ''
+      watchUrl: '',
+      directDownloadUrl: ''
     });
   };
 
@@ -163,10 +165,17 @@ export default function AdminDashboard() {
                 required 
               />
               <Input 
-                placeholder="Watch/Download Link" 
+                placeholder="Watch/Stream Preview Link" 
                 value={formData.watchUrl} 
                 onChange={e => setFormData({...formData, watchUrl: e.target.value})} 
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
+                required 
+              />
+              <Input 
+                placeholder="Final Direct Download Link" 
+                value={formData.directDownloadUrl} 
+                onChange={e => setFormData({...formData, directDownloadUrl: e.target.value})} 
+                className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary"
                 required 
               />
               <div className="grid grid-cols-2 gap-3">

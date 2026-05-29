@@ -5,6 +5,7 @@ import React from 'react';
 import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
+import Link from 'next/link';
 
 interface MovieDetailsProps {
   movie: Movie;
@@ -72,17 +73,16 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </p>
             </div>
 
-            {/* Prominent Action Button */}
+            {/* Prominent Action Button - Routes to Gateway Page */}
             <div className="mb-10">
-              <Button 
-                className="w-full h-14 bg-gradient-to-r from-primary to-cyan-500 text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all"
-                asChild
-              >
-                <a href={movie.watchUrl || "#"} target="_blank" rel="noopener noreferrer">
+              <Link href={`/download/${movie.id}`}>
+                <Button 
+                  className="w-full h-14 bg-gradient-to-r from-primary to-cyan-500 text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all"
+                >
                   <PlayCircle className="w-5 h-5 mr-2" />
                   FINAL DOWNLOAD / WATCH NOW
-                </a>
-              </Button>
+                </Button>
+              </Link>
             </div>
 
             {/* Download Section */}
@@ -93,35 +93,32 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </div>
               
               <div className="grid grid-cols-1 gap-4">
-                <Button 
-                  className="h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all"
-                  asChild
-                >
-                  <a href={movie.watchUrl || "#"} target="_blank">
+                <Link href={`/download/${movie.id}`}>
+                  <Button 
+                    className="w-full h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all text-left"
+                  >
                     <span className="text-[14px]">480p SD - Low Size</span>
                     <span className="text-[12px] opacity-60 group-hover:opacity-100 uppercase">350 MB</span>
-                  </a>
-                </Button>
+                  </Button>
+                </Link>
                 
-                <Button 
-                  className="h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all"
-                  asChild
-                >
-                  <a href={movie.watchUrl || "#"} target="_blank">
+                <Link href={`/download/${movie.id}`}>
+                  <Button 
+                    className="w-full h-14 bg-white/10 hover:bg-primary hover:text-black border border-white/10 rounded-2xl flex justify-between px-6 font-black group transition-all text-left"
+                  >
                     <span className="text-[14px]">720p HD - Recommended</span>
                     <span className="text-[12px] opacity-60 group-hover:opacity-100 uppercase">900 MB</span>
-                  </a>
-                </Button>
+                  </Button>
+                </Link>
                 
-                <Button 
-                  className="h-14 bg-gradient-to-r from-primary to-cyan-400 text-black hover:brightness-110 rounded-2xl flex justify-between px-6 font-black group transition-all shadow-[0_10px_30px_rgba(0,229,255,0.3)]"
-                  asChild
-                >
-                  <a href={movie.watchUrl || "#"} target="_blank">
+                <Link href={`/download/${movie.id}`}>
+                  <Button 
+                    className="w-full h-14 bg-gradient-to-r from-primary to-cyan-400 text-black hover:brightness-110 rounded-2xl flex justify-between px-6 font-black group transition-all shadow-[0_10px_30px_rgba(0,229,255,0.3)] text-left"
+                  >
                     <span className="text-[14px]">1080p Full HD - Ultra</span>
                     <span className="text-[12px] text-black/60 uppercase">2.4 GB</span>
-                  </a>
-                </Button>
+                  </Button>
+                </Link>
               </div>
               
               <p className="text-[11px] text-center text-[#555] font-bold italic">

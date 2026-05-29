@@ -17,6 +17,7 @@ export interface Movie {
   genres: string[];
   description: string;
   watchUrl?: string;
+  directDownloadUrl?: string;
   isBookmarked?: boolean;
 }
 
