@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -129,9 +129,7 @@ export default function AdminDashboard() {
     try {
       if (editingMovie) {
         const movieRef = doc(db, 'movies', editingMovie.id);
-        console.log("Updating movie:", editingMovie.id);
         updateDoc(movieRef, movieData).then(() => {
-          console.log("Successfully updated movie.");
           setEditingMovie(null);
           setFormData({ 
             title: '', posterUrl: '', rating: 0, quality: 'HD', 
@@ -139,7 +137,6 @@ export default function AdminDashboard() {
             genres: [], description: '', watchUrl: '', directDownloadUrl: ''
           });
         }).catch(async (err) => {
-          console.error("Update failed:", err);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: movieRef.path,
             operation: 'update',
@@ -148,9 +145,7 @@ export default function AdminDashboard() {
         });
       } else {
         const moviesRef = collection(db, 'movies');
-        console.log("Adding new movie...");
         addDoc(moviesRef, movieData).then(() => {
-          console.log("Successfully added movie.");
           setIsAdding(false);
           setFormData({ 
             title: '', posterUrl: '', rating: 0, quality: 'HD', 
@@ -158,7 +153,6 @@ export default function AdminDashboard() {
             genres: [], description: '', watchUrl: '', directDownloadUrl: ''
           });
         }).catch(async (err) => {
-          console.error("Add failed:", err);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: moviesRef.path,
             operation: 'create',
@@ -172,23 +166,45 @@ export default function AdminDashboard() {
   };
 
   const deleteMovie = async (id: string) => {
-    if (!id) {
-      console.error("Delete failed: No document ID provided.");
-      return;
-    }
-    
+    if (!id) return;
     if (!confirm('Are you sure you want to delete this movie permanently from the library?')) return;
     
     if (db) {
       const movieRef = doc(db, 'movies', id);
-      console.log(`[Admin] Initiating delete for document ID: ${id}`);
+      deleteDoc(movieRef)
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: movieRef.path,
+            operation: 'delete'
+          }));
+        });
+    }
+  };
+
+  /**
+   * NEW INDEPENDENT FORCE DELETE FUNCTION
+   * TARGETS FIRESTORE DOCUMENT ID DIRECTLY
+   */
+  const forceDeleteMovie = async (id: string) => {
+    if (!id) {
+      console.error("[FORCE DELETE] Error: Missing Document ID.");
+      return;
+    }
+    
+    if (!window.confirm('CRITICAL ACTION: Permanently remove this entry from the database?')) {
+      return;
+    }
+
+    if (db) {
+      const movieRef = doc(db, 'movies', id);
+      console.log(`[FORCE DELETE] Attempting to delete: ${id}`);
       
       deleteDoc(movieRef)
         .then(() => {
-          console.log(`[Admin] Successfully deleted document ID: ${id}`);
+          console.log(`[FORCE DELETE] Success: Document ${id} removed.`);
         })
-        .catch(async (error) => {
-          console.error("[Admin] Firestore Delete Error:", error);
+        .catch((error) => {
+          console.error(`[FORCE DELETE] Failure:`, error);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: movieRef.path,
             operation: 'delete'
@@ -268,7 +284,7 @@ export default function AdminDashboard() {
                         <div className="flex-1 min-w-0 py-1">
                           <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
                           <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
-                          <div className="flex gap-2 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-2 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
                               className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
@@ -280,6 +296,14 @@ export default function AdminDashboard() {
                               className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                             >
                               <Trash2 className="w-4 h-4" />
+                            </button>
+                            {/* NEW FORCE DELETE UI ELEMENT */}
+                            <button 
+                              onClick={() => forceDeleteMovie(movie.id)}
+                              className="ml-1 px-2 py-1 bg-red-500/10 border border-red-500/30 rounded-md text-[8px] font-black text-red-500 uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"
+                            >
+                              <ShieldAlert className="w-2.5 h-2.5" />
+                              Force Delete
                             </button>
                           </div>
                         </div>
