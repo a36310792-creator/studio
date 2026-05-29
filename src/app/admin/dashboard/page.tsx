@@ -2,22 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Film, Check, X, ArrowLeft, Calendar } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { type Movie } from '@/components/movie/MovieCard';
 import Link from 'next/link';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata';
 
-const AVAILABLE_GENRES = [
-  'Action', 'Horror', 'Anime', 'Sci-Fi',
-  'Bollywood', 'Web Series', 'Hollywood', 'South', 'Animation', 'Cartoon'
-];
+const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'Cartoon', 'Drama', 'Comedy', 'Thriller', 'Mystery'];
+const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
+const QUALITIES = ['HD', '4K', 'CAM'];
 
 export default function AdminDashboard() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
   const router = useRouter();
 
   const [formData, setFormData] = useState<Partial<Movie>>({
@@ -57,6 +65,28 @@ export default function AdminDashboard() {
       setFormData({ ...formData, genres: currentGenres.filter(g => g !== genre) });
     } else {
       setFormData({ ...formData, genres: [...currentGenres, genre] });
+    }
+  };
+
+  const handleFetchMetadata = async () => {
+    if (!formData.title) return;
+    setIsFetching(true);
+    try {
+      const metadata = await fetchMovieMetadata({ title: formData.title });
+      setFormData(prev => ({
+        ...prev,
+        posterUrl: metadata.posterUrl,
+        rating: metadata.rating,
+        releaseYear: metadata.releaseYear,
+        description: metadata.description,
+        audio: metadata.audio,
+        quality: metadata.quality as any,
+        genres: [...new Set([...(prev.genres || []), ...metadata.genres])]
+      }));
+    } catch (error) {
+      console.error("Failed to fetch metadata", error);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -152,13 +182,25 @@ export default function AdminDashboard() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input 
-                placeholder="Movie Title" 
-                value={formData.title} 
-                onChange={e => setFormData({...formData, title: e.target.value})} 
-                className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
-                required 
-              />
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Movie Title" 
+                  value={formData.title} 
+                  onChange={e => setFormData({...formData, title: e.target.value})} 
+                  className="bg-black border-white/5 h-12 rounded-xl text-white font-bold flex-1"
+                  required 
+                />
+                <Button 
+                  type="button"
+                  onClick={handleFetchMetadata}
+                  disabled={isFetching || !formData.title}
+                  className="h-12 w-12 bg-primary/20 text-primary border border-primary/30 rounded-xl hover:bg-primary hover:text-black transition-all"
+                  title="Fetch AI Details"
+                >
+                  {isFetching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                </Button>
+              </div>
+
               <Input 
                 placeholder="Poster URL" 
                 value={formData.posterUrl} 
@@ -166,6 +208,40 @@ export default function AdminDashboard() {
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
                 required 
               />
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-[#555] uppercase ml-1">Quality</label>
+                  <Select 
+                    value={formData.quality} 
+                    onValueChange={val => setFormData({...formData, quality: val as any})}
+                  >
+                    <SelectTrigger className="bg-black border-white/5 h-12 rounded-xl">
+                      <SelectValue placeholder="Quality" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#121212] border-white/10 text-white">
+                      {QUALITIES.map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-[#555] uppercase ml-1">Industry</label>
+                  <Select 
+                    onValueChange={val => {
+                      const current = formData.genres || [];
+                      setFormData({...formData, genres: [...new Set([...current, val])]});
+                    }}
+                  >
+                    <SelectTrigger className="bg-black border-white/5 h-12 rounded-xl">
+                      <SelectValue placeholder="Select Industry" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#121212] border-white/10 text-white">
+                      {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <Input 
                 placeholder="Watch/Stream Preview Link" 
                 value={formData.watchUrl} 
@@ -180,6 +256,7 @@ export default function AdminDashboard() {
                 className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary"
                 required 
               />
+              
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative group">
                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
@@ -206,7 +283,7 @@ export default function AdminDashboard() {
               <div>
                 <label className="text-[10px] font-black text-[#555] uppercase tracking-[1px] mb-2 block">Genres / Categories</label>
                 <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_GENRES.map(genre => (
+                  {[...AVAILABLE_GENRES, ...INDUSTRIES].map(genre => (
                     <button
                       key={genre}
                       type="button"
@@ -223,22 +300,14 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Input 
-                  placeholder="Quality (HD/4K)" 
-                  value={formData.quality} 
-                  onChange={e => setFormData({...formData, quality: e.target.value as any})} 
-                  className="bg-black border-white/5 h-12 rounded-xl"
-                  required
-                />
-                <Input 
-                  placeholder="Audio" 
-                  value={formData.audio} 
-                  onChange={e => setFormData({...formData, audio: e.target.value})} 
-                  className="bg-black border-white/5 h-12 rounded-xl"
-                  required
-                />
-              </div>
+              <Input 
+                placeholder="Audio (e.g. Hindi, English)" 
+                value={formData.audio} 
+                onChange={e => setFormData({...formData, audio: e.target.value})} 
+                className="bg-black border-white/5 h-12 rounded-xl"
+                required
+              />
+
               <Textarea 
                 placeholder="Description" 
                 value={formData.description} 
