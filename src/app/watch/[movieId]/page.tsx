@@ -19,14 +19,9 @@ import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
-import Script from 'next/script';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-import 'videojs-contrib-ads';
-import 'videojs-ima';
-import 'videojs-ima/dist/videojs.ima.css';
 
-const VAST_TAG = "https://youradexchange.com/video/select.php?r=11371326";
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
@@ -41,7 +36,6 @@ export default function WatchPage() {
   const playerRef = useRef<any>(null);
   const videoNode = useRef<HTMLVideoElement | null>(null);
   
-  const [imaLoaded, setImaLoaded] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
 
@@ -56,14 +50,14 @@ export default function WatchPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2500);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (!videoNode.current || !movie) return;
 
-    // Clean up existing player to prevent memory leaks or conflicts
+    // Clean up existing player
     if (playerRef.current) {
       playerRef.current.dispose();
       playerRef.current = null;
@@ -93,45 +87,12 @@ export default function WatchPage() {
       setShowLoader(false);
     });
 
-    // VAST Ad Integration Logic
-    if (imaLoaded && (player as any).ima) {
-      const imaOptions = {
-        adTagUrl: VAST_TAG,
-        showCountdown: true,
-        debug: false,
-        adsManagerLoadedTimeout: 5000 // 5 seconds to load ad manager before fallback
-      };
-
-      try {
-        (player as any).ima(imaOptions);
-
-        const handleAdSkipAndPlay = () => {
-          console.log('Ad blocked or failed - Playing content directly');
-          player.play().catch(() => {});
-          setShowLoader(false);
-        };
-
-        // Fallback for ad-blockers or server timeouts
-        player.on('adserror', handleAdSkipAndPlay);
-        player.on('adtimeout', handleAdSkipAndPlay);
-        
-        player.on('readyforpreroll', () => {
-          (player as any).ima.initializeAdDisplayContainer();
-          (player as any).ima.requestAds();
-        });
-
-        player.on('adstart', () => setShowLoader(false));
-      } catch (e) {
-        console.warn('IMA Plugin Initialization failed', e);
-        player.play().catch(() => {});
-        setShowLoader(false);
-      }
-    } else if (!VAST_TAG) {
-      setShowLoader(false);
-    }
-
     player.on('ready', () => {
-      if (!imaLoaded) setShowLoader(false);
+      setShowLoader(false);
+    });
+
+    player.on('loadeddata', () => {
+      setShowLoader(false);
     });
 
     return () => {
@@ -140,7 +101,7 @@ export default function WatchPage() {
         playerRef.current = null;
       }
     };
-  }, [movie, imaLoaded]);
+  }, [movie]);
 
   const handleAction = () => {
     window.open(ROTATION_LINKS[0], '_blank');
@@ -148,16 +109,6 @@ export default function WatchPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-24 shadow-2xl relative overflow-x-hidden font-body">
-      <Script 
-        src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
-        strategy="afterInteractive"
-        onLoad={() => setImaLoaded(true)}
-        onError={() => {
-          setImaLoaded(false);
-          setShowLoader(false);
-        }}
-      />
-      
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
 
