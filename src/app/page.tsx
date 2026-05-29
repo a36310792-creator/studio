@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
+import Script from 'next/script';
 
 const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 const ROTATION_LINKS = [
@@ -177,6 +178,11 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
+      <Script 
+        id="aclib" 
+        src="//acscdn.com/script/aclib.js" 
+        strategy="lazyOnload" 
+      />
       <AdPopup hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
       <AdFloating hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
       
