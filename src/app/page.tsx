@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -104,18 +105,26 @@ export default function Home() {
   const tabs = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi', 'Thriller'];
 
   const displayedMovies = useMemo(() => {
+    let currentPool = movies;
+
     if (navTab === 'saved') {
-      return movies.filter(m => bookmarkedIds.includes(m.id));
-    }
-    
-    if (navTab === 'discover') {
-      return discoverMovies;
+      currentPool = movies.filter(m => bookmarkedIds.includes(m.id));
+    } else if (navTab === 'discover') {
+      currentPool = discoverMovies;
     }
 
-    return movies.filter(movie => {
-      const matchesTab = activeCategory === 'All' || movie.genres.includes(activeCategory);
-      const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesTab && matchesSearch;
+    // Apply filters (Category and Search)
+    return currentPool.filter(movie => {
+      // Category Filter (only applies on Home tab or if pool is already filtered)
+      const matchesCategory = 
+        navTab !== 'home' || 
+        activeCategory === 'All' || 
+        movie.genres.includes(activeCategory);
+
+      // Search Filter (case-insensitive)
+      const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
+
+      return matchesCategory && matchesSearch;
     });
   }, [activeCategory, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
 
@@ -210,7 +219,11 @@ export default function Home() {
                 {navTab === 'saved' ? 'Your list is empty' : 'No movies found'}
               </h4>
               <p className="text-[#555] text-sm">
-                {navTab === 'saved' ? 'Start bookmarking your favorite content!' : 'Try searching for something else.'}
+                {searchQuery 
+                  ? `No matches for "${searchQuery}"` 
+                  : navTab === 'saved' 
+                    ? 'Start bookmarking your favorite content!' 
+                    : 'Try selecting a different category.'}
               </p>
             </div>
           )}
