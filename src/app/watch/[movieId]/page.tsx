@@ -52,20 +52,21 @@ export default function WatchPage() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
 
-  // FAIL-SAFE: Force remove loader after 2 seconds regardless of ad status
+  // Force hide loader after a short fail-safe timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2000);
+    }, 2500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (!videoNode.current || !movie) return;
 
-    // Dispose existing player if it exists to avoid conflicts on data change
+    // Clean up existing player to prevent memory leaks or conflicts
     if (playerRef.current) {
       playerRef.current.dispose();
+      playerRef.current = null;
     }
 
     const videoUrl = movie.watchUrl?.trim() || FALLBACK_VIDEO;
@@ -85,44 +86,52 @@ export default function WatchPage() {
 
     playerRef.current = player;
 
-    // Handle Media Errors
+    // Handle Content Loading Errors
     player.on('error', () => {
       const error = player.error();
-      console.error('Video.js Error:', error);
-      setPlayerError(error?.message || "The media could not be loaded, either because the server or network failed or because the format is not supported.");
+      setPlayerError(error?.message || "Streaming node connection failed.");
       setShowLoader(false);
     });
 
-    // IMA Ad Logic
+    // VAST Ad Integration Logic
     if (imaLoaded && (player as any).ima) {
       const imaOptions = {
         adTagUrl: VAST_TAG,
         showCountdown: true,
-        debug: false
+        debug: false,
+        adsManagerLoadedTimeout: 5000 // 5 seconds to load ad manager before fallback
       };
 
       try {
         (player as any).ima(imaOptions);
 
-        const handleAdFail = () => {
+        const handleAdSkipAndPlay = () => {
+          console.log('Ad blocked or failed - Playing content directly');
           player.play().catch(() => {});
+          setShowLoader(false);
         };
 
-        player.on('adserror', handleAdFail);
-        player.on('adtimeout', handleAdFail);
+        // Fallback for ad-blockers or server timeouts
+        player.on('adserror', handleAdSkipAndPlay);
+        player.on('adtimeout', handleAdSkipAndPlay);
         
         player.on('readyforpreroll', () => {
           (player as any).ima.initializeAdDisplayContainer();
           (player as any).ima.requestAds();
         });
+
+        player.on('adstart', () => setShowLoader(false));
       } catch (e) {
-        console.warn('IMA Initialization failed', e);
+        console.warn('IMA Plugin Initialization failed', e);
         player.play().catch(() => {});
+        setShowLoader(false);
       }
+    } else if (!VAST_TAG) {
+      setShowLoader(false);
     }
 
     player.on('ready', () => {
-      setShowLoader(false);
+      if (!imaLoaded) setShowLoader(false);
     });
 
     return () => {
@@ -143,7 +152,10 @@ export default function WatchPage() {
         src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
         strategy="afterInteractive"
         onLoad={() => setImaLoaded(true)}
-        onError={() => setImaLoaded(false)}
+        onError={() => {
+          setImaLoaded(false);
+          setShowLoader(false);
+        }}
       />
       
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
@@ -192,6 +204,7 @@ export default function WatchPage() {
           </div>
         </div>
 
+        {/* Dynamic Ad Placement */}
         <div className="mb-8">
           <AdBanner id="watch-main-banner" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
