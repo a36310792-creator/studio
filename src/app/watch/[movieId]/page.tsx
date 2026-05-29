@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useRef, useState } from 'react';
@@ -30,18 +31,30 @@ const ROTATION_LINKS = [
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 /**
- * Detects if a URL should be rendered in an iframe.
+ * Intelligent detection for video streaming vs iframe embedding.
+ * Prevents MEDIA_ERR_SRC_NOT_SUPPORTED by routing non-direct links to iframes.
  */
 function isIframeUrl(url: string): boolean {
   if (!url) return false;
-  return (
-    url.includes('youtube.com/embed') || 
-    url.includes('drive.google.com') || 
-    url.includes('vimeo.com') || 
-    url.includes('dailymotion.com') ||
-    url.includes('ok.ru/videoembed') ||
-    url.includes('facebook.com/plugins/video')
-  );
+  const lowercaseUrl = url.toLowerCase();
+  
+  // 1. Explicit direct video extensions (Video.js handled)
+  const videoExtensions = ['.mp4', '.m3u8', '.webm', '.mkv', '.mov', '.avi'];
+  const hasVideoExtension = videoExtensions.some(ext => lowercaseUrl.split('?')[0].endsWith(ext));
+  
+  if (hasVideoExtension) return false;
+
+  // 2. Known embed patterns or common pirate streaming link structures
+  const knownEmbedPatterns = [
+    'youtube.com', 'drive.google.com', 'vimeo.com', 'dailymotion.com',
+    'ok.ru', 'facebook.com', 'embed', '/e/', '/v/', 'vidsrc', 'streamtape',
+    'mixdrop', 'upstream', 'fembed', 'dood', 'html', 'php'
+  ];
+
+  if (knownEmbedPatterns.some(pattern => lowercaseUrl.includes(pattern))) return true;
+
+  // 3. Fallback: If it's a generic web URL without a video extension, treat as iframe
+  return lowercaseUrl.startsWith('http');
 }
 
 export default function WatchPage() {
@@ -61,18 +74,22 @@ export default function WatchPage() {
 
   const { data: movie, loading: docLoading } = useDoc<Movie>(movieRef);
 
-  const watchUrl = movie?.watchUrl?.trim() || (docLoading ? '' : FALLBACK_VIDEO);
+  const rawUrl = movie?.watchUrl?.trim();
+  const watchUrl = rawUrl || (docLoading ? '' : FALLBACK_VIDEO);
   const useIframe = isIframeUrl(watchUrl);
 
   // Force hide loader after a short fail-safe timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2000);
+    }, 2500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    // Reset error state when watchUrl changes
+    setPlayerError(null);
+
     // If we're using an iframe or don't have a URL yet, don't init Video.js
     if (useIframe || !watchUrl || !videoNode.current) {
       if (playerRef.current) {
@@ -83,30 +100,35 @@ export default function WatchPage() {
     }
 
     // Initialize Video.js for direct links
-    const player = videojs(videoNode.current, {
-      autoplay: false,
-      controls: true,
-      responsive: true,
-      fluid: true,
-      preload: 'auto',
-      playbackRates: [0.5, 1, 1.5, 2],
-      sources: [{
-        src: watchUrl,
-        type: watchUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
-      }]
-    });
+    try {
+      const player = videojs(videoNode.current, {
+        autoplay: false,
+        controls: true,
+        responsive: true,
+        fluid: true,
+        preload: 'auto',
+        playbackRates: [0.5, 1, 1.5, 2],
+        sources: [{
+          src: watchUrl,
+          type: watchUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
+        }]
+      });
 
-    playerRef.current = player;
+      playerRef.current = player;
 
-    player.on('error', () => {
-      const error = player.error();
-      setPlayerError(error?.message || "Streaming node connection failed.");
+      player.on('error', () => {
+        const error = player.error();
+        setPlayerError(error?.message || "Format not supported or network failed.");
+        setShowLoader(false);
+      });
+
+      player.on('loadeddata', () => {
+        setShowLoader(false);
+      });
+    } catch (e) {
+      setPlayerError("Initialization failed.");
       setShowLoader(false);
-    });
-
-    player.on('loadeddata', () => {
-      setShowLoader(false);
-    });
+    }
 
     return () => {
       if (playerRef.current) {
@@ -165,12 +187,13 @@ export default function WatchPage() {
               allowFullScreen
               allow="autoplay; encrypted-media"
               onLoad={() => setShowLoader(false)}
+              onError={() => setPlayerError("The embed server refused the connection.")}
             />
           ) : (
-            <div data-vjs-player>
+            <div data-vjs-player className="w-full h-full">
               <video
                 ref={videoNode}
-                className="video-js vjs-big-play-centered vjs-theme-city"
+                className="video-js vjs-big-play-centered"
                 poster={movie?.posterUrl}
                 playsInline
               />
