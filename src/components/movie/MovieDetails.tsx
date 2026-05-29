@@ -1,16 +1,18 @@
-
 'use client';
 
 import React from 'react';
 import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
+import { AdBanner } from '@/components/ads/AdBanner';
 import Link from 'next/link';
 
 interface MovieDetailsProps {
   movie: Movie;
   onClose: () => void;
 }
+
+const AD_URL = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
 
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
@@ -86,7 +88,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
             </div>
 
             {/* Download Section */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 mb-8">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 mb-12">
               <div className="flex items-center gap-3 mb-2">
                 <Download className="w-6 h-6 text-primary" />
                 <h3 className="text-xl font-black text-white uppercase tracking-wider">Download Links</h3>
@@ -124,6 +126,11 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               <p className="text-[11px] text-center text-[#555] font-bold italic">
                 Note: All links are verified and scanned for security.
               </p>
+            </div>
+
+            {/* Details Page Bottom Ad Banner */}
+            <div className="pb-10">
+              <AdBanner id="details-bottom-banner" href={AD_URL} className="w-full" />
             </div>
           </div>
         </div>

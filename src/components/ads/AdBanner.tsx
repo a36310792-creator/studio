@@ -1,19 +1,20 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { ExternalLink, Zap, ShieldCheck } from 'lucide-react';
 
 interface AdBannerProps {
   id: string;
   html?: string;
+  href?: string;
   className?: string;
 }
 
 /**
  * AdBanner Component
- * Safely injects ad scripts or HTML tags.
- * Uses useEffect to ensure code runs only on the client to avoid hydration errors.
+ * Supports both HTML/Script injection and direct Clickable Banners.
  */
-export const AdBanner = ({ id, html, className }: AdBannerProps) => {
+export const AdBanner = ({ id, html, href, className }: AdBannerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -24,15 +25,10 @@ export const AdBanner = ({ id, html, className }: AdBannerProps) => {
   useEffect(() => {
     if (isMounted && containerRef.current && html) {
       try {
-        // Create a range to parse the HTML string into a fragment
-        // This method allows script tags within the HTML to be executed correctly
         const range = document.createRange();
         range.selectNode(containerRef.current);
         const fragment = range.createContextualFragment(html);
-        
-        // Clear existing placeholder content
         containerRef.current.innerHTML = '';
-        // Append the fragment to the DOM
         containerRef.current.appendChild(fragment);
       } catch (error) {
         console.error('Failed to inject ad script:', error);
@@ -40,9 +36,48 @@ export const AdBanner = ({ id, html, className }: AdBannerProps) => {
     }
   }, [isMounted, html]);
 
-  // Prevent server-side rendering of the internal container to avoid hydration mismatch
   if (!isMounted) {
     return <div className={className} style={{ minHeight: '90px' }} />;
+  }
+
+  // If a direct link is provided, render a high-quality clickable banner
+  if (href) {
+    return (
+      <div className={className}>
+        <div className="text-[9px] text-center text-[#444] font-black uppercase tracking-[3px] mb-2">
+          Sponsored Premium Content
+        </div>
+        <a 
+          href={href} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group relative block w-full overflow-hidden rounded-[24px] border border-primary/20 bg-gradient-to-r from-black via-[#0a0a0a] to-black p-5 shadow-[0_0_20px_rgba(0,229,255,0.05)] transition-all hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] active:scale-[0.98]"
+        >
+          {/* Animated Glow Border */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+          
+          <div className="relative z-10 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <Zap className="w-6 h-6 fill-current" />
+              </div>
+              <div className="flex flex-col">
+                <h4 className="text-[13px] font-black text-white uppercase tracking-tight italic">Unlock High Speed Server</h4>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <ShieldCheck className="w-3 h-3 text-green-500" />
+                  <span className="text-[9px] font-black text-green-500/80 uppercase">Verified Secure Link</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="hidden sm:flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider">
+              <span>Access Now</span>
+              <ExternalLink className="w-3 h-3" />
+            </div>
+          </div>
+        </a>
+      </div>
+    );
   }
 
   return (

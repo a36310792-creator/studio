@@ -75,6 +75,8 @@ const MOCK_MOVIES: Movie[] = [
   }
 ];
 
+const AD_URL = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+
 export default function Home() {
   const db = useFirestore();
   const moviesQuery = useMemo(() => {
@@ -251,7 +253,7 @@ export default function Home() {
 
             {/* Top Ad Banner */}
             <div className="px-5 mb-6">
-              <AdBanner id="home-top-banner" className="w-full" />
+              <AdBanner id="home-top-banner" href={AD_URL} className="w-full" />
             </div>
 
             <div className="px-5 mb-1.5 flex items-center gap-2">
@@ -350,7 +352,26 @@ export default function Home() {
           {displayedMovies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
-                {displayedMovies.map((movie) => (
+                {displayedMovies.slice(0, 4).map((movie) => (
+                  <MovieCard 
+                    key={movie.id} 
+                    movie={movie} 
+                    onSelect={setSelectedMovie}
+                    onToggleBookmark={toggleBookmark}
+                    isBookmarked={bookmarkedIds.includes(movie.id)}
+                  />
+                ))}
+              </div>
+
+              {/* Middle Section Ad Banner */}
+              {displayedMovies.length > 4 && (
+                <div className="my-8">
+                  <AdBanner id="home-mid-banner" href={AD_URL} className="w-full" />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-[15px] mt-4">
+                {displayedMovies.slice(4).map((movie) => (
                   <MovieCard 
                     key={movie.id} 
                     movie={movie} 
