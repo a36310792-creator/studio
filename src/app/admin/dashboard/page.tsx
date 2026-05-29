@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/select";
 import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata';
 import { useAuth, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -31,14 +31,15 @@ export default function AdminDashboard() {
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-      if (!u) router.push('/admin/login');
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push('/admin/login');
+      } else {
+        setIsAuthLoading(false);
+      }
     });
     return () => unsubscribe();
   }, [auth, router]);
@@ -154,7 +155,7 @@ export default function AdminDashboard() {
     });
   };
 
-  if (authLoading || moviesLoading) {
+  if (isAuthLoading || moviesLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />

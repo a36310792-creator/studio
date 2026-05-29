@@ -60,7 +60,7 @@
   "firestore": {
     "/movies/{movieId}": {
       "schema": "Movie",
-      "description": "ALLOW_PUBLIC_READ: Publicly readable collection of movies for all users. WRITE_ADMIN_ONLY: Only authenticated admins can create, update, or delete movies."
+      "description": "PUBLIC_READ: Open access for all users to browse movies. ADMIN_WRITE: Restrict modifications to the project owner/admin."
     }
   }
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -6,7 +7,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter, ArrowDownWideNarrow, ChevronDown } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter, ArrowDownWideNarrow, ChevronDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +24,8 @@ export default function Home() {
   const db = useFirestore();
   const moviesQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'movies'), orderBy('releaseYear', 'desc'));
+    // We use a simple collection reference first to avoid index errors on first load
+    return collection(db, 'movies');
   }, [db]);
 
   const { data: firestoreMovies, loading } = useCollection<Movie>(moviesQuery);
@@ -68,33 +70,39 @@ export default function Home() {
   const allFilteredMovies = useMemo(() => {
     let currentPool = firestoreMovies || [];
 
+    // Filter by tab
     if (navTab === 'saved') {
       currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
     } else if (navTab === 'discover') {
       currentPool = [...currentPool].sort(() => 0.5 - Math.random()).slice(0, 6);
     }
 
+    // Apply filters
     let filtered = currentPool.filter(movie => {
+      const movieGenres = movie.genres || [];
       const matchesGenre = 
         navTab !== 'home' || 
         activeGenre === 'All' || 
-        movie.genres?.includes(activeGenre);
+        movieGenres.includes(activeGenre);
 
       const matchesCategory = 
         navTab !== 'home' || 
         activeCategory === 'All' || 
-        movie.genres?.includes(activeCategory);
+        movieGenres.includes(activeCategory);
 
       const matchesYear = 
         selectedYear === 'All' || 
         movie.releaseYear?.toString() === selectedYear;
 
-      const matchesSearch = movie.title?.toLowerCase().includes(searchQuery.toLowerCase().trim());
+      const matchesSearch = !searchQuery || movie.title?.toLowerCase().includes(searchQuery.toLowerCase().trim());
 
       return matchesGenre && matchesCategory && matchesYear && matchesSearch;
     });
 
-    if (sortBy === 'rating') {
+    // Sort locally to ensure immediate responsiveness
+    if (sortBy === 'latest') {
+      filtered.sort((a, b) => (b.releaseYear || 0) - (a.releaseYear || 0));
+    } else if (sortBy === 'rating') {
       filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
 
@@ -284,7 +292,7 @@ export default function Home() {
 
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center">
-              <ChevronDown className="w-10 h-10 text-primary animate-bounce" />
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
               <p className="text-[10px] font-black text-[#555] uppercase mt-4">Syncing with Cinema...</p>
             </div>
           ) : displayedMovies.length > 0 ? (

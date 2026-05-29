@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -16,14 +16,15 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authChecking, setAuthChecking] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-      if (u) router.push('/admin/dashboard');
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.push('/admin/dashboard');
+      } else {
+        setAuthChecking(false);
+      }
     });
     return () => unsubscribe();
   }, [auth, router]);
@@ -34,15 +35,14 @@ export default function AdminLogin() {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/admin/dashboard');
+      // Success will trigger the useEffect to redirect
     } catch (error: any) {
       alert('Login Failed: ' + (error.message || 'Check credentials.'));
-    } finally {
       setIsLoading(false);
     }
   };
 
-  if (authLoading) {
+  if (authChecking) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
