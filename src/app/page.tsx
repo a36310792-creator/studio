@@ -7,6 +7,7 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
+import { MovieDetails } from '@/components/movie/MovieDetails';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
@@ -76,6 +77,7 @@ export default function Home() {
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -154,8 +156,7 @@ export default function Home() {
   }, [firestoreMovies]);
 
   const handleMovieClick = (movie: Movie) => {
-    // Correct Flow: Step 1 (Home) -> Step 2 (Details)
-    router.push(`/movie/${movie.id}`);
+    setSelectedMovie(movie);
   };
 
   const viewTitle = useMemo(() => {
@@ -219,14 +220,21 @@ export default function Home() {
         onHomeClick={handleSidebarHomeClick}
       />
       
-      {navTab === 'home' && latestMovie && (
+      {navTab === 'home' && latestMovie && !selectedMovie && (
         <NewReleaseToast 
           movieName={`${latestMovie.title} - Now Streaming!`} 
           onWatch={() => handleMovieClick(latestMovie)}
         />
       )}
 
-      <main>
+      {selectedMovie && (
+        <MovieDetails 
+          movie={selectedMovie} 
+          onClose={() => setSelectedMovie(null)} 
+        />
+      )}
+
+      <main className={selectedMovie ? 'hidden' : 'block'}>
         {navTab === 'home' && (
           <>
             <div className="px-5 mb-6">

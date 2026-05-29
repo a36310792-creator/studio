@@ -1,12 +1,12 @@
+
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe, MonitorPlay } from 'lucide-react';
+import { ArrowLeft, Star, Download, Info, Calendar, Globe, MonitorPlay, Zap, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
-import Link from 'next/link';
 
 interface MovieDetailsProps {
   movie: Movie;
@@ -18,7 +18,13 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
+
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
+  const handleAction = () => {
+    window.open(SMART_LINK, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
@@ -33,7 +39,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
         </button>
       </div>
 
-      <div className="w-full h-[65vh] relative">
+      <div className="w-full h-[60vh] relative">
         <img 
           src={movie.posterUrl} 
           className="w-full h-full object-cover" 
@@ -43,9 +49,9 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
       </div>
 
-      <div className="px-6 -mt-32 relative z-[2005] max-w-4xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex-1">
+      <div className="px-6 -mt-24 relative z-[2005] max-w-4xl mx-auto">
+        <div className="flex flex-col gap-8">
+          <div>
             <h1 className="text-[32px] md:text-5xl font-black text-white mb-3 tracking-tight leading-tight uppercase italic">
               {movie.title}
             </h1>
@@ -72,44 +78,33 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               <AdBanner id="details-top-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
-            <div className="space-y-4 mb-8">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <Info className="w-5 h-5 text-primary" />
-                Description
-              </h3>
-              <p className="text-[#8b95a5] text-[15px] leading-relaxed">
+            <div className="grid grid-cols-1 gap-4 mb-8">
+              <Button 
+                onClick={handleAction}
+                className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+              >
+                <MonitorPlay className="w-6 h-6" />
+                WATCH ONLINE HD
+              </Button>
+              
+              <Button 
+                onClick={handleAction}
+                variant="outline"
+                className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+              >
+                <Download className="w-6 h-6 text-primary" />
+                DIRECT DOWNLOAD LINKS
+              </Button>
+            </div>
+
+            <div className="bg-[#0a0a0a] rounded-3xl p-6 border border-white/5 mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-[2px]">Encrypted Server Status</span>
+              </div>
+              <p className="text-[#8b95a5] text-[14px] leading-relaxed italic">
                 {movie.description}
               </p>
-            </div>
-
-            <div className="mb-8">
-              <AdBanner id="details-desc-rot" hrefs={ROTATION_LINKS} className="w-full" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 mb-10">
-              {/* Both buttons now lead to the Secure Gateway (Page 3) */}
-              <Link href={`/download/${movie.id}?mode=watch`}>
-                <Button 
-                  className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
-                >
-                  <MonitorPlay className="w-6 h-6" />
-                  WATCH ONLINE HD
-                </Button>
-              </Link>
-              
-              <Link href={`/download/${movie.id}?mode=download`}>
-                <Button 
-                  variant="outline"
-                  className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
-                >
-                  <Download className="w-6 h-6 text-primary" />
-                  DIRECT DOWNLOAD LINKS
-                </Button>
-              </Link>
-            </div>
-
-            <div className="mb-6">
-              <AdBanner id="details-above-btns-rot" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
             <div className="pb-10">
