@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { CineSuggest } from '@/components/movie/CineSuggest';
+import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { Play, TrendingUp, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -74,6 +75,9 @@ export default function Home() {
   return (
     <div className="relative min-h-screen bg-background pb-32 max-w-[600px] mx-auto shadow-2xl border-x border-white/5">
       <Header />
+      
+      {/* Dynamic Toast Notification */}
+      <NewReleaseToast movieName="Avatar: The Way of Water" />
 
       <main>
         {/* Hero Section */}
