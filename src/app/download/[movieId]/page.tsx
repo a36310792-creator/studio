@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -34,6 +35,7 @@ export default function MovieDetailsPage() {
 
   const { data: movie, loading } = useDoc<Movie>(movieRef);
 
+  // FIXED: Strictly navigate to the internal watch route
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push(`/watch/${movieId}`);
@@ -103,6 +105,7 @@ export default function MovieDetailsPage() {
         </div>
 
         <div className="flex flex-col gap-4">
+          {/* WATCH ONLINE BUTTON - Fixed Navigation */}
           <Button 
             type="button"
             onClick={handleWatch}

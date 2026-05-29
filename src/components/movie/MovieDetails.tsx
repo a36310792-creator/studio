@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -21,6 +22,7 @@ const ROTATION_LINKS = [
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   const router = useRouter();
 
+  // FIXED: Strictly navigate to the internal watch route
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push(`/watch/${movie.id}`);
@@ -85,6 +87,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 mb-8">
+              {/* WATCH ONLINE BUTTON - Fixed Navigation */}
               <Button 
                 type="button"
                 onClick={handleWatch}

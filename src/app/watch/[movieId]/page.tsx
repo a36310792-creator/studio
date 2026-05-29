@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -48,7 +49,6 @@ function isIframeUrl(url: string): boolean {
 
   if (knownEmbedPatterns.some(pattern => lowercaseUrl.includes(pattern))) return true;
 
-  // Default: If it doesn't look like a direct video file, treat it as a player page (iframe)
   return true;
 }
 
@@ -70,11 +70,9 @@ export default function WatchPage() {
   const rawUrl = movie?.watchUrl?.trim();
   const watchUrl = rawUrl || (docLoading ? '' : FALLBACK_VIDEO);
   
-  // Memoize detection to avoid flickering
   const useIframe = useMemo(() => isIframeUrl(watchUrl), [watchUrl]);
 
   useEffect(() => {
-    // Artificial delay to ensure shimmer states feel premium
     const timer = setTimeout(() => {
       setShowLoader(false);
     }, 1500);
@@ -90,7 +88,6 @@ export default function WatchPage() {
       <AdFloating hrefs={[WATCH_AD_LINK]} side="right" />
       <AdFloating hrefs={[WATCH_AD_LINK]} side="left" />
 
-      {/* Persistent Header */}
       <header className="sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-2xl p-6 border-b border-white/5 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-all hover:scale-110 active:scale-90">
           <ArrowLeft className="w-6 h-6" />
@@ -105,9 +102,8 @@ export default function WatchPage() {
       </header>
 
       <main className="p-5 animate-in fade-in slide-in-from-bottom-5 duration-700">
-        {/* Unified Player Section */}
+        {/* PLAYER SECTION - Fixed: No anchor tags, direct video/iframe only */}
         <div className="mb-8 rounded-[32px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video group">
-          {/* Shimmer / Loader State */}
           {(showLoader || docLoading) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
               <Skeleton className="absolute inset-0 shimmer" />
@@ -118,7 +114,6 @@ export default function WatchPage() {
             </div>
           )}
           
-          {/* Error State */}
           {playerError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-8 text-center backdrop-blur-xl">
               <AlertCircle className="w-14 h-14 text-red-500 mb-4 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]" />
@@ -130,7 +125,7 @@ export default function WatchPage() {
             </div>
           )}
 
-          {/* Active Player Node */}
+          {/* ACTIVE PLAYER NODE - Rendered directly without <a> tags */}
           {watchUrl && !docLoading && (
             useIframe ? (
               <iframe 
@@ -155,7 +150,6 @@ export default function WatchPage() {
           )}
         </div>
 
-        {/* Media Metadata Card */}
         <div className="bg-[#0a0a0a] rounded-[40px] border border-white/5 p-7 mb-10 shadow-inner">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -185,7 +179,6 @@ export default function WatchPage() {
           </div>
         </div>
 
-        {/* Alternative Node Grid (Ad Monetized) */}
         <div className="space-y-5">
           <div className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Alternative Nodes</div>
           <div className="grid grid-cols-1 gap-4">
