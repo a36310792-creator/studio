@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
+import { CineSuggest } from '@/components/movie/CineSuggest';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter, ArrowDownWideNarrow, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,6 @@ export default function Home() {
     if (navTab === 'saved') {
       currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
     } else if (navTab === 'discover') {
-      // For discover, we just shuffle a subset
       currentPool = [...currentPool].sort(() => 0.5 - Math.random()).slice(0, 6);
     }
 
@@ -191,6 +191,8 @@ export default function Home() {
               </div>
             </div>
 
+            <CineSuggest />
+
             <div className="px-5 mb-1.5 flex items-center gap-2">
               <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Genres</div>
               <div className="flex-1 h-px bg-white/5"></div>
@@ -225,7 +227,7 @@ export default function Home() {
                       activeCategory === cat 
                         ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
                         : "bg-[#121212] text-[#8b95a5] border-white/5 hover:border-white/20"
-                    }`}
+                  }`}
                   >
                     {cat}
                   </button>
