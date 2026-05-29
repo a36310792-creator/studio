@@ -6,7 +6,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter, ArrowDownWideNarrow, ChevronDown, Loader2 } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, ArrowDownWideNarrow, ChevronDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,6 @@ import {
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
-// Fallback data to ensure the UI is never empty and renders instantly
 const MOCK_MOVIES: Movie[] = [
   {
     id: 'hathras-1',
@@ -122,18 +121,14 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    // Merge Firestore movies with Mock data if Firestore is empty or loading
-    // This ensures the UI is never empty and renders instantly
     let currentPool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : MOCK_MOVIES;
 
-    // Filter by tab
     if (navTab === 'saved') {
       currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
     } else if (navTab === 'discover') {
       currentPool = [...currentPool].sort(() => 0.5 - Math.random()).slice(0, 6);
     }
 
-    // Apply filters
     let filtered = currentPool.filter(movie => {
       const movieGenres = movie.genres || [];
       const matchesGenre = 
@@ -155,7 +150,6 @@ export default function Home() {
       return matchesGenre && matchesCategory && matchesYear && matchesSearch;
     });
 
-    // Sort
     if (sortBy === 'latest') {
       filtered.sort((a, b) => (b.releaseYear || 0) - (a.releaseYear || 0));
     } else if (sortBy === 'rating') {
