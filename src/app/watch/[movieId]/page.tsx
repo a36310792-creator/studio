@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Play, MonitorPlay, ShieldCheck, Loader2, Sparkles, Film, Zap, Maximize2, SkipForward, ExternalLink, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Play, MonitorPlay, ShieldCheck, Loader2, Sparkles, Film, Zap, Maximize2, SkipForward, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
+import Script from 'next/script';
 import { useDoc, useFirestore, useCollection } from '@/firebase';
 import { doc, collection, limit, query } from 'firebase/firestore';
 
@@ -17,14 +18,13 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
-
-// Reliable MP4 ad source (Tech/Abstract style)
-const AD_VIDEO_URL = "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+const IMA_AD_TAG = "https://youradexchange.com/video/select.php?r=11371326";
 
 export default function WatchOnline() {
   const { movieId } = useParams();
   const db = useFirestore();
-  const router = useRouter();
+  const playerRef = useRef<any>(null);
+  const videoNodeRef = useRef<HTMLVideoElement>(null);
   
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -39,48 +39,59 @@ export default function WatchOnline() {
   const { data: movie, loading: movieLoading } = useDoc<Movie>(movieRef);
   const { data: relatedMovies } = useCollection<Movie>(relatedQuery);
   
-  const [playbackState, setPlaybackState] = useState<'idle' | 'loading' | 'ad' | 'playing'>('idle');
-  const [adCountdown, setAdCountdown] = useState(15);
-  const [skipAvailable, setSkipAvailable] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (playbackState === 'ad') {
-      if (adCountdown > 0) {
-        timer = setTimeout(() => {
-          setAdCountdown(prev => prev - 1);
-          // Show skip button after 5 seconds (15 - 10 = 5 elapsed)
-          if (adCountdown <= 11) setSkipAvailable(true);
-        }, 1000);
-      } else {
-        handleAdFinish();
-      }
-    }
-    return () => clearTimeout(timer);
-  }, [playbackState, adCountdown]);
+  const [playbackState, setPlaybackState] = useState<'idle' | 'loading' | 'playing'>('idle');
+  const [scriptsLoaded, setScriptsLoaded] = useState({
+    videojs: false,
+    ima: false,
+    google: false
+  });
 
   const handlePlayClick = () => {
     setPlaybackState('loading');
-    // Open monetization in new tab
+    // Open monetization in new tab as per previous requirements
     window.open(SMART_LINK, '_blank');
     
-    // Simulate buffer before starting ad
+    // Buffer for 1.5s to show premium initializing animation
     setTimeout(() => {
-      setPlaybackState('ad');
-      setAdCountdown(15);
-      setSkipAvailable(false);
-    }, 1200);
+      setPlaybackState('playing');
+    }, 1500);
   };
 
-  const handleAdFinish = () => {
-    setPlaybackState('playing');
-  };
+  useEffect(() => {
+    if (playbackState === 'playing' && scriptsLoaded.videojs && scriptsLoaded.ima && scriptsLoaded.google && videoNodeRef.current) {
+      // Initialize Video.js
+      const vjs = (window as any).videojs;
+      if (!vjs) return;
 
-  const handleAdClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    window.open(SMART_LINK, '_blank');
-  };
+      const player = vjs(videoNodeRef.current, {
+        autoplay: true,
+        controls: true,
+        responsive: true,
+        fluid: true,
+        poster: movie?.posterUrl,
+        sources: [{
+          src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Fallback stream
+          type: 'video/mp4'
+        }]
+      });
+
+      playerRef.current = player;
+
+      // Initialize IMA
+      if (player.ima) {
+        player.ima({
+          adTagUrl: IMA_AD_TAG,
+          showCountdown: true,
+        });
+      }
+
+      return () => {
+        if (playerRef.current) {
+          playerRef.current.dispose();
+        }
+      };
+    }
+  }, [playbackState, scriptsLoaded, movie]);
 
   if (movieLoading && !movie) {
     return (
@@ -92,6 +103,26 @@ export default function WatchOnline() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden">
+      {/* External CSS for Video.js and IMA */}
+      <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.css" rel="stylesheet" />
+      
+      <Script 
+        src="https://vjs.zencdn.net/8.10.0/video.min.js" 
+        strategy="lazyOnload" 
+        onLoad={() => setScriptsLoaded(prev => ({...prev, videojs: true}))} 
+      />
+      <Script 
+        src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
+        strategy="lazyOnload" 
+        onLoad={() => setScriptsLoaded(prev => ({...prev, google: true}))} 
+      />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.js" 
+        strategy="lazyOnload" 
+        onLoad={() => setScriptsLoaded(prev => ({...prev, ima: true}))} 
+      />
+
       <AdPopup hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
@@ -108,7 +139,7 @@ export default function WatchOnline() {
 
       <main className="p-0">
         <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-y border-white/5">
-          {/* 1. IDLE STATE */}
+          {/* IDLE STATE */}
           {playbackState === 'idle' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <img 
@@ -132,89 +163,36 @@ export default function WatchOnline() {
                 </p>
                 <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                   <ShieldCheck className="w-3 h-3 text-green-500" />
-                  <span className="text-[9px] font-black text-white/50 uppercase">Encrypted Connection</span>
+                  <span className="text-[9px] font-black text-white/50 uppercase">IMA Protected Player</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 2. LOADING STATE */}
+          {/* LOADING STATE */}
           {playbackState === 'loading' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
               <div className="relative">
                 <Loader2 className="w-14 h-14 text-primary animate-spin" />
                 <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse"></div>
               </div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[5px] mt-6">Allocating CDN Resources...</p>
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-[5px] mt-6">Initializing Ad Engine...</p>
             </div>
           )}
 
-          {/* 3. AD STATE (Pre-roll Video) */}
-          {playbackState === 'ad' && (
-            <div className="absolute inset-0 z-30 bg-black animate-in fade-in duration-500">
-              <video 
-                className="w-full h-full object-cover cursor-pointer"
-                autoPlay 
-                muted={isMuted}
-                playsInline
-                onEnded={handleAdFinish}
-                onClick={handleAdClick}
-              >
-                <source src={AD_VIDEO_URL} type="video/mp4" />
-              </video>
-              
-              <div className="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none">
-                <div className="flex justify-between items-start">
-                  <div className="bg-black/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
-                    <span className="text-[9px] font-black text-primary uppercase bg-primary/10 px-2 py-1 rounded-md border border-primary/20">Ad</span>
-                    <span className="text-[11px] font-black text-white tracking-tight italic">Support MP4VEGA Hosting</span>
-                  </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-                    className="pointer-events-auto bg-black/80 p-3 rounded-2xl border border-white/10 text-white hover:bg-primary hover:text-black transition-all"
-                  >
-                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                  </button>
-                </div>
-
-                <div className="flex justify-end items-end gap-3 pointer-events-auto">
-                  <div className="bg-black/90 backdrop-blur-2xl border border-primary/20 p-4 rounded-3xl flex flex-col items-end min-w-[140px] shadow-2xl">
-                    <div className="text-[9px] font-black text-[#666] uppercase mb-1.5 tracking-widest">Video Ad Remaining</div>
-                    <div className="text-2xl font-black text-primary tabular-nums leading-none italic">{adCountdown}s</div>
-                  </div>
-
-                  {skipAvailable ? (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleAdFinish(); }}
-                      className="h-14 bg-primary text-black px-8 rounded-3xl font-black text-[12px] uppercase flex items-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.4)] animate-in slide-in-from-right-20 duration-500 hover:scale-105 active:scale-95 transition-all"
-                    >
-                      Skip Ad <SkipForward className="w-5 h-5 fill-current" />
-                    </button>
-                  ) : (
-                    <div className="h-14 bg-black/80 border border-white/10 text-white/30 px-8 rounded-3xl font-black text-[10px] uppercase flex items-center gap-3">
-                      Skip in {adCountdown - 10}s
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 4. PLAYING STATE */}
+          {/* PLAYING STATE (Video.js Player) */}
           {playbackState === 'playing' && (
             <div className="w-full h-full relative animate-in zoom-in-95 duration-1000">
-              <video 
-                className="w-full h-full object-contain" 
-                controls 
-                autoPlay
-                poster={movie?.posterUrl}
-              >
-                <source src="#" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <div className="absolute top-4 right-4 bg-primary/20 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] font-black text-primary border border-primary/30 flex items-center gap-2 shadow-xl">
+               <div data-vjs-player>
+                <video 
+                  ref={videoNodeRef} 
+                  className="video-js vjs-big-play-centered vjs-theme-city"
+                  playsInline
+                ></video>
+              </div>
+              <div className="absolute top-4 right-4 z-10 bg-primary/20 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] font-black text-primary border border-primary/30 flex items-center gap-2 shadow-xl pointer-events-none">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                SECURE TUNNEL: 1080P ACTIVE
+                IMA AD SYSTEM ACTIVE
               </div>
             </div>
           )}
@@ -241,7 +219,7 @@ export default function WatchOnline() {
               </div>
               <div className="bg-primary text-black px-4 py-2 rounded-2xl flex items-center gap-2 shadow-[0_5px_15px_rgba(0,229,255,0.2)]">
                 <Zap className="w-4 h-4 fill-current" />
-                <span className="text-[10px] font-black uppercase tracking-tighter">Ultra Speed</span>
+                <span className="text-[10px] font-black uppercase tracking-tighter">High Res</span>
               </div>
             </div>
             
@@ -256,8 +234,8 @@ export default function WatchOnline() {
               asChild
             >
               <a href={SMART_LINK} target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic transition-all">Change Server</span>
-                <span className="text-[9px] opacity-40 uppercase font-bold">Priority Mirror 02</span>
+                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic transition-all">VIP Server</span>
+                <span className="text-[9px] opacity-40 uppercase font-bold">Fast Mirror</span>
               </a>
             </Button>
             <Button 
@@ -265,8 +243,8 @@ export default function WatchOnline() {
               asChild
             >
               <a href={SMART_LINK} target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider text-red-500/80 group-hover:text-red-500">Report Issue</span>
-                <span className="text-[9px] opacity-40 uppercase font-bold">Link Broken?</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-red-500/80 group-hover:text-red-500">Report</span>
+                <span className="text-[9px] opacity-40 uppercase font-bold">Broken?</span>
               </a>
             </Button>
           </div>
