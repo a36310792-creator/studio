@@ -6,8 +6,9 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, Filter, ArrowDownWideNarrow, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -72,11 +73,13 @@ export default function Home() {
   const [activeGenre, setActiveGenre] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedYear, setSelectedYear] = useState('All');
+  const [sortBy, setSortBy] = useState('latest');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [discoverMovies, setDiscoverMovies] = useState<Movie[]>([]);
+  const [visibleCount, setVisibleCount] = useState(10);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,8 +124,8 @@ export default function Home() {
     return ['All', ...range];
   }, []);
 
-  const displayedMovies = useMemo(() => {
-    let currentPool = movies;
+  const allFilteredMovies = useMemo(() => {
+    let currentPool = [...movies];
 
     if (navTab === 'saved') {
       currentPool = movies.filter(m => bookmarkedIds.includes(m.id));
@@ -130,7 +133,7 @@ export default function Home() {
       currentPool = discoverMovies;
     }
 
-    return currentPool.filter(movie => {
+    let filtered = currentPool.filter(movie => {
       const matchesGenre = 
         navTab !== 'home' || 
         activeGenre === 'All' || 
@@ -149,7 +152,24 @@ export default function Home() {
 
       return matchesGenre && matchesCategory && matchesYear && matchesSearch;
     });
-  }, [activeGenre, activeCategory, selectedYear, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
+
+    // Sorting Logic
+    if (sortBy === 'latest') {
+      filtered.sort((a, b) => {
+        const idA = parseInt(a.id) || 0;
+        const idB = parseInt(b.id) || 0;
+        return idB - idA;
+      });
+    } else if (sortBy === 'rating') {
+      filtered.sort((a, b) => b.rating - a.rating);
+    }
+
+    return filtered;
+  }, [activeGenre, activeCategory, selectedYear, searchQuery, movies, navTab, bookmarkedIds, discoverMovies, sortBy]);
+
+  const displayedMovies = useMemo(() => {
+    return allFilteredMovies.slice(0, visibleCount);
+  }, [allFilteredMovies, visibleCount]);
 
   const latestMovie = useMemo(() => {
     return movies.length > 0 ? movies[0] : null;
@@ -187,6 +207,7 @@ export default function Home() {
 
   const handleSidebarCategorySelect = (category: string) => {
     setNavTab('home');
+    setVisibleCount(10);
     if (genres.includes(category)) {
       setActiveGenre(category);
       setActiveCategory('All');
@@ -202,7 +223,12 @@ export default function Home() {
     setActiveGenre('All');
     setActiveCategory('All');
     setSelectedYear('All');
+    setVisibleCount(10);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const loadMore = () => {
+    setVisibleCount(prev => prev + 10);
   };
 
   return (
@@ -236,7 +262,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Row 1: Genres */}
             <div className="px-5 mb-1.5 flex items-center gap-2">
               <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Genres</div>
               <div className="flex-1 h-px bg-white/5"></div>
@@ -245,7 +270,7 @@ export default function Home() {
               {genres.map((genre) => (
                 <button
                   key={genre}
-                  onClick={() => setActiveGenre(genre)}
+                  onClick={() => { setActiveGenre(genre); setVisibleCount(10); }}
                   className={`px-4 py-2 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${
                     activeGenre === genre 
                       ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
@@ -257,7 +282,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Row 2: Categories + Year Dropdown */}
             <div className="px-5 mb-1.5 flex items-center gap-2">
               <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Categories</div>
               <div className="flex-1 h-px bg-white/5"></div>
@@ -267,7 +291,7 @@ export default function Home() {
                 {categories.map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => setActiveCategory(cat)}
+                    onClick={() => { setActiveCategory(cat); setVisibleCount(10); }}
                     className={`px-4 py-2 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${
                       activeCategory === cat 
                         ? "bg-primary text-black border-primary shadow-[0_5px_10px_rgba(0,229,255,0.15)]" 
@@ -280,7 +304,7 @@ export default function Home() {
               </div>
               
               <div className="w-24 shrink-0">
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <Select value={selectedYear} onValueChange={(val) => { setSelectedYear(val); setVisibleCount(10); }}>
                   <SelectTrigger className="bg-[#121212] border-white/5 h-9 rounded-xl text-[11px] font-black text-white focus:ring-primary/30">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
@@ -314,36 +338,66 @@ export default function Home() {
         )}
 
         <section className="px-5 min-h-[400px]">
-          <div className="flex justify-between items-center mb-5">
-            <h3 className="text-[16px] font-black flex items-center gap-2">
-              {viewTitle.icon}
-              {viewTitle.label}
-              {selectedYear !== 'All' && navTab === 'home' && (
-                <span className="text-primary/60 text-[13px]">({selectedYear})</span>
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-[16px] font-black flex items-center gap-2">
+                {viewTitle.icon}
+                {viewTitle.label}
+              </h3>
+              {(activeGenre !== 'All' || activeCategory !== 'All' || selectedYear !== 'All') && navTab === 'home' && (
+                <button 
+                  onClick={() => { setActiveGenre('All'); setActiveCategory('All'); setSelectedYear('All'); setVisibleCount(10); }}
+                  className="text-[10px] font-black text-[#555] hover:text-white transition-colors underline underline-offset-4"
+                >
+                  RESET FILTERS
+                </button>
               )}
-            </h3>
-            {(activeGenre !== 'All' || activeCategory !== 'All' || selectedYear !== 'All') && navTab === 'home' && (
-               <button 
-                onClick={() => { setActiveGenre('All'); setActiveCategory('All'); setSelectedYear('All'); }}
-                className="text-[10px] font-black text-[#555] hover:text-white transition-colors underline underline-offset-4"
-               >
-                 RESET FILTERS
-               </button>
-            )}
+            </div>
+            
+            <div className="flex items-center justify-between bg-[#121212]/50 p-2 rounded-2xl border border-white/5">
+               <div className="flex items-center gap-2 px-2">
+                 <ArrowDownWideNarrow className="w-4 h-4 text-primary" />
+                 <span className="text-[10px] font-black text-[#555] uppercase tracking-wider">Sort Content</span>
+               </div>
+               <Select value={sortBy} onValueChange={setSortBy}>
+                 <SelectTrigger className="bg-transparent border-none h-8 w-[140px] text-[11px] font-black text-white focus:ring-0">
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent className="bg-[#121212] border-white/10 text-white">
+                   <SelectItem value="latest" className="focus:bg-primary focus:text-black font-bold text-[11px]">LATEST ADDED</SelectItem>
+                   <SelectItem value="rating" className="focus:bg-primary focus:text-black font-bold text-[11px]">HIGHEST RATED</SelectItem>
+                 </SelectContent>
+               </Select>
+            </div>
           </div>
 
           {displayedMovies.length > 0 ? (
-            <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
-              {displayedMovies.map((movie) => (
-                <MovieCard 
-                  key={movie.id} 
-                  movie={movie} 
-                  onSelect={setSelectedMovie}
-                  onToggleBookmark={toggleBookmark}
-                  isBookmarked={bookmarkedIds.includes(movie.id)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
+                {displayedMovies.map((movie) => (
+                  <MovieCard 
+                    key={movie.id} 
+                    movie={movie} 
+                    onSelect={setSelectedMovie}
+                    onToggleBookmark={toggleBookmark}
+                    isBookmarked={bookmarkedIds.includes(movie.id)}
+                  />
+                ))}
+              </div>
+              
+              {allFilteredMovies.length > visibleCount && (
+                <div className="mt-12 mb-8 flex justify-center">
+                  <Button 
+                    onClick={loadMore}
+                    variant="outline"
+                    className="h-12 px-10 rounded-2xl bg-[#121212] border-white/5 text-white font-black text-[12px] hover:bg-primary hover:text-black hover:border-primary transition-all shadow-xl"
+                  >
+                    LOAD MORE MOVIES
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="py-20 flex flex-col items-center justify-center text-center px-10 border-2 border-dashed border-white/5 rounded-[32px]">
               <Film className="w-16 h-16 text-[#222] mb-4" />
@@ -369,7 +423,7 @@ export default function Home() {
         />
       )}
 
-      <BottomNav activeTab={navTab} onTabChange={setNavTab} />
+      <BottomNav activeTab={navTab} onTabChange={(tab) => { setNavTab(tab); setVisibleCount(10); }} />
     </div>
   );
 }
