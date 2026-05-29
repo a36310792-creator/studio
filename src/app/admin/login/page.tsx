@@ -27,6 +27,11 @@ export default function AdminLogin() {
   const [authChecking, setAuthChecking] = useState(true);
 
   useEffect(() => {
+    // Safety timer for auth check
+    const safetyTimer = setTimeout(() => {
+      if (authChecking) setAuthChecking(false);
+    }, 2500);
+
     // Check local session first
     const localSession = localStorage.getItem('admin_session');
     if (localSession === 'true') {
@@ -41,8 +46,12 @@ export default function AdminLogin() {
         setAuthChecking(false);
       }
     });
-    return () => unsubscribe();
-  }, [auth, router]);
+    
+    return () => {
+      unsubscribe();
+      clearTimeout(safetyTimer);
+    };
+  }, [auth, router, authChecking]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,9 +72,7 @@ export default function AdminLogin() {
     } catch (err: any) {
       // 3. Graceful error handling - bypass Firebase UI popups
       if (err.code === 'auth/invalid-api-key' || err.code === 'auth/network-request-failed') {
-        // If Firebase is broken but credentials match fallback (already checked), 
-        // we'd have logged in. If they don't match local, we show invalid.
-        setError('Connection issues detected. Using offline mode failed. Please check credentials.');
+        setError('Connection issues detected. Please check credentials or use fallback mode.');
       } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('Invalid admin credentials. Please try again.');
       } else {

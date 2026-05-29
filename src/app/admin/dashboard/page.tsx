@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [localMovies, setLocalMovies] = useState<Movie[]>([]);
+  const [localMovies, setLocalMovies] = useState<Movie[]>(MOCK_FALLBACK);
   const [isAdding, setIsAdding] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isFetching, setIsFetching] = useState(false);
@@ -72,9 +72,11 @@ export default function AdminDashboard() {
   // Authentication Protection
   useEffect(() => {
     const localSession = localStorage.getItem('admin_session');
-    if (localSession === 'true') {
-      setIsAuthLoading(false);
-    }
+    
+    // Safety timer to end loading if auth takes too long
+    const safetyTimer = setTimeout(() => {
+      if (isAuthLoading) setIsAuthLoading(false);
+    }, 2500);
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user && localSession !== 'true') {
@@ -86,8 +88,12 @@ export default function AdminDashboard() {
         setIsAuthLoading(false);
       }
     });
-    return () => unsubscribe();
-  }, [auth, router]);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(safetyTimer);
+    };
+  }, [auth, router, isAuthLoading]);
 
   // Firestore Sync
   const moviesQuery = useMemo(() => {
@@ -102,8 +108,6 @@ export default function AdminDashboard() {
     if (!firestoreLoading) {
       if (firestoreMovies && firestoreMovies.length > 0) {
         setLocalMovies(firestoreMovies);
-      } else {
-        setLocalMovies(MOCK_FALLBACK);
       }
     }
   }, [firestoreMovies, firestoreLoading]);
@@ -272,7 +276,7 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 {localMovies.map(movie => (
                   <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
-                    <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/5">
+                    <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
                       <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
                     </div>
                     <div className="flex-1 min-w-0 py-1">

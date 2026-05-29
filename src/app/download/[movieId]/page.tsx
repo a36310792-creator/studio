@@ -59,10 +59,11 @@ export default function DownloadGateway() {
   const [status, setStatus] = useState<'scanning' | 'locked' | 'verifying' | 'unlocked'>('scanning');
   const [adClicks, setAdClicks] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [forceShow, setForceShow] = useState(false);
 
   const movie = useMemo(() => {
     if (firestoreMovie) return firestoreMovie;
-    return MOCK_FALLBACK_MOVIES.find(m => m.id === movieId) || MOCK_FALLBACK_MOVIES[0];
+    return MOCK_FALLBACK_MOVIES.find(m => m.id === (movieId as string)) || MOCK_FALLBACK_MOVIES[0];
   }, [firestoreMovie, movieId]);
 
   // Initial Security Scan Countdown
@@ -76,6 +77,12 @@ export default function DownloadGateway() {
       }
     }
   }, [countdown, status]);
+
+  // Safety timer to prevent infinite spinner
+  useEffect(() => {
+    const timer = setTimeout(() => setForceShow(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleUnlockClick = () => {
     if (isProcessing) return;
@@ -96,7 +103,7 @@ export default function DownloadGateway() {
     }, 2500);
   };
 
-  if (firestoreLoading && !movie) {
+  if (firestoreLoading && !movie && !forceShow) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
