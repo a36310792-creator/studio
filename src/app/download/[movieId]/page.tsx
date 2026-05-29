@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -18,9 +19,11 @@ import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
 
+// Updated ad link for Movie Details Page
+const DETAILS_AD_LINK = "https://commendtwisted.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995";
 const ROTATION_LINKS = [
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
-  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
+  DETAILS_AD_LINK,
+  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed"
 ];
 
 export default function MovieDetailsPage() {
@@ -40,6 +43,9 @@ export default function MovieDetailsPage() {
   };
 
   const handleDownload = () => {
+    // Trigger ad link in new tab
+    window.open(DETAILS_AD_LINK, '_blank');
+    // Proceed to Gateway Page
     router.push(`/movie/${movieId}`);
   };
 
@@ -47,8 +53,8 @@ export default function MovieDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-44 shadow-2xl relative font-body overflow-x-hidden">
-      <AdFloating hrefs={ROTATION_LINKS} side="right" />
-      <AdFloating hrefs={ROTATION_LINKS} side="left" />
+      <AdFloating hrefs={[DETAILS_AD_LINK]} side="right" />
+      <AdFloating hrefs={[DETAILS_AD_LINK]} side="left" />
       
       {/* Header with Fixed Back Button */}
       <div className="absolute top-5 left-5 z-[2010]">
@@ -99,12 +105,7 @@ export default function MovieDetailsPage() {
           </div>
         </div>
 
-        {/* Top Promotional Unit */}
-        <div className="w-full">
-          <AdBanner id="details-top-fixed" hrefs={ROTATION_LINKS} className="w-full" />
-        </div>
-
-        {/* Primary Action Funnel */}
+        {/* Action Funnel */}
         <div className="flex flex-col gap-3.5">
           <Button 
             onClick={handleWatch}
@@ -135,15 +136,14 @@ export default function MovieDetailsPage() {
           </p>
         </div>
 
-        {/* Secondary Promotional Unit */}
         <div className="w-full">
-          <AdBanner id="details-bottom-fixed" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="details-bottom-fixed" hrefs={[DETAILS_AD_LINK]} className="w-full" />
         </div>
       </main>
 
       {/* Global Sticky Footer Monetization */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-[2020] bg-black/95 backdrop-blur-3xl border-t border-primary/20 p-2.5 max-w-[420px] shadow-[0_-15px_50px_rgba(0,0,0,0.9)]">
-        <AdBanner id="details-sticky-footer" hrefs={ROTATION_LINKS} className="w-full" />
+        <AdBanner id="details-sticky-footer" hrefs={[DETAILS_AD_LINK]} className="w-full" />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -20,11 +21,8 @@ import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
 
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
-const ROTATION_LINKS = [
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
-  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
-];
+// Updated ad link for Gateway Page
+const GATEWAY_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
 
 export default function MovieGateway() {
   const { movieId } = useParams();
@@ -39,21 +37,23 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleMonetizationAction = () => {
-    window.open(SMART_LINK, '_blank');
+    window.open(GATEWAY_AD_LINK, '_blank');
   };
 
   const handleDownloadAction = () => {
+    // Open ad link first in new tab
+    window.open(GATEWAY_AD_LINK, '_blank');
+    
+    // Attempt download
     if (movie?.directDownloadUrl) {
       window.open(movie.directDownloadUrl, '_blank');
-    } else {
-      window.open(SMART_LINK, '_blank');
     }
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl relative overflow-x-hidden font-body">
-      <AdFloating hrefs={ROTATION_LINKS} side="right" />
-      <AdFloating hrefs={ROTATION_LINKS} side="left" />
+      <AdFloating hrefs={[GATEWAY_AD_LINK]} side="right" />
+      <AdFloating hrefs={[GATEWAY_AD_LINK]} side="left" />
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl p-5 border-b border-white/5 flex items-center justify-between">
@@ -118,10 +118,6 @@ export default function MovieGateway() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <AdBanner id="gateway-mid" hrefs={ROTATION_LINKS} className="w-full" />
-        </div>
-
         {/* Server Nodes */}
         <div className="space-y-4">
           <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[3px] ml-1">Alternative Nodes</h3>
@@ -153,7 +149,7 @@ export default function MovieGateway() {
         </div>
 
         <div className="mt-8">
-          <AdBanner id="gateway-bottom" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="gateway-bottom-large" hrefs={[GATEWAY_AD_LINK]} className="w-full" />
         </div>
       </main>
 

@@ -23,37 +23,23 @@ import { type Movie } from '@/components/movie/MovieCard';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 
-const ROTATION_LINKS = [
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
-  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
-];
+// Updated specific ad link for Watch Page
+const WATCH_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
 
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
-/**
- * Intelligent detection for video streaming vs iframe embedding.
- * Prevents MEDIA_ERR_SRC_NOT_SUPPORTED by routing non-direct links to iframes.
- */
 function isIframeUrl(url: string): boolean {
   if (!url) return false;
   const lowercaseUrl = url.toLowerCase();
-  
-  // 1. Explicit direct video extensions (Video.js handled)
   const videoExtensions = ['.mp4', '.m3u8', '.webm', '.mkv', '.mov', '.avi'];
   const hasVideoExtension = videoExtensions.some(ext => lowercaseUrl.split('?')[0].endsWith(ext));
-  
   if (hasVideoExtension) return false;
-
-  // 2. Known embed patterns or common pirate streaming link structures
   const knownEmbedPatterns = [
     'youtube.com', 'drive.google.com', 'vimeo.com', 'dailymotion.com',
     'ok.ru', 'facebook.com', 'embed', '/e/', '/v/', 'vidsrc', 'streamtape',
     'mixdrop', 'upstream', 'fembed', 'dood', 'html', 'php'
   ];
-
   if (knownEmbedPatterns.some(pattern => lowercaseUrl.includes(pattern))) return true;
-
-  // 3. Fallback: If it's a generic web URL without a video extension, treat as iframe
   return lowercaseUrl.startsWith('http');
 }
 
@@ -78,19 +64,15 @@ export default function WatchPage() {
   const watchUrl = rawUrl || (docLoading ? '' : FALLBACK_VIDEO);
   const useIframe = isIframeUrl(watchUrl);
 
-  // Force hide loader after a short fail-safe timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2500);
+    }, 2000); // 2 second fail-safe timeout
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    // Reset error state when watchUrl changes
     setPlayerError(null);
-
-    // If we're using an iframe or don't have a URL yet, don't init Video.js
     if (useIframe || !watchUrl || !videoNode.current) {
       if (playerRef.current) {
         playerRef.current.dispose();
@@ -99,7 +81,6 @@ export default function WatchPage() {
       return;
     }
 
-    // Initialize Video.js for direct links
     try {
       const player = videojs(videoNode.current, {
         autoplay: false,
@@ -107,24 +88,17 @@ export default function WatchPage() {
         responsive: true,
         fluid: true,
         preload: 'auto',
-        playbackRates: [0.5, 1, 1.5, 2],
         sources: [{
           src: watchUrl,
           type: watchUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
         }]
       });
-
       playerRef.current = player;
-
       player.on('error', () => {
-        const error = player.error();
-        setPlayerError(error?.message || "Format not supported or network failed.");
+        setPlayerError("Streaming error: The media could not be loaded.");
         setShowLoader(false);
       });
-
-      player.on('loadeddata', () => {
-        setShowLoader(false);
-      });
+      player.on('loadeddata', () => setShowLoader(false));
     } catch (e) {
       setPlayerError("Initialization failed.");
       setShowLoader(false);
@@ -139,13 +113,13 @@ export default function WatchPage() {
   }, [watchUrl, useIframe]);
 
   const handleAction = () => {
-    window.open(ROTATION_LINKS[0], '_blank');
+    window.open(WATCH_AD_LINK, '_blank');
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-24 shadow-2xl relative overflow-x-hidden font-body">
-      <AdFloating hrefs={ROTATION_LINKS} side="right" />
-      <AdFloating hrefs={ROTATION_LINKS} side="left" />
+      <AdFloating hrefs={[WATCH_AD_LINK]} side="right" />
+      <AdFloating hrefs={[WATCH_AD_LINK]} side="left" />
 
       <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl p-5 border-b border-white/5 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-colors">
@@ -163,19 +137,19 @@ export default function WatchPage() {
       <main className="p-5">
         <div className="mb-6 rounded-[24px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_30px_rgba(0,229,255,0.1)] relative aspect-video">
           {showLoader && !playerError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 transition-opacity duration-300">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20">
               <Activity className="w-8 h-8 text-primary animate-spin mb-3" />
-              <span className="text-[10px] font-black text-primary uppercase tracking-[2px]">Initializing Secure Player...</span>
+              <span className="text-[10px] font-black text-primary uppercase">Initializing...</span>
             </div>
           )}
           
           {playerError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-6 text-center">
               <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
-              <h3 className="text-sm font-black uppercase text-white mb-2">Streaming Error</h3>
-              <p className="text-[10px] text-[#555] font-bold leading-relaxed mb-4">{playerError}</p>
-              <Button onClick={() => window.location.reload()} variant="outline" className="h-9 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-black">
-                RETRY CONNECTION
+              <h3 className="text-sm font-black uppercase mb-2">Streaming Error</h3>
+              <p className="text-[10px] text-[#555] font-bold mb-4">{playerError}</p>
+              <Button onClick={() => window.location.reload()} variant="outline" className="h-9 px-6 rounded-xl border-primary/20 text-primary">
+                RETRY
               </Button>
             </div>
           )}
@@ -187,7 +161,6 @@ export default function WatchPage() {
               allowFullScreen
               allow="autoplay; encrypted-media"
               onLoad={() => setShowLoader(false)}
-              onError={() => setPlayerError("The embed server refused the connection.")}
             />
           ) : (
             <div data-vjs-player className="w-full h-full">
@@ -199,11 +172,6 @@ export default function WatchPage() {
               />
             </div>
           )}
-        </div>
-
-        {/* Dynamic Ad Placement */}
-        <div className="mb-8">
-          <AdBanner id="watch-main-banner" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
         <div className="bg-[#0a0a0a] rounded-[32px] border border-white/5 p-6 mb-8">
@@ -219,9 +187,6 @@ export default function WatchPage() {
                   <span className="text-[9px] font-bold text-green-500 uppercase">Premium Encryption Active</span>
                 </div>
               </div>
-            </div>
-            <div className="bg-primary/20 border border-primary/30 px-3 py-1 rounded-full">
-              <span className="text-[9px] font-black text-primary">SECURE</span>
             </div>
           </div>
 
@@ -263,13 +228,13 @@ export default function WatchPage() {
             ))}
           </div>
         </div>
+
+        <div className="mt-12">
+          <AdBanner id="watch-bottom-banner" hrefs={[WATCH_AD_LINK]} className="w-full" />
+        </div>
       </main>
 
       <footer className="p-8 text-center">
-        <div className="flex items-center justify-center gap-2 text-red-500 mb-2">
-          <AlertCircle className="w-4 h-4" />
-          <span className="text-[10px] font-black uppercase">Copyright Protection Active</span>
-        </div>
         <p className="text-[9px] text-[#222] font-black uppercase tracking-widest leading-relaxed">
           Tunnel protocol active. AES-256 server-side encryption enabled for all active streams.
         </p>

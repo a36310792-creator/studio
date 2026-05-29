@@ -24,10 +24,11 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import Script from 'next/script';
 
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
+// Updated specific ad link for Home Page
+const HOME_AD_LINK = "https://commendtwisted.com/mygta0t4?key=1b3b930c08b87fb0f6d646f6149ac6f1";
 const ROTATION_LINKS = [
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
-  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
+  HOME_AD_LINK,
+  "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf"
 ];
 
 export default function Home() {
@@ -183,8 +184,9 @@ export default function Home() {
         src="//acscdn.com/script/aclib.js" 
         strategy="lazyOnload" 
       />
-      <AdPopup hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
-      <AdFloating hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
+      <AdPopup hrefs={[HOME_AD_LINK]} />
+      <AdFloating hrefs={[HOME_AD_LINK]} side="right" />
+      <AdFloating hrefs={[HOME_AD_LINK]} side="left" />
       
       <Header 
         onSearchClick={handleSearchIconClick} 
@@ -216,7 +218,7 @@ export default function Home() {
             </div>
 
             <div className="px-5 mb-6">
-              <AdBanner id="home-top-banner" hrefs={[SMART_LINK, ...ROTATION_LINKS]} className="w-full" />
+              <AdBanner id="home-top-banner" hrefs={[HOME_AD_LINK]} className="w-full" />
             </div>
 
             <div className="flex gap-2.5 px-5 mb-4 overflow-x-auto no-scrollbar py-1">
@@ -344,6 +346,10 @@ export default function Home() {
           )}
         </section>
       </main>
+
+      <div className="px-5 mt-6 mb-12">
+        <AdBanner id="home-bottom-sponsored" hrefs={[HOME_AD_LINK]} className="w-full" />
+      </div>
 
       <BottomNav activeTab={navTab} onTabChange={(tab) => { setNavTab(tab); setVisibleCount(10); }} />
     </div>
