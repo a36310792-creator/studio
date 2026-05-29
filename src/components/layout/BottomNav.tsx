@@ -1,13 +1,17 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Home, Compass, Bookmark, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-export const BottomNav = () => {
-  const [activeTab, setActiveTab] = useState('home');
+interface BottomNavProps {
+  activeTab: string;
+  onTabChange: (id: string) => void;
+}
 
+export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   const navItems = [
     { id: 'home', icon: Home, label: 'HOME', href: '/' },
     { id: 'discover', icon: Compass, label: 'DISCOVER', href: '#' },
@@ -22,12 +26,12 @@ export const BottomNav = () => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           
-          if (item.href && item.href !== '#') {
-            return (
+          if (item.id === 'home' || item.id === 'settings') {
+             return (
               <Link
                 key={item.id}
                 href={item.href}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => onTabChange(item.id)}
                 className={cn(
                   "flex flex-col items-center gap-1 transition-all duration-300 min-w-[60px]",
                   isActive ? "text-primary scale-105" : "text-[#8b95a5] hover:text-white"
@@ -47,7 +51,7 @@ export const BottomNav = () => {
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => onTabChange(item.id)}
               className={cn(
                 "flex flex-col items-center gap-1 transition-all duration-300 min-w-[60px]",
                 isActive ? "text-primary scale-105" : "text-[#8b95a5] hover:text-white"

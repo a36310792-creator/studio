@@ -24,9 +24,11 @@ export interface Movie {
 interface MovieCardProps {
   movie: Movie;
   onSelect: (movie: Movie) => void;
+  onToggleBookmark?: (e: React.MouseEvent, id: string) => void;
+  isBookmarked?: boolean;
 }
 
-export const MovieCard = ({ movie, onSelect }: MovieCardProps) => {
+export const MovieCard = ({ movie, onSelect, onToggleBookmark, isBookmarked }: MovieCardProps) => {
   return (
     <div 
       onClick={() => onSelect(movie)}
@@ -41,14 +43,25 @@ export const MovieCard = ({ movie, onSelect }: MovieCardProps) => {
       />
       
       {/* Top Badges */}
-      <div className="absolute top-2.5 left-2.5 z-10 flex gap-1">
+      <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1">
         <span className={cn(
-          "px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded-[4px] text-white",
+          "px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded-[4px] text-white w-fit",
           movie.quality === '4K' ? "bg-primary text-black" : movie.quality === 'CAM' ? "bg-gray-600" : "bg-red-600"
         )}>
           {movie.quality}
         </span>
       </div>
+
+      {/* Bookmark Button */}
+      <button 
+        onClick={(e) => onToggleBookmark?.(e, movie.id)}
+        className={cn(
+          "absolute top-2.5 right-2.5 z-30 p-2 rounded-xl backdrop-blur-md transition-all active:scale-90",
+          isBookmarked ? "bg-primary text-black" : "bg-black/40 text-white hover:bg-black/60"
+        )}
+      >
+        <Bookmark className={cn("w-4 h-4", isBookmarked && "fill-current")} />
+      </button>
 
       {/* Hover Play Button */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 bg-black/40 backdrop-blur-[2px]">
