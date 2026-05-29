@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -113,20 +112,21 @@ export default function Home() {
       currentPool = discoverMovies;
     }
 
-    // Apply filters (Category and Search)
     return currentPool.filter(movie => {
-      // Category Filter (only applies on Home tab or if pool is already filtered)
       const matchesCategory = 
         navTab !== 'home' || 
         activeCategory === 'All' || 
         movie.genres.includes(activeCategory);
 
-      // Search Filter (case-insensitive)
       const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
 
       return matchesCategory && matchesSearch;
     });
   }, [activeCategory, searchQuery, movies, navTab, bookmarkedIds, discoverMovies]);
+
+  const latestMovie = useMemo(() => {
+    return movies.length > 0 ? movies[0] : null;
+  }, [movies]);
 
   const viewTitle = useMemo(() => {
     if (navTab === 'saved') return { label: 'Saved Collection', icon: <BookmarkIcon className="w-5 h-5 text-primary" /> };
@@ -141,7 +141,12 @@ export default function Home() {
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
       <Header />
       
-      {navTab === 'home' && <NewReleaseToast movieName="The Z Effect - 4K Release Live!" />}
+      {navTab === 'home' && latestMovie && (
+        <NewReleaseToast 
+          movieName={`${latestMovie.title} - Now Streaming!`} 
+          onWatch={() => setSelectedMovie(latestMovie)}
+        />
+      )}
 
       <main>
         {navTab === 'home' && (
