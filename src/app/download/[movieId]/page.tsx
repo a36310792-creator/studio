@@ -1,34 +1,34 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, ShieldCheck, Zap, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import Link from 'next/link';
+import { useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
   const router = useRouter();
-  const [movie, setMovie] = useState<Movie | null>(null);
+  const db = useFirestore();
+  
+  const movieRef = useMemo(() => {
+    if (!db || !movieId) return null;
+    return doc(db, 'movies', movieId as string);
+  }, [db, movieId]);
+
+  const { data: movie, loading: movieLoading } = useDoc<Movie>(movieRef);
   const [countdown, setCountdown] = useState(5);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('lumina_movies');
-    if (stored) {
-      const allMovies: Movie[] = JSON.parse(stored);
-      const found = allMovies.find(m => m.id === movieId);
-      if (found) {
-        setMovie(found);
-      } else {
-        router.push('/');
-      }
-    } else {
+    if (!movieLoading && !movie) {
       router.push('/');
     }
-  }, [movieId, router]);
+  }, [movie, movieLoading, router]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -38,6 +38,14 @@ export default function DownloadGateway() {
       setIsReady(true);
     }
   }, [countdown]);
+
+  if (movieLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   if (!movie) return null;
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -16,60 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const DEFAULT_MOVIES: Movie[] = [
-  {
-    id: '1',
-    title: 'Hathras Season 1',
-    posterUrl: 'https://images.unsplash.com/photo-1478827536114-da961b7f86d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    rating: 8.5,
-    quality: 'HD',
-    releaseYear: 2026,
-    audio: 'Hindi Dubbed',
-    genres: ['Web Series'],
-    description: 'A deep investigative journey into the mysteries of Hathras, following a team of journalists uncovering hidden truths in the heart of rural India.',
-    watchUrl: '#'
-  },
-  {
-    id: '2',
-    title: 'Karuppu: Echoes',
-    posterUrl: 'https://images.unsplash.com/photo-1505506874110-6a7a4c9891ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    rating: 7.2,
-    quality: '4K',
-    releaseYear: 2026,
-    audio: 'Multi Audio',
-    genres: ['South'],
-    description: 'An ancient spirit awakens in the dark forests of southern India. When a group of hikers goes missing, only the locals know what truly haunts the trees.',
-    watchUrl: '#'
-  },
-  {
-    id: '3',
-    title: 'Krishnavatara',
-    posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    rating: 6.8,
-    quality: 'CAM',
-    releaseYear: 2025,
-    audio: 'Dual Audio',
-    genres: ['Animation'],
-    description: 'A modern retelling of the legends, blending traditional storytelling with cutting-edge futuristic animation in a world where gods and machines coexist.',
-    watchUrl: '#'
-  },
-  {
-    id: '4',
-    title: 'The Z Effect',
-    posterUrl: 'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-    rating: 9.1,
-    quality: 'HD',
-    releaseYear: 2024,
-    audio: 'English Sub',
-    genres: ['Hollywood'],
-    description: 'In the year 2099, a biological breakthrough turns into a global catastrophe. One soldier must navigate the wasteland to deliver the only known cure.',
-    watchUrl: '#'
-  }
-];
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 
 export default function Home() {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const db = useFirestore();
+  const moviesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'movies'), orderBy('releaseYear', 'desc'));
+  }, [db]);
+
+  const { data: firestoreMovies, loading } = useCollection<Movie>(moviesQuery);
   const [activeGenre, setActiveGenre] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedYear, setSelectedYear] = useState('All');
@@ -78,20 +36,11 @@ export default function Home() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
-  const [discoverMovies, setDiscoverMovies] = useState<Movie[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('lumina_movies');
-    if (stored) {
-      setMovies(JSON.parse(stored));
-    } else {
-      setMovies(DEFAULT_MOVIES);
-      localStorage.setItem('lumina_movies', JSON.stringify(DEFAULT_MOVIES));
-    }
-
     const saved = localStorage.getItem('lumina_bookmarks');
     if (saved) {
       setBookmarkedIds(JSON.parse(saved));
@@ -108,13 +57,6 @@ export default function Home() {
     localStorage.setItem('lumina_bookmarks', JSON.stringify(newBookmarks));
   };
 
-  useEffect(() => {
-    if (navTab === 'discover') {
-      const shuffled = [...movies].sort(() => 0.5 - Math.random());
-      setDiscoverMovies(shuffled.slice(0, 6));
-    }
-  }, [navTab, movies]);
-
   const genres = ['All', 'Action', 'Horror', 'Anime', 'Sci-Fi'];
   const categories = ['All', 'Bollywood', 'Hollywood', 'South', 'Web Series', 'Animation', 'Cartoon'];
   
@@ -125,55 +67,49 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    let currentPool = [...movies];
+    let currentPool = firestoreMovies || [];
 
     if (navTab === 'saved') {
-      currentPool = movies.filter(m => bookmarkedIds.includes(m.id));
+      currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
     } else if (navTab === 'discover') {
-      currentPool = discoverMovies;
+      // For discover, we just shuffle a subset
+      currentPool = [...currentPool].sort(() => 0.5 - Math.random()).slice(0, 6);
     }
 
     let filtered = currentPool.filter(movie => {
       const matchesGenre = 
         navTab !== 'home' || 
         activeGenre === 'All' || 
-        movie.genres.includes(activeGenre);
+        movie.genres?.includes(activeGenre);
 
       const matchesCategory = 
         navTab !== 'home' || 
         activeCategory === 'All' || 
-        movie.genres.includes(activeCategory);
+        movie.genres?.includes(activeCategory);
 
       const matchesYear = 
         selectedYear === 'All' || 
-        movie.releaseYear.toString() === selectedYear;
+        movie.releaseYear?.toString() === selectedYear;
 
-      const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
+      const matchesSearch = movie.title?.toLowerCase().includes(searchQuery.toLowerCase().trim());
 
       return matchesGenre && matchesCategory && matchesYear && matchesSearch;
     });
 
-    // Sorting Logic
-    if (sortBy === 'latest') {
-      filtered.sort((a, b) => {
-        const idA = parseInt(a.id) || 0;
-        const idB = parseInt(b.id) || 0;
-        return idB - idA;
-      });
-    } else if (sortBy === 'rating') {
-      filtered.sort((a, b) => b.rating - a.rating);
+    if (sortBy === 'rating') {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
 
     return filtered;
-  }, [activeGenre, activeCategory, selectedYear, searchQuery, movies, navTab, bookmarkedIds, discoverMovies, sortBy]);
+  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, navTab, bookmarkedIds, sortBy]);
 
   const displayedMovies = useMemo(() => {
     return allFilteredMovies.slice(0, visibleCount);
   }, [allFilteredMovies, visibleCount]);
 
   const latestMovie = useMemo(() => {
-    return movies.length > 0 ? movies[0] : null;
-  }, [movies]);
+    return firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies[0] : null;
+  }, [firestoreMovies]);
 
   const viewTitle = useMemo(() => {
     if (navTab === 'saved') return { label: 'Saved Collection', icon: <BookmarkIcon className="w-5 h-5 text-primary" /> };
@@ -188,18 +124,13 @@ export default function Home() {
       label = `${activeCategory} Collection`;
     }
 
-    return { 
-      label,
-      icon: <TrendingUp className="w-5 h-5 text-primary" /> 
-    };
+    return { label, icon: <TrendingUp className="w-5 h-5 text-primary" /> };
   }, [navTab, activeGenre, activeCategory]);
 
   const handleSearchIconClick = () => {
     if (navTab !== 'home') {
       setNavTab('home');
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
+      setTimeout(() => searchInputRef.current?.focus(), 100);
     } else {
       searchInputRef.current?.focus();
     }
@@ -227,9 +158,7 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loadMore = () => {
-    setVisibleCount(prev => prev + 10);
-  };
+  const loadMore = () => setVisibleCount(prev => prev + 10);
 
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
@@ -321,22 +250,6 @@ export default function Home() {
           </>
         )}
 
-        {navTab === 'discover' && (
-          <div className="px-5 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-[32px] p-6 text-center">
-              <Sparkles className="w-10 h-10 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-black mb-2">Feeling Lucky?</h2>
-              <p className="text-sm text-[#8b95a5] font-bold">Discover something unexpected from our library.</p>
-              <button 
-                onClick={() => setDiscoverMovies([...movies].sort(() => 0.5 - Math.random()).slice(0, 6))}
-                className="mt-6 px-8 py-3 bg-primary text-black font-black rounded-2xl shadow-lg hover:brightness-110 transition-all"
-              >
-                SHUFFLE AGAIN
-              </button>
-            </div>
-          </div>
-        )}
-
         <section className="px-5 min-h-[400px]">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex justify-between items-center">
@@ -371,7 +284,12 @@ export default function Home() {
             </div>
           </div>
 
-          {displayedMovies.length > 0 ? (
+          {loading ? (
+            <div className="py-20 flex flex-col items-center justify-center">
+              <ChevronDown className="w-10 h-10 text-primary animate-bounce" />
+              <p className="text-[10px] font-black text-[#555] uppercase mt-4">Syncing with Cinema...</p>
+            </div>
+          ) : displayedMovies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
                 {displayedMovies.map((movie) => (

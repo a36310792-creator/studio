@@ -1,0 +1,66 @@
+
+{
+  "entities": {
+    "Movie": {
+      "title": "Movie",
+      "description": "A movie or TV show entry in the library",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the movie"
+        },
+        "posterUrl": {
+          "type": "string",
+          "description": "URL to the movie poster image"
+        },
+        "rating": {
+          "type": "number",
+          "description": "IMDb or user rating"
+        },
+        "quality": {
+          "type": "string",
+          "enum": ["HD", "4K", "CAM"],
+          "description": "Video quality"
+        },
+        "releaseYear": {
+          "type": "number",
+          "description": "Year of release"
+        },
+        "audio": {
+          "type": "string",
+          "description": "Available audio languages"
+        },
+        "genres": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of associated genres and categories"
+        },
+        "description": {
+          "type": "string",
+          "description": "Plot summary"
+        },
+        "watchUrl": {
+          "type": "string",
+          "description": "Streaming link"
+        },
+        "directDownloadUrl": {
+          "type": "string",
+          "description": "Direct download link"
+        }
+      },
+      "required": ["title", "posterUrl", "quality", "releaseYear", "genres"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/movies/{movieId}": {
+      "schema": "Movie",
+      "description": "Publicly readable collection of movies, writable only by admins."
+    }
+  }
+}

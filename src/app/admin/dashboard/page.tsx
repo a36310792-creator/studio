@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,17 +17,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata';
+import { useAuth, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'Cartoon', 'Drama', 'Comedy', 'Thriller', 'Mystery'];
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
 
 export default function AdminDashboard() {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const db = useFirestore();
+  const router = useRouter();
+  
+  const moviesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'movies'), orderBy('title', 'asc'));
+  }, [db]);
+
+  const { data: movies, loading: moviesLoading } = useCollection<Movie>(moviesQuery);
   const [isAdding, setIsAdding] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isFetching, setIsFetching] = useState(false);
-  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Movie>>({
     title: '',
@@ -42,20 +57,12 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    const auth = localStorage.getItem('lumina_auth');
-    if (auth !== 'true') router.push('/admin/login');
+    if (!authLoading && !user) router.push('/admin/login');
+  }, [user, authLoading, router]);
 
-    const stored = localStorage.getItem('lumina_movies');
-    if (stored) setMovies(JSON.parse(stored));
-  }, [router]);
-
-  const saveMovies = (newMovies: Movie[]) => {
-    setMovies(newMovies);
-    localStorage.setItem('lumina_movies', JSON.stringify(newMovies));
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('lumina_auth');
+  const handleLogout = async () => {
+    const auth = (await import('@/firebase')).getAuth();
+    await signOut(auth);
     router.push('/admin/login');
   };
 
@@ -90,36 +97,64 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingMovie) {
-      const updated = movies.map(m => m.id === editingMovie.id ? { ...m, ...formData } as Movie : m);
-      saveMovies(updated);
-      setEditingMovie(null);
-    } else {
-      const newMovie = { ...formData, id: Date.now().toString() } as Movie;
-      saveMovies([newMovie, ...movies]);
-      setIsAdding(false);
+    if (!db) return;
+    setIsSubmitting(true);
+
+    const movieData = { ...formData };
+    
+    try {
+      if (editingMovie) {
+        const movieRef = doc(db, 'movies', editingMovie.id);
+        updateDoc(movieRef, movieData).catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: movieRef.path,
+            operation: 'update',
+            requestResourceData: movieData
+          }));
+        });
+        setEditingMovie(null);
+      } else {
+        const moviesRef = collection(db, 'movies');
+        addDoc(moviesRef, movieData).catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: moviesRef.path,
+            operation: 'create',
+            requestResourceData: movieData
+          }));
+        });
+        setIsAdding(false);
+      }
+      
+      setFormData({ 
+        title: '', posterUrl: '', rating: 0, quality: 'HD', 
+        releaseYear: new Date().getFullYear(), audio: 'Hindi', 
+        genres: [], description: '', watchUrl: '', directDownloadUrl: ''
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    setFormData({ 
-      title: '', 
-      posterUrl: '', 
-      rating: 0, 
-      quality: 'HD', 
-      releaseYear: new Date().getFullYear(), 
-      audio: 'Hindi', 
-      genres: [], 
-      description: '',
-      watchUrl: '',
-      directDownloadUrl: ''
+  };
+
+  const deleteMovie = async (id: string) => {
+    if (!db || !confirm('Are you sure you want to delete this movie?')) return;
+    const movieRef = doc(db, 'movies', id);
+    deleteDoc(movieRef).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: movieRef.path,
+        operation: 'delete'
+      }));
     });
   };
 
-  const deleteMovie = (id: string) => {
-    if (confirm('Are you sure you want to delete this movie?')) {
-      saveMovies(movies.filter(m => m.id !== id));
-    }
-  };
+  if (authLoading || moviesLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl">
@@ -144,8 +179,8 @@ export default function AdminDashboard() {
             </Button>
 
             <div className="space-y-3">
-              <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px] mb-4">Manage Library</h3>
-              {movies.map(movie => (
+              <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px] mb-4">Manage Library ({movies?.length || 0})</h3>
+              {movies?.map(movie => (
                 <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
                   <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0">
                     <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
@@ -195,7 +230,6 @@ export default function AdminDashboard() {
                   onClick={handleFetchMetadata}
                   disabled={isFetching || !formData.title}
                   className="h-12 w-12 bg-primary/20 text-primary border border-primary/30 rounded-xl hover:bg-primary hover:text-black transition-all"
-                  title="Fetch AI Details"
                 >
                   {isFetching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                 </Button>
@@ -247,14 +281,12 @@ export default function AdminDashboard() {
                 value={formData.watchUrl} 
                 onChange={e => setFormData({...formData, watchUrl: e.target.value})} 
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
-                required 
               />
               <Input 
                 placeholder="Final Direct Download Link" 
                 value={formData.directDownloadUrl} 
                 onChange={e => setFormData({...formData, directDownloadUrl: e.target.value})} 
                 className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary"
-                required 
               />
               
               <div className="grid grid-cols-2 gap-3">
@@ -276,7 +308,6 @@ export default function AdminDashboard() {
                   value={formData.rating} 
                   onChange={e => setFormData({...formData, rating: parseFloat(e.target.value)})} 
                   className="bg-black border-white/5 h-12 rounded-xl"
-                  required
                 />
               </div>
 
@@ -305,7 +336,6 @@ export default function AdminDashboard() {
                 value={formData.audio} 
                 onChange={e => setFormData({...formData, audio: e.target.value})} 
                 className="bg-black border-white/5 h-12 rounded-xl"
-                required
               />
 
               <Textarea 
@@ -313,10 +343,10 @@ export default function AdminDashboard() {
                 value={formData.description} 
                 onChange={e => setFormData({...formData, description: e.target.value})} 
                 className="bg-black border-white/5 rounded-xl min-h-[100px]"
-                required
               />
-              <Button type="submit" className="w-full h-14 bg-primary text-black font-black rounded-2xl shadow-lg">
-                <Check className="w-5 h-5 mr-2" /> {editingMovie ? 'UPDATE CHANGES' : 'PUBLISH NOW'}
+              <Button type="submit" disabled={isSubmitting} className="w-full h-14 bg-primary text-black font-black rounded-2xl shadow-lg">
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />} 
+                {editingMovie ? 'UPDATE CHANGES' : 'PUBLISH NOW'}
               </Button>
             </form>
           </div>

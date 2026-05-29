@@ -1,33 +1,42 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!authLoading && user) router.push('/admin/dashboard');
+  }, [user, authLoading, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Updated authentication logic with requested credentials
-    setTimeout(() => {
-      if (email === 'a36310792@gmail.com' && password === '45652515##') {
-        localStorage.setItem('lumina_auth', 'true');
-        router.push('/admin/dashboard');
-      } else {
-        alert('Invalid credentials! Access denied.');
-      }
+    try {
+      const auth = (await import('@/firebase')).getAuth();
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/admin/dashboard');
+    } catch (error: any) {
+      alert('Login Failed: ' + (error.message || 'Check credentials.'));
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-6 max-w-[420px] mx-auto border-x border-white/5 shadow-2xl">
@@ -46,7 +55,7 @@ export default function AdminLogin() {
             <Lock className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-black text-white">Admin Access</h1>
-          <p className="text-[#8b95a5] text-sm mt-2 font-bold">Sign in to manage LuminaStream</p>
+          <p className="text-[#8b95a5] text-sm mt-2 font-bold">Sign in to manage MP4VEGA Library</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
