@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, BarChart3, Film, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,46 +28,85 @@ const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'C
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
 
+const MOCK_FALLBACK: Movie[] = [
+  {
+    id: 'hathras-1',
+    title: 'Hathras',
+    posterUrl: 'https://picsum.photos/seed/hathras/400/600',
+    rating: 8.2,
+    quality: 'HD',
+    releaseYear: 2024,
+    audio: 'Hindi',
+    genres: ['Thriller', 'Drama', 'Bollywood'],
+    description: 'A gripping investigative thriller based on true events.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  },
+  {
+    id: 'karuppu-2',
+    title: 'Karuppu',
+    posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
+    rating: 7.9,
+    quality: '4K',
+    releaseYear: 2024,
+    audio: 'Tamil',
+    genres: ['Action', 'Thriller', 'South'],
+    description: 'An intense action drama from the heart of South India.',
+    watchUrl: '#',
+    directDownloadUrl: '#'
+  }
+];
+
 export default function AdminDashboard() {
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      // 1. Check local session
-      const localSession = localStorage.getItem('admin_session');
-      if (localSession === 'true') {
-        setIsAuthLoading(false);
-        return;
-      }
-
-      // 2. Check Firebase session
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (!user || (user.email !== MASTER_ADMIN_EMAIL && user.email !== FALLBACK_ADMIN_EMAIL)) {
-          if (user) await signOut(auth);
-          router.push('/admin/login');
-        } else {
-          setIsAuthLoading(false);
-        }
-      });
-      return () => unsubscribe();
-    };
-
-    checkAuth();
-  }, [auth, router]);
   
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [localMovies, setLocalMovies] = useState<Movie[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Authentication Protection
+  useEffect(() => {
+    const localSession = localStorage.getItem('admin_session');
+    if (localSession === 'true') {
+      setIsAuthLoading(false);
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user && localSession !== 'true') {
+        router.push('/admin/login');
+      } else if (user && user.email !== MASTER_ADMIN_EMAIL && user.email !== FALLBACK_ADMIN_EMAIL && localSession !== 'true') {
+        await signOut(auth);
+        router.push('/admin/login');
+      } else {
+        setIsAuthLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
+
+  // Firestore Sync
   const moviesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'movies'), orderBy('title', 'asc'));
   }, [db]);
 
-  const { data: movies, loading: moviesLoading } = useCollection<Movie>(moviesQuery);
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: firestoreMovies, loading: firestoreLoading } = useCollection<Movie>(moviesQuery);
+
+  // Synchronize local state with firestore or fallback
+  useEffect(() => {
+    if (!firestoreLoading) {
+      if (firestoreMovies && firestoreMovies.length > 0) {
+        setLocalMovies(firestoreMovies);
+      } else {
+        setLocalMovies(MOCK_FALLBACK);
+      }
+    }
+  }, [firestoreMovies, firestoreLoading]);
 
   const [formData, setFormData] = useState<Partial<Movie>>({
     title: '',
@@ -86,19 +125,8 @@ export default function AdminDashboard() {
     localStorage.removeItem('admin_session');
     try {
       await signOut(auth);
-    } catch (e) {
-      // Ignore auth errors during logout
-    }
+    } catch (e) {}
     router.push('/admin/login');
-  };
-
-  const toggleGenre = (genre: string) => {
-    const currentGenres = formData.genres || [];
-    if (currentGenres.includes(genre)) {
-      setFormData({ ...formData, genres: currentGenres.filter(g => g !== genre) });
-    } else {
-      setFormData({ ...formData, genres: [...currentGenres, genre] });
-    }
   };
 
   const handleFetchMetadata = async () => {
@@ -125,31 +153,38 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db) return;
     setIsSubmitting(true);
-
     const movieData = { ...formData };
     
     try {
       if (editingMovie) {
-        const movieRef = doc(db, 'movies', editingMovie.id);
-        updateDoc(movieRef, movieData).catch(async () => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: movieRef.path,
-            operation: 'update',
-            requestResourceData: movieData
-          }));
-        });
+        if (db) {
+          const movieRef = doc(db, 'movies', editingMovie.id);
+          updateDoc(movieRef, movieData).catch(async () => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: movieRef.path,
+              operation: 'update',
+              requestResourceData: movieData
+            }));
+          });
+        }
+        // Optimistic UI
+        setLocalMovies(prev => prev.map(m => m.id === editingMovie.id ? { ...m, ...movieData } : m));
         setEditingMovie(null);
       } else {
-        const moviesRef = collection(db, 'movies');
-        addDoc(moviesRef, movieData).catch(async () => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: moviesRef.path,
-            operation: 'create',
-            requestResourceData: movieData
-          }));
-        });
+        if (db) {
+          const moviesRef = collection(db, 'movies');
+          addDoc(moviesRef, movieData).catch(async () => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: moviesRef.path,
+              operation: 'create',
+              requestResourceData: movieData
+            }));
+          });
+        }
+        // Optimistic UI update
+        const id = 'temp-' + Date.now();
+        setLocalMovies(prev => [...prev, { ...movieData, id } as Movie]);
         setIsAdding(false);
       }
       
@@ -164,14 +199,18 @@ export default function AdminDashboard() {
   };
 
   const deleteMovie = async (id: string) => {
-    if (!db || !confirm('Are you sure you want to delete this movie?')) return;
-    const movieRef = doc(db, 'movies', id);
-    deleteDoc(movieRef).catch(async () => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: movieRef.path,
-        operation: 'delete'
-      }));
-    });
+    if (!confirm('Are you sure you want to delete this movie?')) return;
+    
+    if (db) {
+      const movieRef = doc(db, 'movies', id);
+      deleteDoc(movieRef).catch(async () => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: movieRef.path,
+          operation: 'delete'
+        }));
+      });
+    }
+    setLocalMovies(prev => prev.filter(m => m.id !== id));
   };
 
   if (isAuthLoading) {
@@ -183,11 +222,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl">
+    <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl relative">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl p-5 border-b border-white/5 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-[#8b95a5]"><ArrowLeft className="w-5 h-5" /></Link>
-          <h1 className="text-lg font-black tracking-tight">Dashboard</h1>
+          <Link href="/" className="text-[#8b95a5] hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+          <h1 className="text-lg font-black tracking-tight">Management</h1>
         </div>
         <button onClick={handleLogout} className="text-[#ff3b30] p-2 hover:bg-red-500/10 rounded-xl transition-all">
           <LogOut className="w-5 h-5" />
@@ -197,53 +236,73 @@ export default function AdminDashboard() {
       <main className="p-5">
         {!isAdding && !editingMovie ? (
           <div className="space-y-6">
+            {/* Stats Section */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+               <div className="bg-[#121212] border border-white/5 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Film className="w-4 h-4 text-primary" />
+                    <span className="text-[10px] font-black text-[#444] uppercase">Total</span>
+                  </div>
+                  <div className="text-2xl font-black">{localMovies.length}</div>
+                  <div className="text-[9px] font-bold text-[#555] mt-1 uppercase">Media Entries</div>
+               </div>
+               <div className="bg-[#121212] border border-white/5 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Globe className="w-4 h-4 text-primary" />
+                    <span className="text-[10px] font-black text-[#444] uppercase">Active</span>
+                  </div>
+                  <div className="text-2xl font-black">{QUALITIES.length}</div>
+                  <div className="text-[9px] font-bold text-[#555] mt-1 uppercase">Quality Types</div>
+               </div>
+            </div>
+
             <Button 
               onClick={() => setIsAdding(true)}
-              className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-[0_5px_20px_rgba(0,229,255,0.2)]"
+              className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-[0_5px_20px_rgba(0,229,255,0.2)] hover:scale-[1.01] transition-all"
             >
-              <Plus className="w-5 h-5" /> ADD NEW MOVIE
+              <Plus className="w-5 h-5" /> PUBLISH NEW MOVIE
             </Button>
 
             <div className="space-y-3">
-              <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px] mb-4">Manage Library ({movies?.length || 0})</h3>
-              {moviesLoading ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                </div>
-              ) : (
-                movies?.map(movie => (
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px]">Library Management</h3>
+                <span className="text-[10px] font-bold text-primary/50 uppercase">{localMovies.length} Items</span>
+              </div>
+              
+              <div className="space-y-3">
+                {localMovies.map(movie => (
                   <div key={movie.id} className="flex gap-4 p-3 rounded-2xl bg-[#121212] border border-white/5 group hover:border-primary/30 transition-all">
-                    <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0">
+                    <div className="w-16 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-white/5">
                       <img src={movie.posterUrl} className="w-full h-full object-cover" alt="" />
                     </div>
                     <div className="flex-1 min-w-0 py-1">
                       <h4 className="text-[14px] font-bold truncate">{movie.title}</h4>
-                      <p className="text-[10px] text-[#8b95a5] font-bold uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
+                      <p className="text-[10px] text-primary font-black uppercase mt-1">{movie.quality} • {movie.releaseYear}</p>
                       <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => { setEditingMovie(movie); setFormData(movie); }} 
-                          className="p-1.5 text-primary hover:bg-primary/10 rounded-lg"
+                          className="p-1.5 text-white/50 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => deleteMovie(movie.id)} 
-                          className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"
+                          className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                   </div>
-                ))
-              )}
+                ))}
+              </div>
             </div>
           </div>
         ) : (
           <div className="bg-[#121212] p-6 rounded-[32px] border border-primary/20 animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-black text-primary">{editingMovie ? 'Edit Movie' : 'New Movie'}</h2>
-              <button onClick={() => { setIsAdding(false); setEditingMovie(null); }} className="p-2 text-[#555] hover:text-white">
+              <h2 className="text-xl font-black text-primary">{editingMovie ? 'Edit Media' : 'New Media'}</h2>
+              <button onClick={() => { setIsAdding(false); setEditingMovie(null); }} className="p-2 text-[#555] hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -291,7 +350,7 @@ export default function AdminDashboard() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-[#555] uppercase ml-1">Industry</label>
+                  <label className="text-[10px] font-black text-[#555] uppercase ml-1">Industry Tag</label>
                   <Select 
                     onValueChange={val => {
                       const current = formData.genres || [];
@@ -299,7 +358,7 @@ export default function AdminDashboard() {
                     }}
                   >
                     <SelectTrigger className="bg-black border-white/5 h-12 rounded-xl">
-                      <SelectValue placeholder="Select Industry" />
+                      <SelectValue placeholder="Select Tag" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#121212] border-white/10 text-white">
                       {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
@@ -309,23 +368,23 @@ export default function AdminDashboard() {
               </div>
 
               <Input 
-                placeholder="Watch/Stream Preview Link" 
+                placeholder="Watch Online URL" 
                 value={formData.watchUrl} 
                 onChange={e => setFormData({...formData, watchUrl: e.target.value})} 
                 className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
               />
               <Input 
-                placeholder="Final Direct Download Link" 
+                placeholder="Direct Download Link" 
                 value={formData.directDownloadUrl} 
                 onChange={e => setFormData({...formData, directDownloadUrl: e.target.value})} 
-                className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary"
+                className="bg-black border-primary/30 h-12 rounded-xl text-white font-bold focus:border-primary shadow-[0_0_15px_rgba(0,229,255,0.05)]"
               />
               
               <div className="grid grid-cols-2 gap-3">
-                <div className="relative group">
+                <div className="relative">
                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
                    <Input 
-                    placeholder="Release Year" 
+                    placeholder="Year" 
                     type="number" 
                     value={formData.releaseYear} 
                     onChange={e => setFormData({...formData, releaseYear: parseInt(e.target.value)})} 
@@ -334,7 +393,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <Input 
-                  placeholder="Rating (0-10)" 
+                  placeholder="Rating" 
                   type="number" 
                   step="0.1" 
                   value={formData.rating} 
@@ -344,13 +403,20 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-[#555] uppercase tracking-[1px] mb-2 block">Genres / Categories</label>
+                <label className="text-[10px] font-black text-[#555] uppercase tracking-[1px] mb-2 block">Categories</label>
                 <div className="flex flex-wrap gap-2">
                   {[...AVAILABLE_GENRES, ...INDUSTRIES].map(genre => (
                     <button
                       key={genre}
                       type="button"
-                      onClick={() => toggleGenre(genre)}
+                      onClick={() => {
+                        const current = formData.genres || [];
+                        if (current.includes(genre)) {
+                          setFormData({ ...formData, genres: current.filter(g => g !== genre) });
+                        } else {
+                          setFormData({ ...formData, genres: [...current, genre] });
+                        }
+                      }}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
                         formData.genres?.includes(genre)
                           ? "bg-primary text-black border-primary"
@@ -364,21 +430,26 @@ export default function AdminDashboard() {
               </div>
 
               <Input 
-                placeholder="Audio (e.g. Hindi, English)" 
+                placeholder="Audio (e.g. Hindi, Multi)" 
                 value={formData.audio} 
                 onChange={e => setFormData({...formData, audio: e.target.value})} 
                 className="bg-black border-white/5 h-12 rounded-xl"
               />
 
               <Textarea 
-                placeholder="Description" 
+                placeholder="Plot Synopsis" 
                 value={formData.description} 
                 onChange={e => setFormData({...formData, description: e.target.value})} 
                 className="bg-black border-white/5 rounded-xl min-h-[100px]"
               />
-              <Button type="submit" disabled={isSubmitting} className="w-full h-14 bg-primary text-black font-black rounded-2xl shadow-lg">
+              
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="w-full h-14 bg-primary text-black font-black rounded-2xl shadow-lg active:scale-95 transition-all"
+              >
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2" />} 
-                {editingMovie ? 'UPDATE CHANGES' : 'PUBLISH NOW'}
+                {editingMovie ? 'SAVE CHANGES' : 'PUBLISH MEDIA'}
               </Button>
             </form>
           </div>
