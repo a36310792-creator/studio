@@ -78,9 +78,9 @@ export default function MovieDetailsPage() {
       {/* Structured Content Area */}
       <main className="px-6 -mt-20 relative z-[2005] flex flex-col gap-8 animate-in slide-in-from-bottom-10 duration-700">
         <div className="space-y-4">
-          <h1 className="text-[34px] font-black text-white leading-[1.1] uppercase italic tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
+          <div role="heading" aria-level={1} className="text-[34px] font-black text-white leading-[1.1] uppercase italic tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
             {movie?.title || (loading ? <Skeleton className="h-10 w-64 shimmer" /> : 'MEDIA ENTRY')}
-          </h1>
+          </div>
           
           <div className="flex flex-wrap gap-2.5">
             <span className="bg-primary text-black px-4 py-1.5 rounded-xl font-black text-[11px] uppercase shadow-glow">
@@ -129,9 +129,9 @@ export default function MovieDetailsPage() {
             <ShieldCheck className="w-4.5 h-4.5 text-primary" />
             <span className="text-[10px] font-black text-[#444] uppercase tracking-[3px]">Secure Protocol Active</span>
           </div>
-          <p className="text-[#8b95a5] text-[14.5px] leading-relaxed italic font-medium opacity-90">
+          <div className="text-[#8b95a5] text-[14.5px] leading-relaxed italic font-medium opacity-90">
             {movie?.description || (loading ? <Skeleton className="h-20 w-full shimmer" /> : 'Awaiting data synchronization from master server node.')}
-          </p>
+          </div>
         </div>
 
         <div className="w-full mt-2">

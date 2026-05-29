@@ -124,10 +124,10 @@ export default function WatchPage() {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex flex-col items-center">
-          <h1 className="text-xl font-black italic tracking-tighter uppercase cyan-glow-text">
+          <div className="text-xl font-black italic tracking-tighter uppercase cyan-glow-text">
             <span className="text-white">STREAMING</span>
             <span className="text-primary">HUB</span>
-          </h1>
+          </div>
         </div>
         <div className="w-6"></div>
       </header>
@@ -147,7 +147,7 @@ export default function WatchPage() {
           {playerError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-30 p-8 text-center backdrop-blur-xl">
               <AlertCircle className="w-14 h-14 text-red-500 mb-4 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]" />
-              <h3 className="text-lg font-black uppercase mb-2 italic">Node Disconnected</h3>
+              <div role="heading" aria-level={3} className="text-lg font-black uppercase mb-2 italic">Node Disconnected</div>
               <p className="text-[11px] text-[#555] font-bold mb-6 leading-relaxed max-w-[240px]">{playerError}</p>
               <Button onClick={() => window.location.reload()} className="h-12 px-10 rounded-2xl bg-primary text-black font-black uppercase shadow-lg shadow-primary/20">
                 RETRY HANDSHAKE
@@ -182,9 +182,9 @@ export default function WatchPage() {
                 <MonitorPlay className="w-7 h-7" />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-black uppercase tracking-tight text-white truncate italic">
+                <div role="heading" aria-level={2} className="text-sm font-black uppercase tracking-tight text-white truncate italic">
                   {movie?.title || <Skeleton className="h-5 w-40 shimmer" />}
-                </h2>
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <Activity className="w-3.5 h-3.5 text-green-500 animate-pulse" />
                   <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Quantum Encryption Active</span>
@@ -205,7 +205,7 @@ export default function WatchPage() {
         </div>
 
         <div className="space-y-5">
-          <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Elite Node Grid</h3>
+          <div role="heading" aria-level={3} className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Elite Node Grid</div>
           <div className="grid grid-cols-1 gap-4">
             {[
               { name: 'US-PREMIUM (AD-FREE)', speed: '2.4 GB/s', icon: <Wifi className="w-5 h-5 text-primary" /> },
