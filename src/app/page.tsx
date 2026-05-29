@@ -6,7 +6,10 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { CineSuggest } from '@/components/movie/CineSuggest';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
-import { TrendingUp, ChevronRight } from 'lucide-react';
+import { AdminPanel } from '@/components/admin/AdminPanel';
+import { MovieDetails } from '@/components/movie/MovieDetails';
+import { TrendingUp, ChevronRight, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const MOCK_MOVIES: Movie[] = [
   {
@@ -49,6 +52,8 @@ const MOCK_MOVIES: Movie[] = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('trending');
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   const tabs = [
     { id: 'trending', label: '🔥 Trending' },
@@ -63,7 +68,23 @@ export default function Home() {
       
       <NewReleaseToast movieName="Avatar: The Way of Water" />
 
+      {/* Admin Toggle (For Demo) */}
+      <div className="px-5 mb-4 flex justify-end">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setShowAdmin(!showAdmin)}
+          className="text-primary hover:bg-primary/10 font-bold text-[11px] gap-1.5"
+        >
+          <PlusCircle className="w-3.5 h-3.5" />
+          {showAdmin ? 'Close Admin' : 'Add Movie'}
+        </Button>
+      </div>
+
       <main>
+        {/* Admin Panel Component */}
+        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+
         {/* Scrollable Tabs */}
         <div className="flex gap-2.5 px-5 mb-6 overflow-x-auto no-scrollbar py-2">
           {tabs.map((tab) => (
@@ -98,11 +119,21 @@ export default function Home() {
 
           <div className="grid grid-cols-2 gap-[15px]">
             {MOCK_MOVIES.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+              <div key={movie.id} onClick={() => setSelectedMovie(movie)} className="cursor-pointer">
+                <MovieCard movie={movie} />
+              </div>
             ))}
           </div>
         </section>
       </main>
+
+      {/* Movie Details Overlay */}
+      {selectedMovie && (
+        <MovieDetails 
+          movie={selectedMovie} 
+          onClose={() => setSelectedMovie(null)} 
+        />
+      )}
 
       <BottomNav />
     </div>
