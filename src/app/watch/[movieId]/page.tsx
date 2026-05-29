@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useRef, useState } from 'react';
@@ -8,7 +7,6 @@ import {
   ShieldCheck, 
   MonitorPlay,
   Zap,
-  Globe,
   Wifi,
   Server,
   Lock,
@@ -40,7 +38,9 @@ export default function WatchPage() {
   const router = useRouter();
   const playerRef = useRef<any>(null);
   const videoNode = useRef<HTMLVideoElement | null>(null);
+  
   const [imaLoaded, setImaLoaded] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
 
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -49,8 +49,18 @@ export default function WatchPage() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
 
+  // FAIL-SAFE: Force remove loader after 1.5 seconds regardless of ad status
   useEffect(() => {
-    if (!videoNode.current || !movie || !imaLoaded) return;
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // If we don't have the node or movie data, wait. 
+    // We don't wait for imaLoaded here because the player should init even if ads fail.
+    if (!videoNode.current || !movie) return;
 
     const player = videojs(videoNode.current, {
       autoplay: false,
@@ -66,39 +76,45 @@ export default function WatchPage() {
 
     playerRef.current = player;
 
-    const imaOptions = {
-      adTagUrl: VAST_TAG,
-      showCountdown: true,
-      debug: false
-    };
-
-    try {
-      // @ts-ignore
-      player.ima(imaOptions);
-
-      // FALLBACK: If ads fail, skip immediately to movie
-      const handleAdFail = () => {
-        player.play().catch(() => {});
+    // Only attempt IMA initialization if the script actually loaded (imaLoaded is true)
+    // and if the player.ima function exists.
+    if (imaLoaded && (player as any).ima) {
+      const imaOptions = {
+        adTagUrl: VAST_TAG,
+        showCountdown: true,
+        debug: false
       };
 
-      player.on('adserror', handleAdFail);
-      player.on('adtimeout', handleAdFail);
-      
-      // Auto-init fail-safe
-      const failSafe = setTimeout(() => {
-        if (player.paused()) handleAdFail();
-      }, 5000);
+      try {
+        (player as any).ima(imaOptions);
 
-      player.on('readyforpreroll', () => {
-        // @ts-ignore
-        player.ima.initializeAdDisplayContainer();
-        // @ts-ignore
-        player.ima.requestAds();
+        const handleAdFail = () => {
+          player.play().catch(() => {});
+        };
+
+        player.on('adserror', handleAdFail);
+        player.on('adtimeout', handleAdFail);
+        
+        // Secondary internal fail-safe
+        const internalFailSafe = setTimeout(() => {
+          if (player.paused()) handleAdFail();
+        }, 5000);
+
+        player.on('readyforpreroll', () => {
+          (player as any).ima.initializeAdDisplayContainer();
+          (player as any).ima.requestAds();
+        });
+
+        // Clear timer on success
+        player.on('adsready', () => clearTimeout(internalFailSafe));
+      } catch (e) {
+        player.play().catch(() => {});
+      }
+    } else {
+      // If IMA isn't loaded or available, just play normally when clicked
+      player.on('ready', () => {
+        setShowLoader(false);
       });
-
-      return () => clearTimeout(failSafe);
-    } catch (e) {
-      player.play().catch(() => {});
     }
 
     return () => {
@@ -116,12 +132,15 @@ export default function WatchPage() {
         src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
         strategy="afterInteractive"
         onLoad={() => setImaLoaded(true)}
+        onError={() => {
+          setImaLoaded(false);
+          setShowLoader(false);
+        }}
       />
       
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
 
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl p-5 border-b border-white/5 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-colors">
           <ArrowLeft className="w-6 h-6" />
@@ -136,10 +155,9 @@ export default function WatchPage() {
       </header>
 
       <main className="p-5">
-        {/* Video Player Section */}
         <div className="mb-6 rounded-[24px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_30px_rgba(0,229,255,0.1)] relative aspect-video">
-          {!imaLoaded && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-10">
+          {showLoader && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 transition-opacity duration-300">
               <Activity className="w-8 h-8 text-primary animate-spin mb-3" />
               <span className="text-[10px] font-black text-primary uppercase tracking-[2px]">Initializing Secure Player...</span>
             </div>
@@ -153,12 +171,10 @@ export default function WatchPage() {
           </div>
         </div>
 
-        {/* PRIMARY BANNER AD: Exactly one as requested, placed naturally below player */}
         <div className="mb-8">
           <AdBanner id="watch-main-banner" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
-        {/* Status Hub */}
         <div className="bg-[#0a0a0a] rounded-[32px] border border-white/5 p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -189,7 +205,6 @@ export default function WatchPage() {
           </div>
         </div>
 
-        {/* Server Nodes */}
         <div className="space-y-4">
           <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[3px] ml-1">Optimized Server Nodes</h3>
           <div className="grid grid-cols-1 gap-3">
