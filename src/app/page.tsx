@@ -22,6 +22,13 @@ import {
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
+
+const ROTATION_LINKS = [
+  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
+  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
+];
+
 const MOCK_MOVIES: Movie[] = [
   {
     id: 'hathras-1',
@@ -75,14 +82,6 @@ const MOCK_MOVIES: Movie[] = [
     watchUrl: '#',
     directDownloadUrl: '#'
   }
-];
-
-const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
-
-const ROTATION_LINKS = [
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
-  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
 export default function Home() {
@@ -267,7 +266,7 @@ export default function Home() {
             </div>
 
             <div className="px-5 mb-6">
-              <AdBanner id="home-top-banner" hrefs={[BANNER_LINK, ...ROTATION_LINKS]} className="w-full" />
+              <AdBanner id="home-top-banner" hrefs={[SMART_LINK, ...ROTATION_LINKS]} className="w-full" />
             </div>
 
             <div className="px-5 mb-1.5 flex items-center gap-2">

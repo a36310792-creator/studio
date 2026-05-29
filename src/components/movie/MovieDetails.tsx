@@ -8,17 +8,12 @@ import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
 
-interface MovieDetailsProps {
-  movie: Movie;
-  onClose: () => void;
-}
-
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
-const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
