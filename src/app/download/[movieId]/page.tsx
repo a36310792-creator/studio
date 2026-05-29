@@ -22,7 +22,7 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
     genres: ['Thriller', 'Drama', 'Bollywood'],
     description: 'A gripping investigative thriller based on true events.',
     watchUrl: '#',
-    directDownloadUrl: '#'
+    directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
   },
   {
     id: 'karuppu-2',
@@ -35,7 +35,7 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
     genres: ['Action', 'Thriller', 'South'],
     description: 'An intense action drama from the heart of South India.',
     watchUrl: '#',
-    directDownloadUrl: '#'
+    directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
   },
   {
     id: 'zeffect-3',
@@ -48,9 +48,11 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
     genres: ['Sci-Fi', 'Horror', 'Hollywood'],
     description: 'A terrifying sci-fi experience that challenges reality.',
     watchUrl: '#',
-    directDownloadUrl: '#'
+    directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
   }
 ];
+
+const EXTERNAL_DOWNLOAD_URL = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
@@ -67,7 +69,6 @@ export default function DownloadGateway() {
   const [isReady, setIsReady] = useState(false);
   const [forceLoad, setForceLoad] = useState(false);
 
-  // Force loading state to false after a short timeout to prevent hanging
   useEffect(() => {
     const timer = setTimeout(() => {
       setForceLoad(true);
@@ -134,7 +135,6 @@ export default function DownloadGateway() {
             : `Please wait ${countdown} seconds while we scan the cloud servers for security.`}
         </p>
 
-        {/* Status Card */}
         <div className="w-full bg-[#111] border border-white/5 rounded-[24px] p-5 mb-8 text-left">
           <div className="flex gap-4 items-center mb-5">
             <div className="w-14 h-20 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-lg">
@@ -173,10 +173,10 @@ export default function DownloadGateway() {
               className="w-full h-16 bg-gradient-to-r from-primary to-cyan-400 text-black font-black text-lg rounded-2xl shadow-[0_15px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex justify-between px-6"
               asChild
             >
-              <a href={movie.directDownloadUrl || "#"} target="_blank" rel="noopener noreferrer">
+              <a href={EXTERNAL_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
                 <div className="flex items-center gap-3">
                   <Download className="w-6 h-6" />
-                  <span>1080p Full HD</span>
+                  <span>1080p Download</span>
                 </div>
                 <Zap className="w-5 h-5 fill-current" />
               </a>
@@ -188,8 +188,8 @@ export default function DownloadGateway() {
               className="w-full h-14 bg-white/5 border-white/10 text-white font-black text-[14px] rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all flex justify-between px-6"
               asChild
             >
-              <a href={movie.directDownloadUrl || "#"} target="_blank" rel="noopener noreferrer">
-                <span>720p HD Ready</span>
+              <a href={EXTERNAL_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                <span>720p Download</span>
                 <span className="text-primary/70">Recommended</span>
               </a>
             </Button>
@@ -200,13 +200,12 @@ export default function DownloadGateway() {
               className="w-full h-14 bg-white/5 border-white/10 text-white font-black text-[14px] rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all flex justify-between px-6"
               asChild
             >
-              <a href={movie.directDownloadUrl || "#"} target="_blank" rel="noopener noreferrer">
-                <span>480p SD Mobile</span>
+              <a href={EXTERNAL_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                <span>480p Download</span>
                 <span className="text-[#555]">Low Data</span>
               </a>
             </Button>
 
-            {/* Bottom Ad Banner */}
             <AdBanner id="download-bottom-banner" className="w-full mt-8" />
 
             <p className="text-[10px] text-[#444] font-black uppercase tracking-[2px] pt-4">
