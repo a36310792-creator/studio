@@ -18,6 +18,9 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
+// Fallback high-quality sample video
+const FALLBACK_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
 export default function WatchOnline() {
   const { movieId } = useParams();
   const db = useFirestore();
@@ -44,26 +47,35 @@ export default function WatchOnline() {
 
   const handlePlayClick = () => {
     setPlaybackState('loading');
-    // Ad redirect removed to ensure smooth, ad-free player experience
     setTimeout(() => {
       setPlaybackState('playing');
     }, 1200);
   };
 
   useEffect(() => {
-    if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current) {
+    if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current && movie) {
       const vjs = (window as any).videojs;
       if (!vjs) return;
+
+      // Dispose existing player if it exists to avoid re-initialization errors
+      if (playerRef.current) {
+        playerRef.current.dispose();
+      }
+
+      // Validate video source
+      const videoSrc = movie.watchUrl && movie.watchUrl !== '#' 
+        ? movie.watchUrl 
+        : FALLBACK_VIDEO_URL;
 
       const player = vjs(videoNodeRef.current, {
         autoplay: true,
         controls: true,
         responsive: true,
         fluid: true,
-        poster: movie?.posterUrl,
+        poster: movie.posterUrl,
         sources: [{
-          src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 
-          type: 'video/mp4'
+          src: videoSrc, 
+          type: videoSrc.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
         }]
       });
 
@@ -72,10 +84,11 @@ export default function WatchOnline() {
       return () => {
         if (playerRef.current) {
           playerRef.current.dispose();
+          playerRef.current = null;
         }
       };
     }
-  }, [playbackState, scriptsLoaded, movie]);
+  }, [playbackState, scriptsLoaded.videojs, movie]);
 
   if (movieLoading && !movie) {
     return (
@@ -87,7 +100,6 @@ export default function WatchOnline() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden">
-      {/* External CSS for Video.js */}
       <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
       
       <Script 
@@ -96,7 +108,6 @@ export default function WatchOnline() {
         onLoad={() => setScriptsLoaded(prev => ({...prev, videojs: true}))} 
       />
 
-      {/* Page-level ads (Outside the player area) */}
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
 
@@ -111,15 +122,16 @@ export default function WatchOnline() {
       </header>
 
       <main className="p-0">
-        {/* Video Player Area - Optimized for smooth playback without ads */}
         <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-y border-white/5">
           {playbackState === 'idle' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <img 
-                src={movie?.posterUrl || 'https://picsum.photos/seed/movie/800/450'} 
-                className="absolute inset-0 w-full h-full object-cover blur-md opacity-30" 
-                alt="" 
-              />
+              {movie?.posterUrl && (
+                <img 
+                  src={movie.posterUrl} 
+                  className="absolute inset-0 w-full h-full object-cover blur-md opacity-30" 
+                  alt="" 
+                />
+              )}
               <div className="absolute inset-0 bg-black/60"></div>
               
               <button 
@@ -165,7 +177,6 @@ export default function WatchOnline() {
           )}
         </div>
 
-        {/* Website Content Ads (Outside the player) */}
         <div className="px-5 py-6">
           <AdBanner id="watch-player-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
@@ -248,7 +259,6 @@ export default function WatchOnline() {
         </div>
       </main>
 
-      {/* Sticky Bottom Ad */}
       <footer className="fixed bottom-0 left-0 right-0 z-[1000] bg-black/95 backdrop-blur-2xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
         <AdBanner id="watch-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </footer>
