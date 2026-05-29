@@ -1,8 +1,12 @@
 import React from 'react';
-import { Search, User } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export const Header = () => {
+interface HeaderProps {
+  onSearchClick?: () => void;
+}
+
+export const Header = ({ onSearchClick }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-center px-5 py-6 bg-background/80 backdrop-blur-2xl border-b border-white/5">
       {/* Centered Logo with Glowing Effect */}
@@ -17,6 +21,7 @@ export const Header = () => {
       {/* Action Buttons (Absolute positioned to keep logo centered) */}
       <div className="absolute right-5 flex items-center gap-2">
         <Button 
+          onClick={onSearchClick}
           variant="secondary" 
           size="icon" 
           className="rounded-full bg-[#121212] hover:bg-white/10 text-[#8b95a5] hover:text-primary w-9 h-9 border-none transition-all"

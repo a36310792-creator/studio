@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
@@ -68,6 +68,8 @@ export default function Home() {
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [discoverMovies, setDiscoverMovies] = useState<Movie[]>([]);
+  
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('lumina_movies');
@@ -137,9 +139,21 @@ export default function Home() {
     };
   }, [navTab, activeCategory]);
 
+  const handleSearchIconClick = () => {
+    if (navTab !== 'home') {
+      setNavTab('home');
+      // Delay focus slightly to allow the home tab elements to render
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    } else {
+      searchInputRef.current?.focus();
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
-      <Header />
+      <Header onSearchClick={handleSearchIconClick} />
       
       {navTab === 'home' && latestMovie && (
         <NewReleaseToast 
@@ -155,6 +169,7 @@ export default function Home() {
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555] group-focus-within:text-primary transition-colors" />
                 <Input 
+                  ref={searchInputRef}
                   placeholder="Search movies, series..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
