@@ -10,7 +10,7 @@ import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,35 +27,6 @@ const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8ca
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
-];
-
-const MOCK_MOVIES: Movie[] = [
-  {
-    id: 'hathras-1',
-    title: 'Hathras (Sample)',
-    posterUrl: 'https://picsum.photos/seed/hathras/400/600',
-    rating: 8.2,
-    quality: 'HD',
-    releaseYear: 2024,
-    audio: 'Hindi',
-    genres: ['Thriller', 'Drama', 'Bollywood'],
-    description: 'A gripping investigative thriller based on true events.',
-    watchUrl: '#',
-    directDownloadUrl: '#'
-  },
-  {
-    id: 'karuppu-2',
-    title: 'Karuppu (Sample)',
-    posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
-    rating: 7.9,
-    quality: '4K',
-    releaseYear: 2024,
-    audio: 'Tamil',
-    genres: ['Action', 'Thriller', 'South'],
-    description: 'An intense action drama from the heart of South India.',
-    watchUrl: '#',
-    directDownloadUrl: '#'
-  }
 ];
 
 export default function Home() {
@@ -107,16 +78,9 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    // Favor firestore data. Only show mock movies if the database is truly empty and not loading.
-    let currentPool: Movie[] = [];
+    if (!firestoreMovies) return [];
     
-    if (firestoreMovies && firestoreMovies.length > 0) {
-      currentPool = firestoreMovies;
-    } else if (firestoreLoading) {
-      currentPool = MOCK_MOVIES; // Show mocks while loading to prevent empty screen
-    } else {
-      currentPool = MOCK_MOVIES; // Fallback if database is empty
-    }
+    let currentPool = [...firestoreMovies];
 
     if (navTab === 'saved') {
       currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
@@ -152,7 +116,7 @@ export default function Home() {
     }
 
     return filtered;
-  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, firestoreLoading, navTab, bookmarkedIds, sortBy]);
+  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, navTab, bookmarkedIds, sortBy]);
 
   const displayedMovies = useMemo(() => {
     return allFilteredMovies.slice(0, visibleCount);
@@ -326,7 +290,11 @@ export default function Home() {
             </div>
           </div>
 
-          {displayedMovies.length > 0 ? (
+          {firestoreLoading ? (
+            <div className="py-20 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          ) : displayedMovies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
                 {displayedMovies.map((movie) => (
@@ -364,7 +332,7 @@ export default function Home() {
                   ? `No matches for "${searchQuery}"` 
                   : navTab === 'saved' 
                     ? 'Start bookmarking your favorite content!' 
-                    : 'Try selecting a different year or category.'}
+                    : 'The library is currently being updated.'}
               </p>
             </div>
           )}
