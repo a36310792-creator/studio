@@ -6,7 +6,6 @@ import { ArrowLeft, Play, MonitorPlay, ShieldCheck, Loader2, Sparkles, Film, Zap
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
-import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
 import Script from 'next/script';
@@ -18,7 +17,6 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
-const IMA_AD_TAG = "https://youradexchange.com/video/select.php?r=11371326";
 
 export default function WatchOnline() {
   const { movieId } = useParams();
@@ -41,25 +39,19 @@ export default function WatchOnline() {
   
   const [playbackState, setPlaybackState] = useState<'idle' | 'loading' | 'playing'>('idle');
   const [scriptsLoaded, setScriptsLoaded] = useState({
-    videojs: false,
-    ima: false,
-    google: false
+    videojs: false
   });
 
   const handlePlayClick = () => {
     setPlaybackState('loading');
-    // Open monetization in new tab as per previous requirements
-    window.open(SMART_LINK, '_blank');
-    
-    // Buffer for 1.5s to show premium initializing animation
+    // Ad redirect removed to ensure smooth, ad-free player experience
     setTimeout(() => {
       setPlaybackState('playing');
-    }, 1500);
+    }, 1200);
   };
 
   useEffect(() => {
-    if (playbackState === 'playing' && scriptsLoaded.videojs && scriptsLoaded.ima && scriptsLoaded.google && videoNodeRef.current) {
-      // Initialize Video.js
+    if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current) {
       const vjs = (window as any).videojs;
       if (!vjs) return;
 
@@ -70,20 +62,12 @@ export default function WatchOnline() {
         fluid: true,
         poster: movie?.posterUrl,
         sources: [{
-          src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Fallback stream
+          src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 
           type: 'video/mp4'
         }]
       });
 
       playerRef.current = player;
-
-      // Initialize IMA
-      if (player.ima) {
-        player.ima({
-          adTagUrl: IMA_AD_TAG,
-          showCountdown: true,
-        });
-      }
 
       return () => {
         if (playerRef.current) {
@@ -103,27 +87,16 @@ export default function WatchOnline() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden">
-      {/* External CSS for Video.js and IMA */}
+      {/* External CSS for Video.js */}
       <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.css" rel="stylesheet" />
       
       <Script 
         src="https://vjs.zencdn.net/8.10.0/video.min.js" 
         strategy="lazyOnload" 
         onLoad={() => setScriptsLoaded(prev => ({...prev, videojs: true}))} 
       />
-      <Script 
-        src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
-        strategy="lazyOnload" 
-        onLoad={() => setScriptsLoaded(prev => ({...prev, google: true}))} 
-      />
-      <Script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.js" 
-        strategy="lazyOnload" 
-        onLoad={() => setScriptsLoaded(prev => ({...prev, ima: true}))} 
-      />
 
-      <AdPopup hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
+      {/* Page-level ads (Outside the player area) */}
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
 
@@ -138,8 +111,8 @@ export default function WatchOnline() {
       </header>
 
       <main className="p-0">
+        {/* Video Player Area - Optimized for smooth playback without ads */}
         <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-y border-white/5">
-          {/* IDLE STATE */}
           {playbackState === 'idle' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <img 
@@ -158,29 +131,27 @@ export default function WatchOnline() {
               </button>
               
               <div className="relative z-10 mt-6 flex flex-col items-center">
-                 <p className="text-[10px] font-black text-primary uppercase tracking-[4px] animate-pulse">
-                  Start Premium Stream
+                 <p className="text-[10px] font-black text-primary uppercase tracking-[4px]">
+                  Start High-Speed Stream
                 </p>
                 <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                   <ShieldCheck className="w-3 h-3 text-green-500" />
-                  <span className="text-[9px] font-black text-white/50 uppercase">IMA Protected Player</span>
+                  <span className="text-[9px] font-black text-white/50 uppercase tracking-tighter">Verified Secure Tunnel</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* LOADING STATE */}
           {playbackState === 'loading' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
               <div className="relative">
                 <Loader2 className="w-14 h-14 text-primary animate-spin" />
                 <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse"></div>
               </div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[5px] mt-6">Initializing Ad Engine...</p>
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-[5px] mt-6">Connecting to Mirror...</p>
             </div>
           )}
 
-          {/* PLAYING STATE (Video.js Player) */}
           {playbackState === 'playing' && (
             <div className="w-full h-full relative animate-in zoom-in-95 duration-1000">
                <div data-vjs-player>
@@ -190,14 +161,11 @@ export default function WatchOnline() {
                   playsInline
                 ></video>
               </div>
-              <div className="absolute top-4 right-4 z-10 bg-primary/20 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] font-black text-primary border border-primary/30 flex items-center gap-2 shadow-xl pointer-events-none">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                IMA AD SYSTEM ACTIVE
-              </div>
             </div>
           )}
         </div>
 
+        {/* Website Content Ads (Outside the player) */}
         <div className="px-5 py-6">
           <AdBanner id="watch-player-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
@@ -280,6 +248,7 @@ export default function WatchOnline() {
         </div>
       </main>
 
+      {/* Sticky Bottom Ad */}
       <footer className="fixed bottom-0 left-0 right-0 z-[1000] bg-black/95 backdrop-blur-2xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
         <AdBanner id="watch-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </footer>
