@@ -7,11 +7,10 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
-import { MovieDetails } from '@/components/movie/MovieDetails';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, ArrowDownWideNarrow, ChevronDown, Loader2 } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, ArrowDownWideNarrow, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +24,6 @@ import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
 const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
-
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
@@ -77,7 +75,6 @@ export default function Home() {
   const [navTab, setNavTab] = useState('home');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -150,13 +147,9 @@ export default function Home() {
     return allFilteredMovies.slice(0, visibleCount);
   }, [allFilteredMovies, visibleCount]);
 
-  const latestMovie = useMemo(() => {
-    const pool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : MOCK_MOVIES;
-    return pool[0];
-  }, [firestoreMovies]);
-
   const handleMovieClick = (movie: Movie) => {
-    setSelectedMovie(movie);
+    // Navigate to Page 2 (Details Page)
+    router.push(`/download/${movie.id}`);
   };
 
   const viewTitle = useMemo(() => {
@@ -212,7 +205,6 @@ export default function Home() {
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
       <AdPopup hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
       <AdFloating hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
-      <AdFloating hrefs={ROTATION_LINKS} side="left" />
       
       <Header 
         onSearchClick={handleSearchIconClick} 
@@ -220,21 +212,14 @@ export default function Home() {
         onHomeClick={handleSidebarHomeClick}
       />
       
-      {navTab === 'home' && latestMovie && !selectedMovie && (
+      {navTab === 'home' && firestoreMovies && firestoreMovies.length > 0 && (
         <NewReleaseToast 
-          movieName={`${latestMovie.title} - Now Streaming!`} 
-          onWatch={() => handleMovieClick(latestMovie)}
+          movieName={`${firestoreMovies[0].title} - Now Streaming!`} 
+          onWatch={() => handleMovieClick(firestoreMovies[0])}
         />
       )}
 
-      {selectedMovie && (
-        <MovieDetails 
-          movie={selectedMovie} 
-          onClose={() => setSelectedMovie(null)} 
-        />
-      )}
-
-      <main className={selectedMovie ? 'hidden' : 'block'}>
+      <main>
         {navTab === 'home' && (
           <>
             <div className="px-5 mb-6">
@@ -254,10 +239,6 @@ export default function Home() {
               <AdBanner id="home-top-banner" hrefs={[SMART_LINK, ...ROTATION_LINKS]} className="w-full" />
             </div>
 
-            <div className="px-5 mb-1.5 flex items-center gap-2">
-              <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Genres</div>
-              <div className="flex-1 h-px bg-white/5"></div>
-            </div>
             <div className="flex gap-2.5 px-5 mb-4 overflow-x-auto no-scrollbar py-1">
               {genres.map((genre) => (
                 <button
@@ -274,10 +255,6 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="px-5 mb-1.5 flex items-center gap-2">
-              <div className="text-[10px] font-black text-[#444] uppercase tracking-wider">Categories</div>
-              <div className="flex-1 h-px bg-white/5"></div>
-            </div>
             <div className="flex items-center gap-3 px-5 mb-8">
               <div className="flex-1 flex gap-2 overflow-x-auto no-scrollbar py-1 pr-2 border-r border-white/5">
                 {categories.map((cat) => (
@@ -320,14 +297,6 @@ export default function Home() {
                 {viewTitle.icon}
                 {viewTitle.label}
               </h3>
-              {(activeGenre !== 'All' || activeCategory !== 'All' || selectedYear !== 'All') && navTab === 'home' && (
-                <button 
-                  onClick={() => { setActiveGenre('All'); setActiveCategory('All'); setSelectedYear('All'); setVisibleCount(10); }}
-                  className="text-[10px] font-black text-[#555] hover:text-white transition-colors underline underline-offset-4"
-                >
-                  RESET FILTERS
-                </button>
-              )}
             </div>
             
             <div className="flex items-center justify-between bg-[#121212]/50 p-2 rounded-2xl border border-white/5">
@@ -350,25 +319,7 @@ export default function Home() {
           {displayedMovies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-[15px] animate-in fade-in duration-500">
-                {displayedMovies.slice(0, 4).map((movie) => (
-                  <MovieCard 
-                    key={movie.id} 
-                    movie={movie} 
-                    onSelect={handleMovieClick}
-                    onToggleBookmark={toggleBookmark}
-                    isBookmarked={bookmarkedIds.includes(movie.id)}
-                  />
-                ))}
-              </div>
-
-              {displayedMovies.length > 4 && (
-                <div className="my-8">
-                  <AdBanner id="home-mid-banner" hrefs={ROTATION_LINKS} className="w-full" />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-[15px] mt-4">
-                {displayedMovies.slice(4).map((movie) => (
+                {displayedMovies.map((movie) => (
                   <MovieCard 
                     key={movie.id} 
                     movie={movie} 
@@ -407,11 +358,6 @@ export default function Home() {
               </p>
             </div>
           )}
-          
-          <div className="mt-10 space-y-6">
-            <AdBanner id="home-bottom-new-1" hrefs={ROTATION_LINKS} className="w-full" />
-            <AdBanner id="home-bottom-new-2" hrefs={ROTATION_LINKS} className="w-full" />
-          </div>
         </section>
       </main>
 
