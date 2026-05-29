@@ -34,11 +34,13 @@ export default function MovieDetailsPage() {
 
   const { data: movie, loading } = useDoc<Movie>(movieRef);
 
-  const handleWatch = () => {
+  const handleWatch = (e: React.MouseEvent) => {
+    e.preventDefault();
     router.push(`/watch/${movieId}`);
   };
 
-  const handleDownload = () => {
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
     window.open(DETAILS_AD_LINK, '_blank');
     router.push(`/movie/${movieId}`);
   };
@@ -50,7 +52,6 @@ export default function MovieDetailsPage() {
       <AdFloating hrefs={[DETAILS_AD_LINK]} side="right" />
       <AdFloating hrefs={[DETAILS_AD_LINK]} side="left" />
       
-      {/* Header with Fixed Back Button */}
       <div className="absolute top-6 left-6 z-[2010]">
         <button 
           onClick={() => router.push('/')}
@@ -60,7 +61,6 @@ export default function MovieDetailsPage() {
         </button>
       </div>
 
-      {/* Hero Poster Section */}
       <div className="w-full h-[60vh] relative">
         {loading ? (
           <Skeleton className="w-full h-full shimmer" />
@@ -75,7 +75,6 @@ export default function MovieDetailsPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
       </div>
 
-      {/* Structured Content Area */}
       <main className="px-6 -mt-20 relative z-[2005] flex flex-col gap-8 animate-in slide-in-from-bottom-10 duration-700">
         <div className="space-y-4">
           <div role="heading" aria-level={1} className="text-[34px] font-black text-white leading-[1.1] uppercase italic tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
@@ -103,9 +102,9 @@ export default function MovieDetailsPage() {
           </div>
         </div>
 
-        {/* Action Funnel */}
         <div className="flex flex-col gap-4">
           <Button 
+            type="button"
             onClick={handleWatch}
             className="w-full h-16 py-4 bg-primary text-black font-black rounded-2xl shadow-[0_12px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg italic uppercase"
           >
@@ -114,6 +113,7 @@ export default function MovieDetailsPage() {
           </Button>
           
           <Button 
+            type="button"
             onClick={handleDownload}
             variant="outline"
             className="w-full h-16 py-4 bg-[#0a0a0a] border-primary/20 text-white font-black rounded-2xl hover:bg-[#111] hover:border-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg italic uppercase"
@@ -123,7 +123,6 @@ export default function MovieDetailsPage() {
           </Button>
         </div>
 
-        {/* Information Security Context */}
         <div className="bg-[#0a0a0a] rounded-[32px] p-7 border border-white/5 shadow-inner">
           <div className="flex items-center gap-2.5 mb-4">
             <ShieldCheck className="w-4.5 h-4.5 text-primary" />
@@ -139,7 +138,6 @@ export default function MovieDetailsPage() {
         </div>
       </main>
 
-      {/* Global Sticky Footer Monetization */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-[2020] bg-black/95 backdrop-blur-3xl border-t border-primary/10 p-3 max-w-[420px] shadow-[0_-15px_60px_rgba(0,0,0,1)]">
         <AdBanner id="details-sticky-footer" hrefs={[DETAILS_AD_LINK]} className="w-full" />
       </div>

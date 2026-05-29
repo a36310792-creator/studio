@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -22,13 +21,13 @@ const ROTATION_LINKS = [
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   const router = useRouter();
 
-  const handleWatch = () => {
-    // Navigate to Page 4 (Watch Hub)
+  const handleWatch = (e: React.MouseEvent) => {
+    e.preventDefault();
     router.push(`/watch/${movie.id}`);
   };
 
-  const handleDownload = () => {
-    // Navigate to Page 3 (Secure Gateway / Download Gateway)
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
     router.push(`/movie/${movie.id}`);
   };
 
@@ -87,6 +86,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
 
             <div className="grid grid-cols-1 gap-4 mb-8">
               <Button 
+                type="button"
                 onClick={handleWatch}
                 className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
               >
@@ -95,6 +95,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </Button>
               
               <Button 
+                type="button"
                 onClick={handleDownload}
                 variant="outline"
                 className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
