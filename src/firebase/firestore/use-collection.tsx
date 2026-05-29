@@ -27,14 +27,20 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
     const unsubscribe = onSnapshot(
       query,
       (snapshot: QuerySnapshot<T>) => {
-        const items = snapshot.docs.map((doc: QueryDocumentSnapshot<T>) => ({
-          ...doc.data(),
-          id: doc.id,
-        }));
-        setData(items);
+        const items = snapshot.docs.map((doc: QueryDocumentSnapshot<T>) => {
+          const docData = doc.data();
+          return {
+            ...docData,
+            id: doc.id,
+          } as T & { id: string };
+        });
+        
+        console.log(`[Firestore] Sync complete: ${items.length} documents fetched.`);
+        setData(items as any);
         setLoading(false);
       },
       async (err) => {
+        console.error("[Firestore] Collection listener error:", err);
         const permissionError = new FirestorePermissionError({
           path: (query as any)._query?.path?.segments?.join('/') || 'unknown',
           operation: 'list',

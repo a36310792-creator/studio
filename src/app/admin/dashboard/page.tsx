@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,6 @@ export default function AdminDashboard() {
   const [isFetching, setIsFetching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Authentication Protection
   useEffect(() => {
     const localSession = localStorage.getItem('admin_session');
     
@@ -58,7 +57,6 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, [auth, router]);
 
-  // Firestore Sync - Live updates from the database
   const moviesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'movies'), orderBy('title', 'asc'));
@@ -131,49 +129,71 @@ export default function AdminDashboard() {
     try {
       if (editingMovie) {
         const movieRef = doc(db, 'movies', editingMovie.id);
-        updateDoc(movieRef, movieData).catch(async () => {
+        console.log("Updating movie:", editingMovie.id);
+        updateDoc(movieRef, movieData).then(() => {
+          console.log("Successfully updated movie.");
+          setEditingMovie(null);
+          setFormData({ 
+            title: '', posterUrl: '', rating: 0, quality: 'HD', 
+            releaseYear: new Date().getFullYear(), audio: 'Hindi', 
+            genres: [], description: '', watchUrl: '', directDownloadUrl: ''
+          });
+        }).catch(async (err) => {
+          console.error("Update failed:", err);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: movieRef.path,
             operation: 'update',
             requestResourceData: movieData
           }));
         });
-        setEditingMovie(null);
       } else {
         const moviesRef = collection(db, 'movies');
-        addDoc(moviesRef, movieData).catch(async () => {
+        console.log("Adding new movie...");
+        addDoc(moviesRef, movieData).then(() => {
+          console.log("Successfully added movie.");
+          setIsAdding(false);
+          setFormData({ 
+            title: '', posterUrl: '', rating: 0, quality: 'HD', 
+            releaseYear: new Date().getFullYear(), audio: 'Hindi', 
+            genres: [], description: '', watchUrl: '', directDownloadUrl: ''
+          });
+        }).catch(async (err) => {
+          console.error("Add failed:", err);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: moviesRef.path,
             operation: 'create',
             requestResourceData: movieData
           }));
         });
-        setIsAdding(false);
       }
-      
-      setFormData({ 
-        title: '', posterUrl: '', rating: 0, quality: 'HD', 
-        releaseYear: new Date().getFullYear(), audio: 'Hindi', 
-        genres: [], description: '', watchUrl: '', directDownloadUrl: ''
-      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const deleteMovie = async (id: string) => {
-    if (!id) return;
+    if (!id) {
+      console.error("Delete failed: No document ID provided.");
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this movie permanently from the library?')) return;
     
     if (db) {
       const movieRef = doc(db, 'movies', id);
-      // Initiation of deleteDoc - updates local cache instantly via onSnapshot listener
-      deleteDoc(movieRef).catch(async () => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: movieRef.path,
-          operation: 'delete'
-        } satisfies any));
-      });
+      console.log(`[Admin] Initiating delete for document ID: ${id}`);
+      
+      deleteDoc(movieRef)
+        .then(() => {
+          console.log(`[Admin] Successfully deleted document ID: ${id}`);
+        })
+        .catch(async (error) => {
+          console.error("[Admin] Firestore Delete Error:", error);
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: movieRef.path,
+            operation: 'delete'
+          }));
+        });
     }
   };
 
