@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
+import { AdBanner } from '@/components/ads/AdBanner';
 import Link from 'next/link';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -70,7 +71,7 @@ export default function DownloadGateway() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setForceLoad(true);
-    }, 2000); // 2 seconds max wait for Firebase
+    }, 2000); 
     return () => clearTimeout(timer);
   }, []);
 
@@ -88,14 +89,12 @@ export default function DownloadGateway() {
     }
   }, [countdown]);
 
-  // If we have no movie data at all and firestore is done loading, redirect
   useEffect(() => {
     if (!firestoreLoading && !movie && forceLoad) {
       router.push('/');
     }
   }, [movie, firestoreLoading, forceLoad, router]);
 
-  // Only show the global spinner if we are waiting for both Firebase and the safety timeout
   if (firestoreLoading && !movie && !forceLoad) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -206,6 +205,9 @@ export default function DownloadGateway() {
                 <span className="text-[#555]">Low Data</span>
               </a>
             </Button>
+
+            {/* Bottom Ad Banner */}
+            <AdBanner id="download-bottom-banner" className="w-full mt-8" />
 
             <p className="text-[10px] text-[#444] font-black uppercase tracking-[2px] pt-4">
               Links expire in 120 minutes

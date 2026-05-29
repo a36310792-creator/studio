@@ -6,6 +6,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
+import { AdBanner } from '@/components/ads/AdBanner';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, ArrowDownWideNarrow, ChevronDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -246,6 +247,11 @@ export default function Home() {
                   className="bg-[#121212] border-white/5 h-12 rounded-2xl pl-11 text-white placeholder:text-[#555] focus-visible:ring-primary/50 transition-all"
                 />
               </div>
+            </div>
+
+            {/* Top Ad Banner */}
+            <div className="px-5 mb-6">
+              <AdBanner id="home-top-banner" className="w-full" />
             </div>
 
             <div className="px-5 mb-1.5 flex items-center gap-2">
