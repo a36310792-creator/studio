@@ -14,10 +14,14 @@ interface MovieDetailsProps {
 
 const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
 
+const ROTATION_LINKS = [
+  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
+  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
+];
+
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
-      {/* Glass Back Button */}
       <div className="absolute top-5 left-5 z-[2010]">
         <button 
           onClick={onClose}
@@ -27,7 +31,6 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
         </button>
       </div>
 
-      {/* Hero Poster Backdrop */}
       <div className="w-full h-[65vh] relative">
         <img 
           src={movie.posterUrl} 
@@ -38,10 +41,8 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
       </div>
 
-      {/* Content Container */}
       <div className="px-6 -mt-32 relative z-[2005] max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Main Info */}
           <div className="flex-1">
             <h1 className="text-[32px] md:text-5xl font-black text-white mb-3 tracking-tight leading-tight">
               {movie.title}
@@ -75,12 +76,10 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </p>
             </div>
 
-            {/* Ad: Below Description */}
             <div className="mb-8">
-              <AdBanner id="details-mid-desc" href={BANNER_LINK} className="w-full" />
+              <AdBanner id="details-new-rotation-desc" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
-            {/* Prominent Action Button - Routes to Gateway Page */}
             <div className="mb-10">
               <Link href={`/download/${movie.id}`}>
                 <Button 
@@ -92,12 +91,10 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </Link>
             </div>
 
-            {/* Ad: Above Download Links */}
             <div className="mb-8">
-              <AdBanner id="details-above-links" href={BANNER_LINK} className="w-full" />
+              <AdBanner id="details-new-rotation-above" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
 
-            {/* Download Section */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 mb-12">
               <div className="flex items-center gap-3 mb-2">
                 <Download className="w-6 h-6 text-primary" />
@@ -138,17 +135,15 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </p>
             </div>
 
-            {/* Details Page Bottom Ad Banner */}
             <div className="pb-10">
-              <AdBanner id="details-bottom-banner" href={BANNER_LINK} className="w-full" />
+              <AdBanner id="details-new-rotation-bottom" hrefs={ROTATION_LINKS} className="w-full" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sticky Bottom Ad */}
       <div className="fixed bottom-0 left-0 right-0 z-[2020] bg-black/90 backdrop-blur-xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
-        <AdBanner id="details-sticky-bottom" href={BANNER_LINK} className="w-full" />
+        <AdBanner id="details-sticky-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </div>
     </div>
   );

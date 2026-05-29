@@ -1,21 +1,30 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Zap, ExternalLink } from 'lucide-react';
 
 interface AdFloatingProps {
-  href: string;
+  href?: string;
+  hrefs?: string[];
   side?: 'left' | 'right';
 }
 
-/**
- * AdFloating Component
- * A persistent corner floating ad button.
- */
-export const AdFloating = ({ href, side = 'right' }: AdFloatingProps) => {
+export const AdFloating = ({ href, hrefs, side = 'right' }: AdFloatingProps) => {
+  const [activeHref, setActiveHref] = useState<string | undefined>(href);
+
+  useEffect(() => {
+    if (hrefs && hrefs.length > 0) {
+      const randomLink = hrefs[Math.floor(Math.random() * hrefs.length)];
+      setActiveHref(randomLink);
+    }
+  }, [href, hrefs]);
+
+  if (!activeHref) return null;
+
   return (
     <div className={`fixed bottom-28 ${side === 'right' ? 'right-5' : 'left-5'} z-[100] animate-bounce hover:animate-none transition-all`}>
       <a 
-        href={href} 
+        href={activeHref} 
         target="_blank" 
         rel="noopener noreferrer" 
         className="flex items-center gap-2.5 bg-primary text-black px-5 py-3.5 rounded-2xl font-black text-[10px] uppercase shadow-[0_15px_40px_rgba(0,229,255,0.4)] hover:scale-110 active:scale-95 transition-all group"

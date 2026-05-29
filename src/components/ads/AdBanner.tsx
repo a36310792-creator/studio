@@ -7,20 +7,22 @@ interface AdBannerProps {
   id: string;
   html?: string;
   href?: string;
+  hrefs?: string[];
   className?: string;
 }
 
-/**
- * AdBanner Component
- * Supports both HTML/Script injection and direct Clickable Banners.
- */
-export const AdBanner = ({ id, html, href, className }: AdBannerProps) => {
+export const AdBanner = ({ id, html, href, hrefs, className }: AdBannerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeHref, setActiveHref] = useState<string | undefined>(href);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    if (hrefs && hrefs.length > 0) {
+      const randomLink = hrefs[Math.floor(Math.random() * hrefs.length)];
+      setActiveHref(randomLink);
+    }
+  }, [href, hrefs]);
 
   useEffect(() => {
     if (isMounted && containerRef.current && html) {
@@ -40,20 +42,18 @@ export const AdBanner = ({ id, html, href, className }: AdBannerProps) => {
     return <div className={className} style={{ minHeight: '90px' }} />;
   }
 
-  // If a direct link is provided, render a high-quality clickable banner
-  if (href) {
+  if (activeHref) {
     return (
       <div className={className}>
         <div className="text-[9px] text-center text-[#444] font-black uppercase tracking-[3px] mb-2">
           Sponsored Premium Content
         </div>
         <a 
-          href={href} 
+          href={activeHref} 
           target="_blank" 
           rel="noopener noreferrer"
           className="group relative block w-full overflow-hidden rounded-[24px] border border-primary/20 bg-gradient-to-r from-black via-[#0a0a0a] to-black p-5 shadow-[0_0_20px_rgba(0,229,255,0.05)] transition-all hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] active:scale-[0.98]"
         >
-          {/* Animated Glow Border */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
           
           <div className="relative z-10 flex items-center justify-between gap-4">

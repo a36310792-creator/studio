@@ -80,6 +80,11 @@ const MOCK_MOVIES: Movie[] = [
 const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
 const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
+const ROTATION_LINKS = [
+  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
+  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
+];
+
 export default function Home() {
   const db = useFirestore();
   const moviesQuery = useMemo(() => {
@@ -106,7 +111,6 @@ export default function Home() {
     if (saved) {
       setBookmarkedIds(JSON.parse(saved));
     }
-    // Safety timer to ensure the spinner doesn't show forever
     const timer = setTimeout(() => setForceShow(true), 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -229,9 +233,9 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
-      {/* Home Ads: Popup & Floating */}
-      <AdPopup href={SMART_LINK} />
-      <AdFloating href={SMART_LINK} />
+      <AdPopup hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
+      <AdFloating hrefs={[SMART_LINK, ...ROTATION_LINKS]} />
+      <AdFloating hrefs={ROTATION_LINKS} side="left" />
       
       <Header 
         onSearchClick={handleSearchIconClick} 
@@ -262,9 +266,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Top Ad Banner */}
             <div className="px-5 mb-6">
-              <AdBanner id="home-top-banner" href={BANNER_LINK} className="w-full" />
+              <AdBanner id="home-top-banner" hrefs={[BANNER_LINK, ...ROTATION_LINKS]} className="w-full" />
             </div>
 
             <div className="px-5 mb-1.5 flex items-center gap-2">
@@ -374,10 +377,9 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Middle Section Ad Banner */}
               {displayedMovies.length > 4 && (
                 <div className="my-8">
-                  <AdBanner id="home-mid-banner" href={BANNER_LINK} className="w-full" />
+                  <AdBanner id="home-mid-banner" hrefs={ROTATION_LINKS} className="w-full" />
                 </div>
               )}
 
@@ -428,10 +430,9 @@ export default function Home() {
             </div>
           )}
           
-          {/* Bottom Ad Banners */}
           <div className="mt-10 space-y-6">
-            <AdBanner id="home-bottom-1" href={BANNER_LINK} className="w-full" />
-            <AdBanner id="home-bottom-2" href={BANNER_LINK} className="w-full" />
+            <AdBanner id="home-bottom-new-1" hrefs={ROTATION_LINKS} className="w-full" />
+            <AdBanner id="home-bottom-new-2" hrefs={ROTATION_LINKS} className="w-full" />
           </div>
         </section>
       </main>

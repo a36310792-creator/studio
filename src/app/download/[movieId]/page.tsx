@@ -44,6 +44,11 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
 const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
 const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
+const ROTATION_LINKS = [
+  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
+  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
+];
+
 export default function DownloadGateway() {
   const { movieId } = useParams();
   const db = useFirestore();
@@ -66,7 +71,6 @@ export default function DownloadGateway() {
     return MOCK_FALLBACK_MOVIES.find(m => m.id === (movieId as string)) || MOCK_FALLBACK_MOVIES[0];
   }, [firestoreMovie, movieId]);
 
-  // Initial Security Scan Countdown
   useEffect(() => {
     if (status === 'scanning') {
       if (countdown > 0) {
@@ -78,7 +82,6 @@ export default function DownloadGateway() {
     }
   }, [countdown, status]);
 
-  // Safety timer to prevent infinite spinner
   useEffect(() => {
     const timer = setTimeout(() => setForceShow(true), 3000);
     return () => clearTimeout(timer);
@@ -87,14 +90,12 @@ export default function DownloadGateway() {
   const handleUnlockClick = () => {
     if (isProcessing) return;
 
-    // Open Ad Link
     window.open(SMART_LINK, '_blank');
     
     setIsProcessing(true);
     const nextClickCount = adClicks + 1;
     setAdClicks(nextClickCount);
 
-    // Simulate verification delay
     setTimeout(() => {
       setIsProcessing(false);
       if (nextClickCount >= 2) {
@@ -113,11 +114,9 @@ export default function DownloadGateway() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl flex flex-col relative overflow-hidden">
-      {/* Download Page Ads */}
-      <AdPopup href={SMART_LINK} delay={1000} />
-      <AdFloating href={SMART_LINK} side="left" />
+      <AdPopup hrefs={ROTATION_LINKS} />
+      <AdFloating hrefs={ROTATION_LINKS} side="left" />
       
-      {/* Decorative Glows */}
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
       <div className="absolute top-1/2 -right-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
 
@@ -129,7 +128,6 @@ export default function DownloadGateway() {
       </header>
 
       <main className="flex-1 px-6 pt-10 flex flex-col items-center text-center">
-        {/* Status Icon */}
         <div className="w-28 h-28 mb-8 relative group">
           <div className={`absolute inset-0 bg-primary/20 rounded-[40px] blur-[20px] transition-all duration-700 ${status === 'unlocked' ? 'opacity-100 scale-125' : 'opacity-0 scale-50'}`}></div>
           <div className={`w-full h-full bg-[#0a0a0a] rounded-[40px] border flex items-center justify-center transition-all duration-500 relative z-10 ${
@@ -162,12 +160,10 @@ export default function DownloadGateway() {
           </p>
         </div>
 
-        {/* Ad: Above Download Section */}
         <div className="w-full mb-8">
-          <AdBanner id="download-above-sec" href={BANNER_LINK} className="w-full" />
+          <AdBanner id="download-above-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
-        {/* Action Area */}
         <div className="w-full relative z-10 min-h-[80px]">
           {status === 'locked' && (
             <Button 
@@ -236,12 +232,10 @@ export default function DownloadGateway() {
           )}
         </div>
 
-        {/* Ad: Below Download Section */}
         <div className="w-full mt-8">
-          <AdBanner id="download-below-sec" href={BANNER_LINK} className="w-full" />
+          <AdBanner id="download-below-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
-        {/* Movie Context */}
         <div className="w-full mt-10 bg-[#0a0a0a] border border-white/5 rounded-3xl p-5 text-left group hover:border-primary/10 transition-all">
           <div className="flex gap-4 items-center">
             <div className="w-16 h-22 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
@@ -269,9 +263,8 @@ export default function DownloadGateway() {
           </p>
         </div>
         
-        {/* Sticky Bottom Banner Ad */}
         <div className="fixed bottom-0 left-0 right-0 z-[200] bg-black/95 border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
-          <AdBanner id="download-sticky-bottom" href={BANNER_LINK} className="w-full" />
+          <AdBanner id="download-sticky-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
       </footer>
     </div>

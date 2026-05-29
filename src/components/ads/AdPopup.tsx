@@ -5,19 +5,23 @@ import { X, Zap, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdPopupProps {
-  href: string;
+  href?: string;
+  hrefs?: string[];
   delay?: number;
 }
 
-/**
- * AdPopup Component
- * Shows a high-conversion modal ad after a short delay.
- */
-export const AdPopup = ({ href, delay = 1500 }: AdPopupProps) => {
+export const AdPopup = ({ href, hrefs, delay = 1500 }: AdPopupProps) => {
   const [show, setShow] = useState(false);
+  const [activeHref, setActiveHref] = useState<string | undefined>(href);
 
   useEffect(() => {
-    // Show after delay
+    if (hrefs && hrefs.length > 0) {
+      const randomLink = hrefs[Math.floor(Math.random() * hrefs.length)];
+      setActiveHref(randomLink);
+    }
+  }, [href, hrefs]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       const hasShown = sessionStorage.getItem('popup_shown');
       if (!hasShown) {
@@ -32,7 +36,7 @@ export const AdPopup = ({ href, delay = 1500 }: AdPopupProps) => {
     sessionStorage.setItem('popup_shown', 'true');
   };
 
-  if (!show) return null;
+  if (!show || !activeHref) return null;
 
   return (
     <div className="fixed inset-0 z-[5000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
@@ -54,7 +58,7 @@ export const AdPopup = ({ href, delay = 1500 }: AdPopupProps) => {
         </p>
         
         <Button className="w-full h-14 bg-primary text-black font-black text-[13px] rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:scale-[1.02] transition-all" asChild>
-          <a href={href} target="_blank" rel="noopener noreferrer" onClick={handleClose}>
+          <a href={activeHref} target="_blank" rel="noopener noreferrer" onClick={handleClose}>
             CONTINUE TO SERVER <ExternalLink className="w-4 h-4 ml-2" />
           </a>
         </Button>
