@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Play, MonitorPlay, ShieldCheck, Loader2, Sparkles, Film, Zap, Maximize2, SkipForward, ExternalLink } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, ShieldCheck, Loader2, Sparkles, Zap, ExternalLink, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
-import Script from 'next/script';
 import { useDoc, useFirestore, useCollection } from '@/firebase';
 import { doc, collection, limit, query } from 'firebase/firestore';
 
@@ -17,16 +16,11 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
-const VAST_AD_TAG = "https://youradexchange.com/video/select.php?r=11371326";
-const FALLBACK_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function WatchOnline() {
   const { movieId } = useParams();
   const db = useFirestore();
-  const playerRef = useRef<any>(null);
-  const videoNodeRef = useRef<HTMLVideoElement>(null);
-  const adTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -41,104 +35,6 @@ export default function WatchOnline() {
   const { data: movie, loading: movieLoading } = useDoc<Movie>(movieRef);
   const { data: relatedMovies } = useCollection<Movie>(relatedQuery);
   
-  const [playbackState, setPlaybackState] = useState<'idle' | 'loading' | 'playing'>('idle');
-  const [scriptsLoaded, setScriptsLoaded] = useState({
-    videojs: false,
-    ima: false,
-    contribAds: false
-  });
-
-  const handlePlayClick = () => {
-    // Sequential high-revenue flow
-    window.open(SMART_LINK, '_blank');
-    
-    setPlaybackState('loading');
-    
-    // Safety fallback: Skip ad phase if loading hangs for more than 3.5s
-    adTimeoutRef.current = setTimeout(() => {
-      setPlaybackState('playing');
-    }, 3500);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current && movie) {
-      const vjs = (window as any).videojs;
-      if (!vjs) return;
-
-      if (playerRef.current) return;
-
-      const videoSrc = movie.watchUrl && movie.watchUrl !== '#' 
-        ? movie.watchUrl 
-        : FALLBACK_VIDEO_URL;
-
-      const player = vjs(videoNodeRef.current, {
-        autoplay: true,
-        controls: true,
-        responsive: true,
-        fluid: true,
-        preload: 'auto',
-        poster: movie.posterUrl,
-        sources: [{
-          src: videoSrc, 
-          type: videoSrc.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
-        }]
-      });
-
-      player.on('ready', () => {
-        if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
-        
-        if (scriptsLoaded.ima && scriptsLoaded.contribAds && player.ima) {
-          try {
-            player.ima({
-              adTagUrl: VAST_AD_TAG,
-              showCountdown: true,
-              debug: false,
-              adWillAutoPlay: true,
-              adsResponseTimeout: 3000,
-            });
-          } catch (e) {
-            console.error('Failed to initialize IMA:', e);
-            setPlaybackState('playing');
-            player.play().catch(() => {});
-          }
-        } else {
-          setPlaybackState('playing');
-          player.play().catch(() => {});
-        }
-      });
-
-      // Catch Adblocker or Network errors and skip ad immediately
-      player.on('adserror', (err: any) => {
-        console.warn('IMA Ads error - Bypassing to content:', err);
-        if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
-        setPlaybackState('playing');
-        player.play().catch(() => {});
-      });
-
-      player.on('adstart', () => {
-        if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
-        setPlaybackState('playing');
-      });
-
-      player.on(['adend', 'adskip', 'contentresume'], () => {
-        setPlaybackState('playing');
-        player.play().catch(() => {});
-      });
-
-      playerRef.current = player;
-    }
-  }, [playbackState, scriptsLoaded, movie]);
-
   if (movieLoading && !movie) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -152,29 +48,6 @@ export default function WatchOnline() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden">
-      <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.css" rel="stylesheet" />
-      
-      <Script 
-        src="https://vjs.zencdn.net/8.10.0/video.min.js" 
-        strategy="lazyOnload" 
-        onLoad={() => setScriptsLoaded(prev => ({...prev, videojs: true}))} 
-      />
-      <Script 
-        src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
-        strategy="lazyOnload" 
-      />
-      <Script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-ads/7.0.0/videojs-contrib-ads.min.js" 
-        strategy="lazyOnload"
-        onLoad={() => setScriptsLoaded(prev => ({...prev, contribAds: true}))} 
-      />
-      <Script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.js" 
-        strategy="lazyOnload"
-        onLoad={() => setScriptsLoaded(prev => ({...prev, ima: true}))} 
-      />
-
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
 
@@ -189,61 +62,37 @@ export default function WatchOnline() {
       </header>
 
       <main className="p-0">
-        <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_10px_60px_rgba(0,0,0,0.9)] border-y border-white/5">
-          {playbackState === 'idle' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-30">
-              {movie?.posterUrl && (
-                <div className="absolute inset-0">
-                  <img 
-                    src={movie.posterUrl} 
-                    className="w-full h-full object-cover opacity-40 grayscale-[0.3]" 
-                    alt="" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/60"></div>
-                </div>
-              )}
-              
-              <button 
-                onClick={handlePlayClick}
-                className="relative z-40 w-20 h-20 rounded-full bg-primary flex items-center justify-center text-black shadow-[0_0_50px_rgba(0,229,255,0.4)] hover:scale-110 active:scale-95 transition-all group"
-              >
-                <Play className="w-10 h-10 fill-current ml-1" />
-                <div className="absolute -inset-3 border-2 border-primary/20 rounded-full animate-ping"></div>
-              </button>
-              
-              <div className="relative z-40 mt-8 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-700">
-                 <p className="text-[10px] font-black text-primary uppercase tracking-[5px] drop-shadow-md">
-                  Launch Premium Mirror
-                </p>
-                <div className="flex items-center gap-2 mt-3 px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-primary/20">
-                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[9px] font-black text-white/70 uppercase tracking-tighter italic">Secured CDN Handshake</span>
-                </div>
-              </div>
+        <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_10px_60px_rgba(0,0,0,0.9)] border-y border-white/5 flex items-center justify-center">
+          {movie?.posterUrl && (
+            <div className="absolute inset-0">
+              <img 
+                src={movie.posterUrl} 
+                className="w-full h-full object-cover opacity-40 grayscale-[0.3]" 
+                alt="" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/60"></div>
             </div>
           )}
-
-          {playbackState === 'loading' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-50">
-              <div className="relative">
-                <div className="absolute inset-0 blur-2xl bg-primary/20 animate-pulse rounded-full"></div>
-                <Loader2 className="w-16 h-16 text-primary animate-spin relative z-10" />
-              </div>
-              <div className="mt-8 flex flex-col items-center gap-1.5">
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-[6px] animate-pulse">Establishing Tunnel</p>
-                <p className="text-[8px] font-bold text-primary/30 uppercase tracking-[3px]">Bypassing CDN Latency...</p>
-              </div>
+          
+          <div className="relative z-40 flex flex-col items-center p-6 text-center animate-in fade-in zoom-in-95 duration-700">
+            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 border border-primary/20">
+              <MonitorPlay className="w-8 h-8" />
             </div>
-          )}
+            <h3 className="text-xl font-black italic uppercase text-white mb-2">High Speed Server Ready</h3>
+            <p className="text-[10px] text-white/50 font-black uppercase tracking-[4px] mb-6">4K HDR STREAMING ACTIVATED</p>
+            
+            <Button 
+              className="w-full bg-primary text-black font-black text-sm h-12 rounded-xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:scale-105 active:scale-95 transition-all"
+              asChild
+            >
+              <a href={SMART_LINK} target="_blank">
+                ACCESS STREAM MIRROR <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+            </Button>
 
-          <div className={`w-full h-full transition-opacity duration-1000 ${playbackState === 'playing' ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'}`}>
-             <div data-vjs-player className="w-full h-full">
-              <video 
-                ref={videoNodeRef} 
-                className="video-js vjs-big-play-centered vjs-theme-city"
-                playsInline
-                preload="metadata"
-              ></video>
+            <div className="flex items-center gap-2 mt-6 px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-primary/20">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[9px] font-black text-white/70 uppercase tracking-tighter italic">Secured CDN Handshake</span>
             </div>
           </div>
         </div>
@@ -311,7 +160,7 @@ export default function WatchOnline() {
           
           <div className="grid grid-cols-2 gap-5">
             {relatedMovies?.map((m) => (
-              <Link key={m.id} href={`/watch/${m.id}`} className="group relative">
+              <Link key={m.id} href={`/movie/${m.id}`} className="group relative">
                 <div className="relative aspect-[2/3] rounded-[28px] overflow-hidden border border-white/5 group-hover:border-primary/50 transition-all shadow-2xl">
                   <img src={m.posterUrl} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" alt="" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 transition-opacity"></div>
