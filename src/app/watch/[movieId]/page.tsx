@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -25,6 +26,7 @@ export default function WatchOnline() {
   const db = useFirestore();
   const playerRef = useRef<any>(null);
   const videoNodeRef = useRef<HTMLVideoElement>(null);
+  const adTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -47,19 +49,43 @@ export default function WatchOnline() {
   });
 
   const handlePlayClick = () => {
+    // Start playback sequence immediately
     setPlaybackState('loading');
-    setTimeout(() => {
+    
+    // Safety timeout: If ad system fails to respond in 3 seconds, force movie playback
+    adTimeoutRef.current = setTimeout(() => {
+      if (playbackState !== 'playing') {
+        console.warn('Ad timeout reached, bypassing to movie playback.');
+        setPlaybackState('playing');
+      }
+    }, 3000);
+
+    // If scripts are already loaded, we can skip straight to playing state
+    // VideoJS will handle the IMA ad request on its own
+    if (scriptsLoaded.videojs && scriptsLoaded.ima && scriptsLoaded.contribAds) {
       setPlaybackState('playing');
-    }, 1200);
+    }
   };
 
   useEffect(() => {
-    if (playbackState === 'playing' && scriptsLoaded.videojs && scriptsLoaded.ima && scriptsLoaded.contribAds && videoNodeRef.current && movie) {
+    return () => {
+      if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Re-initialize player when playbackState changes to 'playing' or when movie data arrives
+    if (playbackState === 'playing' && scriptsLoaded.videojs && videoNodeRef.current && movie) {
       const vjs = (window as any).videojs;
       if (!vjs) return;
 
       if (playerRef.current) {
-        playerRef.current.dispose();
+        // Only re-init if source changed or element changed
+        return;
       }
 
       const videoSrc = movie.watchUrl && movie.watchUrl !== '#' 
@@ -71,6 +97,7 @@ export default function WatchOnline() {
         controls: true,
         responsive: true,
         fluid: true,
+        preload: 'auto', // Optimize buffering
         poster: movie.posterUrl,
         sources: [{
           src: videoSrc, 
@@ -78,30 +105,42 @@ export default function WatchOnline() {
         }]
       });
 
-      // Initialize IMA
-      if (player.ima) {
-        player.ima({
-          adTagUrl: VAST_AD_TAG,
-          showCountdown: true,
-          debug: false
-        });
-      }
+      player.on('ready', () => {
+        if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
+        
+        // Initialize IMA only if all plugins are ready
+        if (scriptsLoaded.ima && scriptsLoaded.contribAds && player.ima) {
+          player.ima({
+            adTagUrl: VAST_AD_TAG,
+            showCountdown: true,
+            debug: false,
+            // Fallback: If ad fails, start content
+            adWillAutoPlay: true,
+            adsResponseTimeout: 3000,
+          });
+        }
+      });
+
+      player.on('adserror', () => {
+        console.log('IMA Ads error, continuing to movie...');
+        player.play();
+      });
+
+      player.on('adstart', () => {
+        if (adTimeoutRef.current) clearTimeout(adTimeoutRef.current);
+      });
 
       playerRef.current = player;
-
-      return () => {
-        if (playerRef.current) {
-          playerRef.current.dispose();
-          playerRef.current = null;
-        }
-      };
     }
   }, [playbackState, scriptsLoaded, movie]);
 
   if (movieLoading && !movie) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-[3px] text-primary/40">Initializing Tunnel</p>
+        </div>
       </div>
     );
   }
@@ -111,14 +150,11 @@ export default function WatchOnline() {
       <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
       <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-ima/2.1.0/videojs.ima.min.css" rel="stylesheet" />
       
-      {/* Load core Video.js */}
       <Script 
         src="https://vjs.zencdn.net/8.10.0/video.min.js" 
         strategy="lazyOnload" 
         onLoad={() => setScriptsLoaded(prev => ({...prev, videojs: true}))} 
       />
-
-      {/* Load IMA SDK and Plugins */}
       <Script 
         src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
         strategy="lazyOnload" 
@@ -142,65 +178,72 @@ export default function WatchOnline() {
           <ArrowLeft className="w-5 h-5 text-primary" />
         </Link>
         <div className="flex flex-col">
-          <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Server Status: Online</h1>
+          <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Fast Server Node: 04</h1>
           <span className="text-[12px] font-bold truncate max-w-[200px]">{movie?.title || 'Loading Media...'}</span>
         </div>
       </header>
 
       <main className="p-0">
-        <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] border-y border-white/5">
+        {/* Optimized Player Container */}
+        <div className="relative w-full aspect-video bg-black group overflow-hidden shadow-[0_10px_60px_rgba(0,0,0,0.9)] border-y border-white/5">
           {playbackState === 'idle' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-30 transition-all duration-700">
+              {/* Instant Thumbnail Preview */}
               {movie?.posterUrl && (
-                <img 
-                  src={movie.posterUrl} 
-                  className="absolute inset-0 w-full h-full object-cover blur-md opacity-30" 
-                  alt="" 
-                />
+                <div className="absolute inset-0 transition-transform duration-1000 group-hover:scale-105">
+                  <img 
+                    src={movie.posterUrl} 
+                    className="w-full h-full object-cover opacity-40 grayscale-[0.3]" 
+                    alt="" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/60"></div>
+                </div>
               )}
-              <div className="absolute inset-0 bg-black/60"></div>
               
               <button 
                 onClick={handlePlayClick}
-                className="relative z-10 w-20 h-20 rounded-full bg-primary flex items-center justify-center text-black shadow-[0_0_40px_rgba(0,229,255,0.4)] hover:scale-110 active:scale-95 transition-all group"
+                className="relative z-40 w-20 h-20 rounded-full bg-primary flex items-center justify-center text-black shadow-[0_0_50px_rgba(0,229,255,0.4)] hover:scale-110 active:scale-95 transition-all group"
               >
                 <Play className="w-10 h-10 fill-current ml-1" />
-                <div className="absolute -inset-2 border border-primary/30 rounded-full animate-ping opacity-20"></div>
+                <div className="absolute -inset-3 border-2 border-primary/20 rounded-full animate-ping"></div>
               </button>
               
-              <div className="relative z-10 mt-6 flex flex-col items-center">
-                 <p className="text-[10px] font-black text-primary uppercase tracking-[4px]">
-                  Start High-Speed Stream
+              <div className="relative z-40 mt-8 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-700">
+                 <p className="text-[10px] font-black text-primary uppercase tracking-[5px] drop-shadow-md">
+                  Launch Premium Mirror
                 </p>
-                <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
-                  <ShieldCheck className="w-3 h-3 text-green-500" />
-                  <span className="text-[9px] font-black text-white/50 uppercase tracking-tighter">Verified Secure Tunnel</span>
+                <div className="flex items-center gap-2 mt-3 px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-primary/20">
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[9px] font-black text-white/70 uppercase tracking-tighter italic">Secured CDN Handshake</span>
                 </div>
               </div>
             </div>
           )}
 
           {playbackState === 'loading' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-50">
               <div className="relative">
-                <Loader2 className="w-14 h-14 text-primary animate-spin" />
-                <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse"></div>
+                <div className="absolute inset-0 blur-2xl bg-primary/20 animate-pulse rounded-full"></div>
+                <Loader2 className="w-16 h-16 text-primary animate-spin relative z-10" />
               </div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[5px] mt-6">Connecting to Mirror...</p>
+              <div className="mt-8 flex flex-col items-center gap-1.5">
+                <p className="text-[10px] font-black text-white/50 uppercase tracking-[6px] animate-pulse">Establishing Tunnel</p>
+                <p className="text-[8px] font-bold text-primary/30 uppercase tracking-[3px]">Bypassing CDN Latency...</p>
+              </div>
             </div>
           )}
 
-          {playbackState === 'playing' && (
-            <div className="w-full h-full relative animate-in zoom-in-95 duration-1000">
-               <div data-vjs-player>
-                <video 
-                  ref={videoNodeRef} 
-                  className="video-js vjs-big-play-centered vjs-theme-city"
-                  playsInline
-                ></video>
-              </div>
+          {/* Player reveal animation */}
+          <div className={`w-full h-full transition-opacity duration-1000 ${playbackState === 'playing' ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'}`}>
+             <div data-vjs-player className="w-full h-full">
+              <video 
+                ref={videoNodeRef} 
+                className="video-js vjs-big-play-centered vjs-theme-city"
+                playsInline
+                preload="metadata"
+              ></video>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="px-5 py-6">
@@ -208,48 +251,48 @@ export default function WatchOnline() {
         </div>
 
         <div className="px-5 space-y-5">
-          <div className="bg-[#0a0a0a] rounded-[32px] p-6 border border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
+          <div className="bg-[#0a0a0a] rounded-[32px] p-6 border border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500 shadow-xl">
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/5 blur-[80px]"></div>
             
             <div className="flex justify-between items-start mb-5 relative z-10">
-              <div>
-                <h2 className="text-2xl font-black italic uppercase text-white leading-tight tracking-tighter">
+              <div className="flex-1 min-w-0 pr-4">
+                <h2 className="text-2xl font-black italic uppercase text-white leading-tight tracking-tighter truncate">
                   {movie?.title}
                 </h2>
-                <div className="flex gap-3 mt-2">
-                  <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2 py-0.5 rounded">{movie?.quality}</span>
-                  <span className="text-[10px] font-black text-[#555] uppercase tracking-widest">{movie?.releaseYear}</span>
-                  <span className="text-[10px] font-black text-[#555] uppercase tracking-widest">{movie?.audio}</span>
+                <div className="flex flex-wrap gap-3 mt-2.5">
+                  <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">{movie?.quality}</span>
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.releaseYear}</span>
+                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">{movie?.audio}</span>
                 </div>
               </div>
-              <div className="bg-primary text-black px-4 py-2 rounded-2xl flex items-center gap-2 shadow-[0_5px_15px_rgba(0,229,255,0.2)]">
+              <div className="bg-primary text-black px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-[0_10px_20px_rgba(0,229,255,0.3)] shrink-0 animate-pulse">
                 <Zap className="w-4 h-4 fill-current" />
-                <span className="text-[10px] font-black uppercase tracking-tighter">High Res</span>
+                <span className="text-[10px] font-black uppercase tracking-tighter">Ultra 4K</span>
               </div>
             </div>
             
-            <p className="text-[13px] text-[#8b95a5] leading-relaxed relative z-10 font-medium">
-              {movie?.description || 'No plot summary available for this title.'}
+            <p className="text-[13px] text-[#8b95a5] leading-relaxed relative z-10 font-medium line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
+              {movie?.description || 'Establishing metadata connection for high-speed streaming results...'}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Button 
-              className="h-16 bg-white/5 border border-white/10 rounded-[24px] flex flex-col items-center justify-center gap-0.5 hover:bg-primary hover:text-black transition-all group"
+              className="h-16 bg-white/5 border border-white/10 rounded-[28px] flex flex-col items-center justify-center gap-0.5 hover:bg-primary hover:text-black transition-all group shadow-lg active:scale-95"
               asChild
             >
               <a href="https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf" target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic transition-all">VIP Server</span>
-                <span className="text-[9px] opacity-40 uppercase font-bold">Fast Mirror</span>
+                <span className="text-[11px] font-black uppercase tracking-wider group-hover:italic">VIP Server 1</span>
+                <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest">Instant Mirror</span>
               </a>
             </Button>
             <Button 
-              className="h-16 bg-white/5 border border-white/10 rounded-[24px] flex flex-col items-center justify-center gap-0.5 hover:bg-red-500/20 hover:border-red-500/50 transition-all group"
+              className="h-16 bg-white/5 border border-white/10 rounded-[28px] flex flex-col items-center justify-center gap-0.5 hover:bg-white/10 hover:border-primary/50 transition-all group shadow-lg active:scale-95"
               asChild
             >
               <a href="https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf" target="_blank">
-                <span className="text-[11px] font-black uppercase tracking-wider text-red-500/80 group-hover:text-red-500">Report</span>
-                <span className="text-[9px] opacity-40 uppercase font-bold">Broken?</span>
+                <span className="text-[11px] font-black uppercase tracking-wider">Report Error</span>
+                <span className="text-[9px] opacity-40 uppercase font-bold tracking-widest text-red-500/80">Buffer/Lag?</span>
               </a>
             </Button>
           </div>
@@ -258,21 +301,21 @@ export default function WatchOnline() {
         <div className="mt-12 px-5">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <Film className="w-5 h-5 text-primary" />
-              <h3 className="text-[16px] font-black uppercase tracking-[2px] italic">You May Also Like</h3>
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h3 className="text-[16px] font-black uppercase tracking-[3px] italic">Premium Picks</h3>
             </div>
-            <div className="h-px flex-1 bg-white/5 ml-4"></div>
+            <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4"></div>
           </div>
           
           <div className="grid grid-cols-2 gap-5">
             {relatedMovies?.map((m) => (
               <Link key={m.id} href={`/watch/${m.id}`} className="group relative">
-                <div className="relative aspect-[2/3] rounded-[24px] overflow-hidden border border-white/5 group-hover:border-primary/50 transition-all duration-500 shadow-2xl">
-                  <img src={m.posterUrl} className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" alt="" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                  <div className="absolute inset-x-0 bottom-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                    <span className="text-[11px] font-black text-white truncate block uppercase tracking-tight">{m.title}</span>
-                    <span className="text-[9px] text-primary font-black mt-1 block">{m.quality} • {m.releaseYear}</span>
+                <div className="relative aspect-[2/3] rounded-[28px] overflow-hidden border border-white/5 group-hover:border-primary/50 transition-all duration-700 shadow-2xl">
+                  <img src={m.posterUrl} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110" alt="" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
+                  <div className="absolute inset-x-0 bottom-0 p-5 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-500">
+                    <span className="text-[11px] font-black text-white truncate block uppercase tracking-tight italic">{m.title}</span>
+                    <span className="text-[9px] text-primary font-black mt-1.5 block tracking-widest">{m.quality} • {m.releaseYear}</span>
                   </div>
                 </div>
               </Link>
@@ -280,12 +323,12 @@ export default function WatchOnline() {
           </div>
         </div>
 
-        <div className="mt-12 px-5 pb-20">
+        <div className="mt-12 px-5 pb-24">
           <AdBanner id="watch-final-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 z-[1000] bg-black/95 backdrop-blur-2xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
+      <footer className="fixed bottom-0 left-0 right-0 z-[1000] bg-black/95 backdrop-blur-3xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
         <AdBanner id="watch-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </footer>
     </div>
