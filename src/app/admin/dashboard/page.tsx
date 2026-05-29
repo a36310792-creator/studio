@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, BarChart3, Film, Globe } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata';
-import { useAuth, useFirestore, useCollection } from '@/firebase';
+import { useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
   }, [auth, router]);
 
   // Firestore Sync
-  const moviesQuery = useMemo(() => {
+  const moviesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'movies'), orderBy('title', 'asc'));
   }, [db]);
@@ -118,7 +119,12 @@ export default function AdminDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const movieData = { ...formData };
+    const movieData = { 
+      ...formData,
+      // Ensure specific fields are saved with consistent keys
+      posterUrl: formData.posterUrl || '',
+      updatedAt: new Date().toISOString()
+    };
     
     try {
       if (editingMovie) {

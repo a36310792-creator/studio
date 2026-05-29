@@ -10,7 +10,7 @@ import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, ArrowDownWideNarrow, ChevronDown } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCollection, useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 
 const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 const ROTATION_LINKS = [
@@ -61,12 +61,14 @@ const MOCK_MOVIES: Movie[] = [
 export default function Home() {
   const db = useFirestore();
   const router = useRouter();
-  const moviesQuery = useMemo(() => {
+  
+  const moviesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, 'movies');
+    return query(collection(db, 'movies'), orderBy('title', 'asc'));
   }, [db]);
 
   const { data: firestoreMovies, loading } = useCollection<Movie>(moviesQuery);
+  
   const [activeGenre, setActiveGenre] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedYear, setSelectedYear] = useState('All');
@@ -105,7 +107,9 @@ export default function Home() {
   }, []);
 
   const allFilteredMovies = useMemo(() => {
-    let currentPool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : MOCK_MOVIES;
+    // If Firestore is loading, we might show mock data temporarily to avoid blank screen.
+    // If Firestore is empty (length 0), we fallback to mock data.
+    let currentPool = firestoreMovies && firestoreMovies.length > 0 ? firestoreMovies : (!loading && firestoreMovies?.length === 0 ? MOCK_MOVIES : (firestoreMovies || MOCK_MOVIES));
 
     if (navTab === 'saved') {
       currentPool = currentPool.filter(m => bookmarkedIds.includes(m.id));
@@ -141,14 +145,13 @@ export default function Home() {
     }
 
     return filtered;
-  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, navTab, bookmarkedIds, sortBy]);
+  }, [activeGenre, activeCategory, selectedYear, searchQuery, firestoreMovies, navTab, bookmarkedIds, sortBy, loading]);
 
   const displayedMovies = useMemo(() => {
     return allFilteredMovies.slice(0, visibleCount);
   }, [allFilteredMovies, visibleCount]);
 
   const handleMovieClick = (movie: Movie) => {
-    // Navigate to Page 2 (Details Page)
     router.push(`/download/${movie.id}`);
   };
 
