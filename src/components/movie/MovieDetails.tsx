@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe, Play } from 'lucide-react';
+import { ArrowLeft, Star, Download, PlayCircle, Info, Calendar, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -12,7 +12,7 @@ interface MovieDetailsProps {
   onClose: () => void;
 }
 
-const AD_URL = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
 
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
@@ -75,6 +75,11 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </p>
             </div>
 
+            {/* Ad: Below Description */}
+            <div className="mb-8">
+              <AdBanner id="details-mid-desc" href={BANNER_LINK} className="w-full" />
+            </div>
+
             {/* Prominent Action Button - Routes to Gateway Page */}
             <div className="mb-10">
               <Link href={`/download/${movie.id}`}>
@@ -85,6 +90,11 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                   FINAL DOWNLOAD / WATCH NOW
                 </Button>
               </Link>
+            </div>
+
+            {/* Ad: Above Download Links */}
+            <div className="mb-8">
+              <AdBanner id="details-above-links" href={BANNER_LINK} className="w-full" />
             </div>
 
             {/* Download Section */}
@@ -130,10 +140,15 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
 
             {/* Details Page Bottom Ad Banner */}
             <div className="pb-10">
-              <AdBanner id="details-bottom-banner" href={AD_URL} className="w-full" />
+              <AdBanner id="details-bottom-banner" href={BANNER_LINK} className="w-full" />
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Sticky Bottom Ad */}
+      <div className="fixed bottom-0 left-0 right-0 z-[2020] bg-black/90 backdrop-blur-xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
+        <AdBanner id="details-sticky-bottom" href={BANNER_LINK} className="w-full" />
       </div>
     </div>
   );

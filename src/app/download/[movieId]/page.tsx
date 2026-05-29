@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Lock, Unlock, ExternalLink, Sparkles, Fingerprint } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Lock, Unlock, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
+import { AdPopup } from '@/components/ads/AdPopup';
+import { AdFloating } from '@/components/ads/AdFloating';
 import Link from 'next/link';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -39,7 +41,8 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
   }
 ];
 
-const ADSTERRA_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
+const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
@@ -78,7 +81,7 @@ export default function DownloadGateway() {
     if (isProcessing) return;
 
     // Open Ad Link
-    window.open(ADSTERRA_LINK, '_blank');
+    window.open(SMART_LINK, '_blank');
     
     setIsProcessing(true);
     const nextClickCount = adClicks + 1;
@@ -103,6 +106,10 @@ export default function DownloadGateway() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl flex flex-col relative overflow-hidden">
+      {/* Download Page Ads */}
+      <AdPopup href={SMART_LINK} delay={1000} />
+      <AdFloating href={SMART_LINK} side="left" />
+      
       {/* Decorative Glows */}
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
       <div className="absolute top-1/2 -right-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
@@ -134,7 +141,7 @@ export default function DownloadGateway() {
           </div>
         </div>
 
-        <div className="space-y-2 mb-10">
+        <div className="space-y-2 mb-8">
           <h2 className="text-2xl font-black tracking-tight leading-none uppercase italic">
             {status === 'scanning' && 'Initializing Tunnel...'}
             {status === 'locked' && 'Links Encrypted'}
@@ -146,6 +153,11 @@ export default function DownloadGateway() {
             {status === 'locked' && adClicks === 1 && 'Final verification in progress...'}
             {status === 'unlocked' && 'Direct high-speed links generated'}
           </p>
+        </div>
+
+        {/* Ad: Above Download Section */}
+        <div className="w-full mb-8">
+          <AdBanner id="download-above-sec" href={BANNER_LINK} className="w-full" />
         </div>
 
         {/* Action Area */}
@@ -181,7 +193,7 @@ export default function DownloadGateway() {
                 className="w-full h-16 bg-gradient-to-r from-primary to-cyan-400 text-black font-black text-lg rounded-2xl shadow-[0_15px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex justify-between px-6"
                 asChild
               >
-                <a href={ADSTERRA_LINK} target="_blank" rel="noopener noreferrer">
+                <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
                   <div className="flex items-center gap-3">
                     <Download className="w-6 h-6" />
                     <span>1080p Ultra HD</span>
@@ -196,7 +208,7 @@ export default function DownloadGateway() {
                   className="h-14 bg-white/5 border-white/10 text-white font-black text-[12px] rounded-2xl hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-0.5"
                   asChild
                 >
-                  <a href={ADSTERRA_LINK} target="_blank" rel="noopener noreferrer">
+                  <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
                     <span>720p HD</span>
                     <span className="text-[9px] text-primary/70 uppercase">900 MB</span>
                   </a>
@@ -207,7 +219,7 @@ export default function DownloadGateway() {
                   className="h-14 bg-white/5 border-white/10 text-white font-black text-[12px] rounded-2xl hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-0.5"
                   asChild
                 >
-                  <a href={ADSTERRA_LINK} target="_blank" rel="noopener noreferrer">
+                  <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
                     <span>480p SD</span>
                     <span className="text-[9px] text-[#555] uppercase">350 MB</span>
                   </a>
@@ -217,8 +229,13 @@ export default function DownloadGateway() {
           )}
         </div>
 
+        {/* Ad: Below Download Section */}
+        <div className="w-full mt-8">
+          <AdBanner id="download-below-sec" href={BANNER_LINK} className="w-full" />
+        </div>
+
         {/* Movie Context */}
-        <div className="w-full mt-12 bg-[#0a0a0a] border border-white/5 rounded-3xl p-5 text-left group hover:border-primary/10 transition-all">
+        <div className="w-full mt-10 bg-[#0a0a0a] border border-white/5 rounded-3xl p-5 text-left group hover:border-primary/10 transition-all">
           <div className="flex gap-4 items-center">
             <div className="w-16 h-22 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
               <img src={movie.posterUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
@@ -235,16 +252,19 @@ export default function DownloadGateway() {
             </div>
           </div>
         </div>
-
-        <AdBanner id="download-mid-banner" className="w-full mt-10" />
       </main>
 
       <footer className="px-8 py-10 mt-auto bg-gradient-to-t from-black to-transparent">
-        <div className="bg-primary/5 border border-primary/10 rounded-[24px] p-5 flex gap-4">
+        <div className="bg-primary/5 border border-primary/10 rounded-[24px] p-5 flex gap-4 mb-6">
           <AlertCircle className="w-5 h-5 text-primary shrink-0" />
           <p className="text-[10px] text-[#8b95a5] font-bold leading-relaxed text-left">
             Complete the verification sequence by interacting with the unlock button. This ensures link stability and high-speed delivery.
           </p>
+        </div>
+        
+        {/* Sticky Bottom Banner Ad */}
+        <div className="fixed bottom-0 left-0 right-0 z-[200] bg-black/95 border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
+          <AdBanner id="download-sticky-bottom" href={BANNER_LINK} className="w-full" />
         </div>
       </footer>
     </div>

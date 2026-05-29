@@ -7,6 +7,8 @@ import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
 import { MovieDetails } from '@/components/movie/MovieDetails';
 import { AdBanner } from '@/components/ads/AdBanner';
+import { AdPopup } from '@/components/ads/AdPopup';
+import { AdFloating } from '@/components/ads/AdFloating';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, Calendar, ArrowDownWideNarrow, ChevronDown, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -75,7 +77,8 @@ const MOCK_MOVIES: Movie[] = [
   }
 ];
 
-const AD_URL = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+const BANNER_LINK = "https://www.effectivecpmnetwork.com/qv4i5feg5?key=9e0c9d5168b1b5d5c511beb784e7b727";
+const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 
 export default function Home() {
   const db = useFirestore();
@@ -222,6 +225,10 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5">
+      {/* Home Ads: Popup & Floating */}
+      <AdPopup href={SMART_LINK} />
+      <AdFloating href={SMART_LINK} />
+      
       <Header 
         onSearchClick={handleSearchIconClick} 
         onCategorySelect={handleSidebarCategorySelect}
@@ -253,7 +260,7 @@ export default function Home() {
 
             {/* Top Ad Banner */}
             <div className="px-5 mb-6">
-              <AdBanner id="home-top-banner" href={AD_URL} className="w-full" />
+              <AdBanner id="home-top-banner" href={BANNER_LINK} className="w-full" />
             </div>
 
             <div className="px-5 mb-1.5 flex items-center gap-2">
@@ -366,7 +373,7 @@ export default function Home() {
               {/* Middle Section Ad Banner */}
               {displayedMovies.length > 4 && (
                 <div className="my-8">
-                  <AdBanner id="home-mid-banner" href={AD_URL} className="w-full" />
+                  <AdBanner id="home-mid-banner" href={BANNER_LINK} className="w-full" />
                 </div>
               )}
 
@@ -416,6 +423,12 @@ export default function Home() {
               <Loader2 className="w-6 h-6 text-primary animate-spin" />
             </div>
           )}
+          
+          {/* Bottom Ad Banners */}
+          <div className="mt-10 space-y-6">
+            <AdBanner id="home-bottom-1" href={BANNER_LINK} className="w-full" />
+            <AdBanner id="home-bottom-2" href={BANNER_LINK} className="w-full" />
+          </div>
         </section>
       </main>
 
