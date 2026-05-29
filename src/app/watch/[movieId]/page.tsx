@@ -1,20 +1,19 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   ShieldCheck, 
-  Play, 
-  ExternalLink, 
-  Server, 
-  Activity, 
-  Wifi, 
-  Lock,
   MonitorPlay,
   Zap,
-  Globe
+  Globe,
+  Wifi,
+  Server,
+  Lock,
+  Activity,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -22,8 +21,14 @@ import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
+import Script from 'next/script';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import 'videojs-contrib-ads';
+import 'videojs-ima';
+import 'videojs-ima/dist/videojs.ima.css';
 
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
+const VAST_TAG = "https://youradexchange.com/video/select.php?r=11371326";
 const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
@@ -33,20 +38,96 @@ export default function WatchPage() {
   const { movieId } = useParams();
   const db = useFirestore();
   const router = useRouter();
+  const playerRef = useRef<any>(null);
+  const videoNode = useRef<HTMLVideoElement | null>(null);
+  const [playerReady, setPlayerReady] = useState(false);
+  const [imaLoaded, setImaLoaded] = useState(false);
 
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
     return doc(db, 'movies', movieId as string);
   }, [db, movieId]);
 
-  const { data: movie } = useDoc<Movie>(movieRef);
+  const { data: movie, loading } = useDoc<Movie>(movieRef);
+
+  useEffect(() => {
+    if (!videoNode.current || !movie || !imaLoaded) return;
+
+    const player = videojs(videoNode.current, {
+      autoplay: false,
+      controls: true,
+      responsive: true,
+      fluid: true,
+      preload: 'auto',
+      sources: [{
+        src: movie.watchUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        type: 'video/mp4'
+      }]
+    });
+
+    playerRef.current = player;
+
+    const imaOptions = {
+      adTagUrl: VAST_TAG,
+      showCountdown: true,
+      debug: false
+    };
+
+    try {
+      // @ts-ignore
+      player.ima(imaOptions);
+
+      // FALLBACK LOGIC: If ads fail or take too long, play the movie immediately
+      const handleAdFail = () => {
+        console.log('Ad failed or timed out. Skipping to movie...');
+        player.play().catch(() => {});
+      };
+
+      player.on('adserror', handleAdFail);
+      player.on('adtimeout', handleAdFail);
+      
+      // Auto-init fallback
+      const failSafe = setTimeout(() => {
+        if (!player.paused()) return;
+        handleAdFail();
+      }, 5000);
+
+      player.on('readyforpreroll', () => {
+        // @ts-ignore
+        player.ima.initializeAdDisplayContainer();
+        // @ts-ignore
+        player.ima.requestAds();
+      });
+
+      return () => {
+        clearTimeout(failSafe);
+      };
+    } catch (e) {
+      console.error('IMA Plugin initialization error:', e);
+      player.play().catch(() => {});
+    }
+
+    setPlayerReady(true);
+
+    return () => {
+      if (player) {
+        player.dispose();
+      }
+    };
+  }, [movie, imaLoaded]);
 
   const handleAction = () => {
-    window.open(SMART_LINK, '_blank');
+    window.open(ROTATION_LINKS[0], '_blank');
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-24 shadow-2xl relative overflow-x-hidden font-body">
+      <Script 
+        src="https://imasdk.googleapis.com/js/sdkloader/ima3.js" 
+        strategy="afterInteractive"
+        onLoad={() => setImaLoaded(true)}
+      />
+      
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
       <AdFloating hrefs={ROTATION_LINKS} side="left" />
 
@@ -57,130 +138,107 @@ export default function WatchPage() {
         </button>
         <div className="flex flex-col items-center">
           <h1 className="text-xl font-black italic tracking-tighter uppercase">
-            <span className="text-white">WATCH</span>
-            <span className="text-primary">ONLINE</span>
+            <span className="text-white">STREAMING</span>
+            <span className="text-primary">HUB</span>
           </h1>
         </div>
         <div className="w-6"></div>
       </header>
 
       <main className="p-5">
-        {/* Premium Streaming Hub */}
-        <div className="bg-[#0a0a0a] rounded-[32px] border border-primary/20 p-6 mb-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
-          
-          <div className="relative z-10">
-            {/* Status Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                  <MonitorPlay className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-[11px] font-black uppercase tracking-widest text-white/70">PREMIUM HUB</h2>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Activity className="w-3 h-3 text-green-500 animate-pulse" />
-                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-tighter">4K STREAMING READY</span>
-                  </div>
+        {/* Video Player Section */}
+        <div className="mb-6 rounded-[24px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_30px_rgba(0,229,255,0.1)] relative aspect-video">
+          {!imaLoaded && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-10">
+              <Activity className="w-8 h-8 text-primary animate-spin mb-3" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-[2px]">Initializing Secure Player...</span>
+            </div>
+          )}
+          <div data-vjs-player>
+            <video
+              ref={videoNode}
+              className="video-js vjs-big-play-centered vjs-theme-city"
+              poster={movie?.posterUrl}
+            />
+          </div>
+        </div>
+
+        {/* Status Hub */}
+        <div className="bg-[#0a0a0a] rounded-[32px] border border-white/5 p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <MonitorPlay className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-[12px] font-black uppercase tracking-widest text-white">{movie?.title || 'SYNCING...'}</h2>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Activity className="w-3 h-3 text-green-500 animate-pulse" />
+                  <span className="text-[9px] font-bold text-green-500 uppercase">Premium Encryption Active</span>
                 </div>
               </div>
-              <div className="bg-primary/20 border border-primary/30 px-3 py-1 rounded-full">
-                <span className="text-[10px] font-black text-primary">ENCRYPTED</span>
-              </div>
             </div>
+            <div className="bg-primary/20 border border-primary/30 px-3 py-1 rounded-full">
+              <span className="text-[9px] font-black text-primary">SECURE</span>
+            </div>
+          </div>
 
-            {/* Movie Info Box */}
-            <div className="bg-white/5 border border-white/5 rounded-2xl p-5 mb-8">
-               <div className="flex items-center gap-2 mb-2 text-[9px] font-black text-[#555] uppercase tracking-widest">
-                 <Zap className="w-3 h-3 text-primary" />
-                 <span>Server Connection Established</span>
-               </div>
-               <h3 className="text-xl font-black italic uppercase text-white truncate">
-                 {movie?.title || 'SYNCING MEDIA...'}
-               </h3>
-               <div className="flex gap-3 mt-3">
-                 <span className="text-[10px] font-bold text-[#8b95a5] flex items-center gap-1">
-                   <Globe className="w-3 h-3" /> {movie?.audio || 'Multi-Audio'}
-                 </span>
-                 <span className="text-[10px] font-bold text-[#8b95a5] flex items-center gap-1">
-                   <ShieldCheck className="w-3 h-3 text-primary" /> Ver: {movie?.quality || '4K'}
-                 </span>
-               </div>
-            </div>
-
-            {/* Play Options */}
-            <div className="space-y-4">
-              <Button 
+          <div className="space-y-4">
+             <Button 
                 onClick={handleAction}
-                className="w-full h-16 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_15px_30px_rgba(0,229,255,0.25)] hover:scale-[1.02] transition-all"
+                className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.2)] hover:scale-[1.01] transition-all"
               >
-                <Play className="w-6 h-6 fill-current" />
-                PLAY ON PREMIUM SERVER
+                <Zap className="w-5 h-5 fill-current" />
+                UNLOCK HIGH SPEED DOWNLOAD
               </Button>
-              
-              <Button 
-                onClick={handleAction}
-                variant="outline"
-                className="w-full h-16 bg-white/5 border-primary/30 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all"
-              >
-                <Zap className="w-5 h-5 text-primary" />
-                AUTO-SELECT FASTEST NODE
-              </Button>
-            </div>
           </div>
         </div>
 
         <div className="mb-6">
-          <AdBanner id="watch-mid-banner" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="watch-mid-ads" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
 
-        {/* Streaming Nodes */}
+        {/* Server Nodes */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[3px]">Alternative Nodes</h3>
-            <span className="text-[9px] font-bold text-primary/40 uppercase">Low Latency</span>
-          </div>
-          
+          <h3 className="text-[10px] font-black text-[#444] uppercase tracking-[3px] ml-1">Optimized Server Nodes</h3>
           <div className="grid grid-cols-1 gap-3">
             {[
-              { name: 'US-PREMIUM (AD-FREE)', speed: '1.4 GB/s', icon: <Wifi className="w-5 h-5 text-primary" /> },
-              { name: 'ASIA-VIP DIRECT', speed: '980 MB/s', icon: <Server className="w-5 h-5" /> },
-              { name: 'EURO-FAST STREAM', speed: '1.1 GB/s', icon: <Lock className="w-5 h-5" /> }
+              { name: 'US-PREMIUM (AD-FREE)', speed: '1.4 GB/s', icon: <Wifi className="w-4 h-4 text-primary" /> },
+              { name: 'ASIA-VIP DIRECT', speed: '980 MB/s', icon: <Server className="w-4 h-4" /> },
+              { name: 'EURO-FAST STREAM', speed: '1.1 GB/s', icon: <Lock className="w-4 h-4" /> }
             ].map((node, i) => (
               <button 
                 key={i}
                 onClick={handleAction}
-                className="flex items-center justify-between p-5 rounded-2xl bg-[#121212] border border-white/5 hover:border-primary/40 transition-all group"
+                className="flex items-center justify-between p-4 rounded-2xl bg-[#121212] border border-white/5 hover:border-primary/40 transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-[#333] group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#333] group-hover:text-primary transition-all">
                     {node.icon}
                   </div>
                   <div className="text-left">
-                    <p className="text-[13px] font-black text-white group-hover:text-primary transition-colors italic uppercase">{node.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                      <p className="text-[9px] font-bold text-[#444]">{node.speed}</p>
-                    </div>
+                    <p className="text-[12px] font-black text-white group-hover:text-primary transition-colors italic uppercase">{node.name}</p>
+                    <p className="text-[9px] font-bold text-[#444] mt-0.5">{node.speed}</p>
                   </div>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                   <ExternalLink className="w-4 h-4 text-primary" />
-                </div>
+                <Zap className="w-4 h-4 text-[#222] group-hover:text-primary transition-colors" />
               </button>
             ))}
           </div>
         </div>
 
         <div className="mt-8">
-          <AdBanner id="watch-bottom-banner" hrefs={ROTATION_LINKS} className="w-full" />
+          <AdBanner id="watch-bottom-ads" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
       </main>
 
-      {/* Footer Info */}
       <footer className="p-8 text-center">
+        <div className="flex items-center justify-center gap-2 text-red-500 mb-2">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-[10px] font-black uppercase">Copyright Protection Active</span>
+        </div>
         <p className="text-[9px] text-[#222] font-black uppercase tracking-widest leading-relaxed">
-          Tunnel protocol active. All connections are secured via premium AES-256 encryption.
+          Tunnel protocol active. AES-256 server-side encryption enabled for all active streams.
         </p>
       </footer>
     </div>
