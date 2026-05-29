@@ -6,7 +6,6 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
-import { MovieDetails } from '@/components/movie/MovieDetails';
 import { AdBanner } from '@/components/ads/AdBanner';
 import { AdPopup } from '@/components/ads/AdPopup';
 import { AdFloating } from '@/components/ads/AdFloating';
@@ -54,32 +53,6 @@ const MOCK_MOVIES: Movie[] = [
     audio: 'Tamil',
     genres: ['Action', 'Thriller', 'South'],
     description: 'An intense action drama from the heart of South India.',
-    watchUrl: '#',
-    directDownloadUrl: '#'
-  },
-  {
-    id: 'zeffect-3',
-    title: 'The Z Effect',
-    posterUrl: 'https://picsum.photos/seed/zeffect/400/600',
-    rating: 8.5,
-    quality: '4K',
-    releaseYear: 2024,
-    audio: 'English',
-    genres: ['Sci-Fi', 'Horror', 'Hollywood'],
-    description: 'A terrifying sci-fi experience that challenges reality.',
-    watchUrl: '#',
-    directDownloadUrl: '#'
-  },
-  {
-    id: 'mirzapur-4',
-    title: 'Mirzapur S3',
-    posterUrl: 'https://picsum.photos/seed/mirzapur/400/600',
-    rating: 9.1,
-    quality: '4K',
-    releaseYear: 2024,
-    audio: 'Hindi',
-    genres: ['Action', 'Web Series', 'Bollywood'],
-    description: 'The throne of Mirzapur remains contested as the violence escalates.',
     watchUrl: '#',
     directDownloadUrl: '#'
   }
@@ -183,8 +156,8 @@ export default function Home() {
   }, [firestoreMovies]);
 
   const handleMovieClick = (movie: Movie) => {
-    // Navigate directly to the dedicated watch page
-    router.push(`/watch/${movie.id}`);
+    // Navigation Flow: Step 1 -> Details Page (Page 2)
+    router.push(`/movie/${movie.id}`);
   };
 
   const viewTitle = useMemo(() => {

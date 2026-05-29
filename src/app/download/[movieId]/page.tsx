@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Lock, Unlock, Fingerprint } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Download, ShieldCheck, AlertCircle, Loader2, Zap, Lock, Unlock, Fingerprint, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type Movie } from '@/components/movie/MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -25,19 +25,6 @@ const MOCK_FALLBACK_MOVIES: Movie[] = [
     description: 'A gripping investigative thriller based on true events.',
     watchUrl: '#',
     directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
-  },
-  {
-    id: 'karuppu-2',
-    title: 'Karuppu',
-    posterUrl: 'https://picsum.photos/seed/karuppu/400/600',
-    rating: 7.9,
-    quality: '4K',
-    releaseYear: 2024,
-    audio: 'Tamil',
-    genres: ['Action', 'Thriller', 'South'],
-    description: 'An intense action drama from the heart of South India.',
-    watchUrl: '#',
-    directDownloadUrl: 'https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf'
   }
 ];
 
@@ -50,6 +37,8 @@ const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8ca
 
 export default function DownloadGateway() {
   const { movieId } = useParams();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode') || 'download';
   const db = useFirestore();
   
   const movieRef = useMemo(() => {
@@ -113,19 +102,16 @@ export default function DownloadGateway() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl flex flex-col relative overflow-hidden">
-      {/* Ad 1: Top Popup Ad */}
       <AdPopup hrefs={ROTATION_LINKS} />
-      
-      {/* Ad 2: Floating Side Ad */}
       <AdFloating hrefs={ROTATION_LINKS} side="right" />
       
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
       <div className="absolute top-1/2 -right-20 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none"></div>
 
       <header className="p-5 flex items-center gap-4 border-b border-white/5 bg-background/50 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/" className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
+        <button onClick={() => window.history.back()} className="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all">
           <ArrowLeft className="w-5 h-5 text-primary" />
-        </Link>
+        </button>
         <h1 className="text-[10px] font-black uppercase tracking-[3px] text-[#555]">Secure Tunnel Access</h1>
       </header>
 
@@ -161,7 +147,6 @@ export default function DownloadGateway() {
           </p>
         </div>
 
-        {/* Ad 3: Above unlock/download section */}
         <div className="w-full mb-8">
           <AdBanner id="download-above-unlock-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
@@ -186,7 +171,7 @@ export default function DownloadGateway() {
               ) : (
                 <>
                   <Zap className={`w-6 h-6 ${adClicks > 0 ? 'animate-pulse' : ''}`} />
-                  <span>{adClicks === 0 ? 'UNLOCK DOWNLOAD' : 'CONTINUE VERIFY'}</span>
+                  <span>{adClicks === 0 ? 'UNLOCK CONTENT' : 'CONTINUE VERIFY'}</span>
                 </>
               )}
             </Button>
@@ -194,17 +179,18 @@ export default function DownloadGateway() {
 
           {status === 'unlocked' && (
             <div className="space-y-4 animate-in slide-in-from-bottom-10 duration-700 w-full">
+              {/* Option to stream if watch mode or preferred */}
               <Button 
                 className="w-full h-16 bg-gradient-to-r from-primary to-cyan-400 text-black font-black text-lg rounded-2xl shadow-[0_15px_40px_rgba(0,229,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex justify-between px-6"
                 asChild
               >
-                <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
+                <Link href={`/watch/${movieId}`}>
                   <div className="flex items-center gap-3">
-                    <Download className="w-6 h-6" />
-                    <span>1080p Ultra HD</span>
+                    <MonitorPlay className="w-6 h-6" />
+                    <span>Stream in 4K HDR</span>
                   </div>
                   <Zap className="w-5 h-5 fill-current" />
-                </a>
+                </Link>
               </Button>
 
               <div className="grid grid-cols-2 gap-3">
@@ -213,9 +199,9 @@ export default function DownloadGateway() {
                   className="h-14 bg-white/5 border-white/10 text-white font-black text-[12px] rounded-2xl hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-0.5"
                   asChild
                 >
-                  <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
-                    <span>720p HD</span>
-                    <span className="text-[9px] text-primary/70 uppercase">900 MB</span>
+                  <a href={movie.directDownloadUrl || SMART_LINK} target="_blank" rel="noopener noreferrer">
+                    <Download className="w-3.5 h-3.5 mb-1" />
+                    <span>1080p Download</span>
                   </a>
                 </Button>
 
@@ -225,8 +211,8 @@ export default function DownloadGateway() {
                   asChild
                 >
                   <a href={SMART_LINK} target="_blank" rel="noopener noreferrer">
-                    <span>480p SD</span>
-                    <span className="text-[9px] text-[#555] uppercase">350 MB</span>
+                    <Download className="w-3.5 h-3.5 mb-1" />
+                    <span>720p Download</span>
                   </a>
                 </Button>
               </div>
@@ -234,7 +220,6 @@ export default function DownloadGateway() {
           )}
         </div>
 
-        {/* Ad 4: Below download section */}
         <div className="w-full mt-8">
           <AdBanner id="download-below-section-rot" hrefs={ROTATION_LINKS} className="w-full" />
         </div>
@@ -251,14 +236,13 @@ export default function DownloadGateway() {
               </p>
               <div className="flex items-center gap-2 mt-3">
                 <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-[9px] font-black text-green-500/60 uppercase tracking-tighter">Secure High-Speed Mirror</span>
+                <span className="text-[9px] font-black text-green-500/60 uppercase tracking-tighter">Verified Content Node</span>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Ad 5: Bottom Sticky Ad */}
       <footer className="px-8 py-10 mt-auto bg-gradient-to-t from-black to-transparent">
         <div className="fixed bottom-0 left-0 right-0 z-[200] bg-black/95 border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
           <AdBanner id="download-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />

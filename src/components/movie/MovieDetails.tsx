@@ -18,8 +18,6 @@ const ROTATION_LINKS = [
   "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
 ];
 
-const SMART_LINK = "https://www.effectivecpmnetwork.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
-
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
@@ -89,7 +87,8 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 mb-10">
-              <Link href={`/watch/${movie.id}`}>
+              {/* Both buttons now lead to the Secure Gateway (Page 3) */}
+              <Link href={`/download/${movie.id}?mode=watch`}>
                 <Button 
                   className="w-full h-16 bg-primary text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
                 >
@@ -98,7 +97,7 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                 </Button>
               </Link>
               
-              <Link href={`/download/${movie.id}`}>
+              <Link href={`/download/${movie.id}?mode=download`}>
                 <Button 
                   variant="outline"
                   className="w-full h-16 bg-white/5 border-primary/20 text-white font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3"
