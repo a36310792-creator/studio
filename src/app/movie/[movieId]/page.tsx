@@ -47,8 +47,8 @@ export default function MovieGateway() {
   };
 
   const handleBack = () => {
-    // Copying the EXACT logic from Page 2 (Details) to ensure reliability
-    router.push('/');
+    // Navigate specifically back to Page 2 (Movie Details view)
+    router.push(`/download/${movieId}`);
   };
 
   return (
