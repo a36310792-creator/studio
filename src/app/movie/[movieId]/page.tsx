@@ -31,20 +31,23 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleDownloadAction = (e: React.MouseEvent) => {
-    // Stop Event Bubbling
-    e.stopPropagation();
     e.preventDefault();
-
-    // Trigger the actual file download using a temporary hidden <a> tag
-    // Ad logic removed per user request for a pure download experience
+    e.stopPropagation();
+    
+    // 1. Open Ad (Monetization Layer)
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
+    
+    // 2. Direct Download (Simultaneous Trigger)
     if (movie?.directDownloadUrl) {
-      const link = document.createElement('a');
-      link.href = movie.directDownloadUrl;
-      link.target = '_blank';
-      link.download = '';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = movie.directDownloadUrl!;
+        link.target = '_blank';
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, 100);
     }
   };
 
@@ -84,7 +87,7 @@ export default function MovieGateway() {
       </header>
 
       <main className="p-5">
-        {/* Status Card - Isolated click triggers on children only */}
+        {/* Status Card */}
         <div className="bg-[#0a0a0a] rounded-[32px] border border-primary/20 p-6 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
@@ -115,7 +118,7 @@ export default function MovieGateway() {
               </h3>
             </div>
 
-            {/* 2 & 3. Isolated Button Logic */}
+            {/* Action Buttons */}
             <div className="space-y-4">
               {/* Element 2: UNLOCK HIGH SPEED SERVER - Ad Only Impression Point */}
               <Button 
@@ -126,7 +129,7 @@ export default function MovieGateway() {
                 UNLOCK HIGH SPEED SERVER
               </Button>
               
-              {/* Element 3: MAIN DOWNLOADING LINK - Pure, Clean Download Conversion */}
+              {/* Element 3: MAIN DOWNLOADING LINK - Dual Action Logic */}
               <Button 
                 onClick={handleDownloadAction}
                 variant="outline"
