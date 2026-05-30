@@ -11,17 +11,24 @@ export function GlobalAdScript() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // CRITICAL: Homepage exclusion logic
+    // Strictly DO NOT run on the homepage
     if (pathname === '/') return;
 
+    // Safely inject the script into the DOM
     const script = document.createElement('script');
-    // Using the common multi-tag distribution endpoint
-    script.src = 'https://bolted-scolding.com/f7/a2/63/f7a2631079204445436012b4b06b1ed9';
+    script.src = "//sophisticatedpin.com/b/XvV/sud.GvlQ0wYLWgcc/JeHmk9EuBZKUElZkMPwTQcew/OeTAI/y-NfDbUWtsNAzxAZ5xMDjcIS0-OWQl";
     script.async = true;
-    script.setAttribute('data-cfasync', 'false');
     
+    // Set the referrer policy as required by the provider
+    script.referrerPolicy = 'no-referrer-when-downgrade';
+    
+    // Add the required custom settings object from the provider
+    // Using type assertion since 'settings' is a provider-specific property
+    (script as any).settings = {}; 
+
     document.body.appendChild(script);
 
+    // Cleanup to prevent memory leaks or duplicate ads on page navigation
     return () => {
       if (document.body.contains(script)) {
         document.body.removeChild(script);
