@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SponsoredAd } from '@/components/ads/SponsoredAd';
-import { VideoAdPlayer } from '@/components/movie/VideoAdPlayer';
 
 export default function MaintenancePage() {
   const router = useRouter();
@@ -19,6 +18,12 @@ export default function MaintenancePage() {
       window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
     }, 50);
     router.push('/');
+  };
+
+  const handleFakePlayClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open('https://elderlygoal.com/dOm.Fwz/d/GtN-vrZMGSUs/heXmf9pufZsUrlmkRPVTScxwGOrT/I/xFN/jBkMtGNgzFAH5IMHjlED3/MWwx', '_blank');
   };
 
   // Variations for the ad wall
@@ -49,8 +54,20 @@ export default function MaintenancePage() {
           ))}
         </div>
 
-        {/* YouTube-styled Dummy Video Player for VAST Monetization */}
-        <VideoAdPlayer />
+        {/* Fake Play Banner - Clickable Monetization Prompt */}
+        <div 
+          className="w-full aspect-video bg-gradient-to-r from-gray-900 to-black border border-red-600 rounded-xl p-8 my-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all group"
+          onClick={handleFakePlayClick}
+        >
+          <div className="w-20 h-20 bg-red-600/90 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-red-500 transition-transform shadow-[0_0_15px_rgba(220,38,38,0.6)]">
+            <svg className="w-10 h-10 text-white ml-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+          <h3 className="text-white font-extrabold text-xl tracking-wider text-center drop-shadow-md">
+            ▶ CLICK TO PLAY IN 4K ULTRA HD
+          </h3>
+        </div>
 
         {/* Bottom Ad Grid */}
         <div className="grid grid-cols-1 gap-3">
