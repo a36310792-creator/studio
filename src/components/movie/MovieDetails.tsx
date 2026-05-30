@@ -19,8 +19,8 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
     setTimeout(() => { 
       window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
     }, 50);
-    // Online streaming disabled per instructions
-    alert('Online streaming is temporarily disabled. Please use the Download options instead!');
+    // Restore navigation to Page 4 (Maintenance Player)
+    router.push(`/watch/${movie.id}`);
   };
 
   const handleDownload = (e: React.MouseEvent) => {

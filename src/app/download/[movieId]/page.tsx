@@ -36,8 +36,8 @@ export default function MovieDetailsPage() {
     setTimeout(() => { 
       window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
     }, 50);
-    // User requested: trigger a standard browser alert instead of navigating
-    alert('Online streaming is temporarily disabled. Please use the Download options instead!');
+    // Restore navigation to Page 4 (Maintenance Player)
+    router.push(`/watch/${movieId}`);
   };
 
   const handleDownload = (e: React.MouseEvent) => {

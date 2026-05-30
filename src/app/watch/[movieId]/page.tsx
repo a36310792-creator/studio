@@ -40,7 +40,7 @@ export default function MaintenancePage() {
       </header>
 
       <main className="p-5 flex flex-col gap-1">
-        {/* Cinematic Ads Above Container */}
+        {/* Exactly 2 ads above the container */}
         <SponsoredAd type="cinematic" />
         <SponsoredAd type="cinematic" />
 
@@ -60,9 +60,8 @@ export default function MaintenancePage() {
           </div>
 
           <p className="text-[#8b95a5] text-[13px] font-bold uppercase tracking-tight leading-relaxed px-2">
-            High-speed streaming nodes are currently undergoing scheduled maintenance to optimize 4K playback. 
-            Online watching is temporarily inactive. Please head back and utilize the 
-            <span className="text-primary"> Direct Download</span> options for instant access.
+            High-speed streaming nodes are currently undergoing maintenance. 
+            Online watching is temporarily inactive. Please utilize the Direct Download options.
           </p>
 
           <div className="mt-8 flex items-center justify-center gap-4">
@@ -78,7 +77,7 @@ export default function MaintenancePage() {
           </div>
         </div>
 
-        {/* Cinematic Ads Below Container */}
+        {/* Exactly 3 ads below the container to reach the total of 5 */}
         <div className="space-y-1">
           <SponsoredAd type="cinematic" />
           <SponsoredAd type="cinematic" />
