@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -28,6 +27,8 @@ const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-buck
 
 /**
  * Robustly detects if a URL should be rendered in an iframe or a video tag.
+ * If the URL ends with a direct video extension, it uses a <video> tag.
+ * Otherwise, it defaults to an <iframe> for maximum compatibility.
  */
 function isIframeUrl(url: string): boolean {
   if (!url) return false;
@@ -35,18 +36,14 @@ function isIframeUrl(url: string): boolean {
   
   // Direct video file extensions
   const videoExtensions = ['.mp4', '.m3u8', '.webm', '.ogv', '.ogg'];
-  const hasVideoExtension = videoExtensions.some(ext => lowercaseUrl.split('?')[0].endsWith(ext));
+  const hasVideoExtension = videoExtensions.some(ext => {
+    // Check path before query parameters
+    const path = lowercaseUrl.split('?')[0];
+    return path.endsWith(ext);
+  });
   
-  if (hasVideoExtension) return false;
-
-  // Known embed patterns
-  const knownEmbedPatterns = [
-    'youtube.com', 'youtu.be', 'drive.google.com', 'vimeo.com', 'dailymotion.com',
-    'ok.ru', 'facebook.com', 'embed', '/e/', '/v/', 'vidsrc', 'streamtape',
-    'mixdrop', 'upstream', 'fembed', 'dood', 'player', 'view', 'watch'
-  ];
-
-  return knownEmbedPatterns.some(pattern => lowercaseUrl.includes(pattern));
+  // If it has a video extension, it is NOT an iframe (it's a direct video)
+  return !hasVideoExtension;
 }
 
 export default function WatchPage() {
@@ -105,7 +102,7 @@ export default function WatchPage() {
       </header>
 
       <main className="p-5 animate-in fade-in slide-in-from-bottom-5 duration-700">
-        {/* BRAND NEW PLAYER SECTION - Hardened against downloads */}
+        {/* REINFORCED PLAYER SECTION - Conditional Rendering */}
         <div className="mb-8 rounded-[32px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video">
           {(showLoader || docLoading) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
@@ -150,11 +147,11 @@ export default function WatchPage() {
                   onContextMenu={(e) => e.preventDefault()}
                   className="w-full h-full object-contain bg-black"
                   onLoadedData={() => setShowLoader(false)}
-                  onError={() => setPlayerError("Media decoding failure. Please check the source.")}
+                  onError={() => setPlayerError("Media decoding failure. Please check the source format.")}
                 />
               )}
 
-              {/* FIRST-CLICK AD OVERLAY */}
+              {/* FIRST-CLICK AD OVERLAY - PROTECTED */}
               {!showLoader && !playerError && showAdOverlay && (
                 <div 
                   onClick={handleFirstClickAd}
