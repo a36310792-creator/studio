@@ -15,14 +15,9 @@ import {
   Lock 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AdBanner } from '@/components/ads/AdBanner';
-import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
-
-// Updated ad link for Gateway Page
-const GATEWAY_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
 
 export default function MovieGateway() {
   const { movieId } = useParams();
@@ -36,15 +31,7 @@ export default function MovieGateway() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
 
-  const handleMonetizationAction = () => {
-    window.open(GATEWAY_AD_LINK, '_blank');
-  };
-
   const handleDownloadAction = () => {
-    // Open ad link first in new tab
-    window.open(GATEWAY_AD_LINK, '_blank');
-    
-    // Attempt download
     if (movie?.directDownloadUrl) {
       window.open(movie.directDownloadUrl, '_blank');
     }
@@ -52,9 +39,6 @@ export default function MovieGateway() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl relative overflow-x-hidden font-body">
-      <AdFloating hrefs={[GATEWAY_AD_LINK]} side="right" />
-      <AdFloating hrefs={[GATEWAY_AD_LINK]} side="left" />
-
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl p-5 border-b border-white/5 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-colors">
@@ -99,7 +83,7 @@ export default function MovieGateway() {
 
             <div className="space-y-4">
               <Button 
-                onClick={handleMonetizationAction}
+                onClick={handleDownloadAction}
                 className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.2)] hover:scale-[1.01] transition-all"
               >
                 <Zap className="w-5 h-5 fill-current" />
@@ -130,7 +114,7 @@ export default function MovieGateway() {
             ].map((node, i) => (
               <button 
                 key={i}
-                onClick={handleMonetizationAction}
+                onClick={handleDownloadAction}
                 className="flex items-center justify-between p-4 rounded-2xl bg-[#121212] border border-white/5 hover:border-primary/30 transition-all group"
               >
                 <div className="flex items-center gap-4">
@@ -146,10 +130,6 @@ export default function MovieGateway() {
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="mt-8">
-          <AdBanner id="gateway-bottom-large" hrefs={[GATEWAY_AD_LINK]} className="w-full" />
         </div>
       </main>
 

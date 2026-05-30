@@ -1,22 +1,16 @@
+
 'use client';
 
 import React from 'react';
 import { ArrowLeft, Star, Download, Calendar, Globe, MonitorPlay, ShieldCheck, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
-import { AdBanner } from '@/components/ads/AdBanner';
-import { AdFloating } from '@/components/ads/AdFloating';
 import { useRouter } from 'next/navigation';
 
 interface MovieDetailsProps {
   movie: Movie;
   onClose: () => void;
 }
-
-const ROTATION_LINKS = [
-  "https://www.effectivecpmnetwork.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed",
-  "https://www.effectivecpmnetwork.com/an3xbf8yd?key=7134258fbe58dce7138f6cea55418995"
-];
 
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   const router = useRouter();
@@ -35,8 +29,6 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
 
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
-      <AdFloating hrefs={ROTATION_LINKS} side="right" />
-      <AdFloating hrefs={ROTATION_LINKS} side="left" />
       
       <div className="absolute top-5 left-5 z-[2010]">
         <button 
@@ -88,10 +80,6 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
               </span>
             </div>
 
-            <div className="mb-6">
-              <AdBanner id="details-top-rot" hrefs={ROTATION_LINKS} className="w-full" />
-            </div>
-
             <div className="grid grid-cols-1 gap-4 mb-8">
               <Button 
                 type="button"
@@ -122,16 +110,8 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
                 {movie.description}
               </p>
             </div>
-
-            <div className="pb-10">
-              <AdBanner id="details-final-bottom-rot" hrefs={ROTATION_LINKS} className="w-full" />
-            </div>
           </div>
         </div>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 z-[2020] bg-black/90 backdrop-blur-xl border-t border-primary/20 p-2 md:max-w-[420px] md:mx-auto">
-        <AdBanner id="details-sticky-footer-rot" hrefs={ROTATION_LINKS} className="w-full" />
       </div>
     </div>
   );

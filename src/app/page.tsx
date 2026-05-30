@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -6,9 +7,6 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
-import { AdBanner } from '@/components/ads/AdBanner';
-import { AdPopup } from '@/components/ads/AdPopup';
-import { AdFloating } from '@/components/ads/AdFloating';
 import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,9 +20,6 @@ import {
 } from "@/components/ui/select";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import Script from 'next/script';
-
-const HOME_AD_LINK = "https://commendtwisted.com/mygta0t4?key=1b3b930c08b87fb0f6d646f6149ac6f1";
 
 export default function Home() {
   const db = useFirestore();
@@ -174,11 +169,6 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5 font-body">
-      <Script id="aclib" src="//acscdn.com/script/aclib.js" strategy="lazyOnload" />
-      <AdPopup hrefs={[HOME_AD_LINK]} />
-      <AdFloating hrefs={[HOME_AD_LINK]} side="right" />
-      <AdFloating hrefs={[HOME_AD_LINK]} side="left" />
-      
       <Header 
         onSearchClick={handleSearchIconClick} 
         onCategorySelect={handleSidebarCategorySelect}
@@ -206,10 +196,6 @@ export default function Home() {
                   className="bg-[#0a0a0a] border-white/5 h-14 rounded-2xl pl-12 text-white placeholder:text-[#444] focus-visible:ring-primary/30 transition-all text-sm font-bold"
                 />
               </div>
-            </div>
-
-            <div className="px-5 mb-8">
-              <AdBanner id="home-top-banner" hrefs={[HOME_AD_LINK]} className="w-full" />
             </div>
 
             <div className="flex gap-2.5 px-5 mb-4 overflow-x-auto no-scrollbar py-1">
@@ -343,10 +329,6 @@ export default function Home() {
           )}
         </section>
       </main>
-
-      <div className="px-5 mt-10 mb-12">
-        <AdBanner id="home-bottom-sponsored" hrefs={[HOME_AD_LINK]} className="w-full" />
-      </div>
 
       <BottomNav activeTab={navTab} onTabChange={(tab) => { setNavTab(tab); setVisibleCount(10); }} />
     </div>

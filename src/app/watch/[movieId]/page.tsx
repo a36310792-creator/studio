@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -15,34 +16,20 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AdBanner } from '@/components/ads/AdBanner';
-import { AdFloating } from '@/components/ads/AdFloating';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
 
-const WATCH_AD_LINK = "https://commendtwisted.com/x44bmppn50?key=3d6bef97902a908afb5bcaaa95bf2bed";
-const WATCH_PLAYER_AD_LINK = "https://commendtwisted.com/ypda0qnck?key=83f34bb8cadc279963122cc4a80ebebf";
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
-/**
- * Robustly detects if a URL should be rendered in an iframe or a video tag.
- * If the URL ends with a direct video extension, it uses a <video> tag.
- * Otherwise, it defaults to an <iframe> for maximum compatibility.
- */
 function isIframeUrl(url: string): boolean {
   if (!url) return false;
   const lowercaseUrl = url.toLowerCase();
-  
-  // Direct video file extensions
   const videoExtensions = ['.mp4', '.m3u8', '.webm', '.ogv', '.ogg'];
   const hasVideoExtension = videoExtensions.some(ext => {
-    // Check path before query parameters
     const path = lowercaseUrl.split('?')[0];
     return path.endsWith(ext);
   });
-  
-  // If it has a video extension, it is NOT an iframe (it's a direct video)
   return !hasVideoExtension;
 }
 
@@ -53,7 +40,6 @@ export default function WatchPage() {
   
   const [showLoader, setShowLoader] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
-  const [showAdOverlay, setShowAdOverlay] = useState(true);
 
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -75,19 +61,13 @@ export default function WatchPage() {
   }, []);
 
   const handleAction = () => {
-    window.open(WATCH_AD_LINK, '_blank');
-  };
-
-  const handleFirstClickAd = () => {
-    window.open(WATCH_PLAYER_AD_LINK, '_blank');
-    setShowAdOverlay(false);
+    if (movie?.directDownloadUrl) {
+      window.open(movie.directDownloadUrl, '_blank');
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden font-body">
-      <AdFloating hrefs={[WATCH_AD_LINK]} side="right" />
-      <AdFloating hrefs={[WATCH_AD_LINK]} side="left" />
-
       <header className="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur-2xl p-6 border-b border-white/5 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-all">
           <ArrowLeft className="w-6 h-6" />
@@ -102,7 +82,7 @@ export default function WatchPage() {
       </header>
 
       <main className="p-5 animate-in fade-in slide-in-from-bottom-5 duration-700">
-        {/* REINFORCED PLAYER SECTION - Conditional Rendering */}
+        {/* PLAYER SECTION */}
         <div className="mb-8 rounded-[32px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video">
           {(showLoader || docLoading) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
@@ -148,15 +128,6 @@ export default function WatchPage() {
                   className="w-full h-full object-contain bg-black"
                   onLoadedData={() => setShowLoader(false)}
                   onError={() => setPlayerError("Media decoding failure. Please check the source format.")}
-                />
-              )}
-
-              {/* FIRST-CLICK AD OVERLAY - PROTECTED */}
-              {!showLoader && !playerError && showAdOverlay && (
-                <div 
-                  onClick={handleFirstClickAd}
-                  className="absolute inset-0 z-[40] cursor-pointer bg-transparent"
-                  aria-hidden="true"
                 />
               )}
             </div>
@@ -218,10 +189,6 @@ export default function WatchPage() {
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="mt-14 mb-10">
-          <AdBanner id="watch-bottom-banner" hrefs={[WATCH_AD_LINK]} className="w-full" />
         </div>
       </main>
 
