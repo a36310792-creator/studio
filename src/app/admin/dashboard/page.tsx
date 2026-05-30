@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -115,39 +114,36 @@ export default function AdminDashboard() {
     if (!db) return;
     setIsSubmitting(true);
     
-    let finalPosterUrl = formData.posterUrl;
+    try {
+      let finalPosterUrl = formData.posterUrl;
 
-    // Handle Image Upload to Firebase Storage if a file is selected
-    if (selectedFile && storage) {
-      try {
+      // Handle Image Upload to Firebase Storage if a file is selected
+      if (selectedFile && storage) {
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `${Date.now()}_${formData.title?.replace(/\s+/g, '_').toLowerCase()}.${fileExt}`;
         const storageRef = ref(storage, `posters/${fileName}`);
         
         const snapshot = await uploadBytes(storageRef, selectedFile);
         finalPosterUrl = await getDownloadURL(snapshot.ref);
-      } catch (error) {
-        console.error("Firebase Storage Upload Error:", error);
       }
-    }
-    
-    const movieData = { 
-      title: formData.title || 'Untitled',
-      posterUrl: finalPosterUrl || '',
-      rating: Number(formData.rating) || 0,
-      quality: formData.quality || 'HD',
-      releaseYear: Number(formData.releaseYear) || new Date().getFullYear(),
-      audio: formData.audio || 'Hindi',
-      genres: formData.genres || [],
-      description: formData.description || '',
-      watchUrl: formData.watchUrl || '',
-      directDownloadUrl: formData.directDownloadUrl || '',
-      updatedAt: serverTimestamp()
-    };
-    
-    try {
+      
+      const movieData = { 
+        title: formData.title || 'Untitled',
+        posterUrl: finalPosterUrl || '',
+        rating: Number(formData.rating) || 0,
+        quality: formData.quality || 'HD',
+        releaseYear: Number(formData.releaseYear) || new Date().getFullYear(),
+        audio: formData.audio || 'Hindi',
+        genres: formData.genres || [],
+        description: formData.description || '',
+        watchUrl: formData.watchUrl || '',
+        directDownloadUrl: formData.directDownloadUrl || '',
+        updatedAt: serverTimestamp()
+      };
+      
       if (editingMovie) {
         const movieRef = doc(db, 'movies', editingMovie.id);
+        // We do not await Firestore mutations to allow background sync and optimistic UI
         updateDoc(movieRef, movieData).then(() => {
           resetForm();
         }).catch(async (err) => {
@@ -159,6 +155,7 @@ export default function AdminDashboard() {
         });
       } else {
         const moviesRef = collection(db, 'movies');
+        // We do not await Firestore mutations to allow background sync and optimistic UI
         addDoc(moviesRef, movieData).then(() => {
           resetForm();
         }).catch(async (err) => {
@@ -169,7 +166,11 @@ export default function AdminDashboard() {
           }));
         });
       }
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      alert("Failed to save media: " + error.message);
     } finally {
+      // The finally block ensures the loading state is reset even if an error occurs
       setIsSubmitting(false);
     }
   };
