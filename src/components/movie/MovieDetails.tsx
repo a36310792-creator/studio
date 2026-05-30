@@ -16,13 +16,18 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
 
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
-    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
-    router.push(`/watch/${movie.id}`);
+    setTimeout(() => { 
+      window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
+    }, 50);
+    // Online streaming disabled per instructions
+    alert('Online streaming is temporarily disabled. Please use the Download options instead!');
   };
 
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
-    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
+    setTimeout(() => { 
+      window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
+    }, 50);
     router.push(`/movie/${movie.id}`);
   };
 
