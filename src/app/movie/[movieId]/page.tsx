@@ -86,7 +86,7 @@ export default function MovieGateway() {
       </header>
 
       <main className="p-5">
-        {/* Status Card - 1. Remove Parent Clicks (NO onClick here) */}
+        {/* Status Card - Isolated click triggers on children only */}
         <div className="bg-[#0a0a0a] rounded-[32px] border border-primary/20 p-6 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
@@ -103,23 +103,23 @@ export default function MovieGateway() {
               </div>
             </div>
 
-            {/* 1. SELECTED MEDIA Box - Ad Only */}
+            {/* 1. SELECTED MEDIA Box - Ad Only Impression Point */}
             <div 
               onClick={handleAdOnlyAction}
-              className="p-4 rounded-2xl bg-white/5 border border-white/5 mb-6 cursor-pointer hover:bg-white/10 transition-all"
+              className="p-4 rounded-2xl bg-white/5 border border-white/5 mb-6 cursor-pointer hover:bg-white/10 transition-all group"
             >
               <div className="flex justify-between items-center text-[10px] font-black text-[#555] uppercase mb-2">
                 <span>Selected Media</span>
-                <span className="text-primary">SECURE ACCESS</span>
+                <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity tracking-widest">SECURE ACCESS</span>
               </div>
               <h3 className="text-lg font-black truncate italic uppercase">
                 {movie?.title || 'Syncing Metadata...'}
               </h3>
             </div>
 
-            {/* 2 & 3. Isolate Button Logic */}
+            {/* 2 & 3. Isolated Button Logic */}
             <div className="space-y-4">
-              {/* Element 2: UNLOCK HIGH SPEED SERVER - Ad Only */}
+              {/* Element 2: UNLOCK HIGH SPEED SERVER - Ad Only Impression Point */}
               <Button 
                 onClick={handleAdOnlyAction}
                 className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.25)] hover:scale-[1.01] transition-all"
@@ -128,11 +128,11 @@ export default function MovieGateway() {
                 UNLOCK HIGH SPEED SERVER
               </Button>
               
-              {/* Element 3: MAIN DOWNLOADING LINK - Dual Action */}
+              {/* Element 3: MAIN DOWNLOADING LINK - Simultaneous Ad + Download Conversion */}
               <Button 
                 onClick={handleDownloadAction}
                 variant="outline"
-                className="w-full h-14 bg-white/5 border-primary/20 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all"
+                className="w-full h-14 bg-white/5 border-primary/20 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-[0_5px_15px_rgba(0,0,0,0.3)]"
               >
                 <Download className="w-5 h-5 text-primary" />
                 MAIN DOWNLOADING LINK
