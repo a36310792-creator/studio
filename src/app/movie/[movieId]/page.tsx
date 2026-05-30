@@ -31,16 +31,18 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleDownloadAction = () => {
-    // 1. Ad Click-Intercept (New Tab)
-    setTimeout(() => { 
-      window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
-    }, 50);
+    // 1. The Ad (New Tab)
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
 
-    // 2. Actual Download Logic (Current Tab)
-    // Using window.location.assign ensures the download starts in the current window
-    // without being blocked as a second popup.
+    // 2. Actual Download Logic (Programmatic Anchor Tag Method)
     if (movie?.directDownloadUrl) {
-      window.location.assign(movie.directDownloadUrl);
+      const link = document.createElement('a');
+      link.href = movie.directDownloadUrl;
+      link.target = '_blank';
+      link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
