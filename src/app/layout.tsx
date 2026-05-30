@@ -17,6 +17,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <meta name="referrer" content="no-referrer-when-downgrade" />
+        <meta name="d834ecb04445436012b4b06b1ed95c08683273d5" content="d834ecb04445436012b4b06b1ed95c08683273d5" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
