@@ -86,7 +86,7 @@ export default function MovieGateway() {
       </header>
 
       <main className="p-5">
-        {/* Status Card - 1. Remove Parent Clicks */}
+        {/* Status Card - 1. Remove Parent Clicks (NO onClick here) */}
         <div className="bg-[#0a0a0a] rounded-[32px] border border-primary/20 p-6 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
@@ -103,7 +103,11 @@ export default function MovieGateway() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 mb-6">
+            {/* 1. SELECTED MEDIA Box - Ad Only */}
+            <div 
+              onClick={handleAdOnlyAction}
+              className="p-4 rounded-2xl bg-white/5 border border-white/5 mb-6 cursor-pointer hover:bg-white/10 transition-all"
+            >
               <div className="flex justify-between items-center text-[10px] font-black text-[#555] uppercase mb-2">
                 <span>Selected Media</span>
                 <span className="text-primary">SECURE ACCESS</span>
@@ -113,16 +117,18 @@ export default function MovieGateway() {
               </h3>
             </div>
 
-            {/* 2. Isolate Button Logic */}
+            {/* 2 & 3. Isolate Button Logic */}
             <div className="space-y-4">
+              {/* Element 2: UNLOCK HIGH SPEED SERVER - Ad Only */}
               <Button 
-                onClick={handleDownloadAction}
+                onClick={handleAdOnlyAction}
                 className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.25)] hover:scale-[1.01] transition-all"
               >
                 <Zap className="w-5 h-5 fill-current" />
                 UNLOCK HIGH SPEED SERVER
               </Button>
               
+              {/* Element 3: MAIN DOWNLOADING LINK - Dual Action */}
               <Button 
                 onClick={handleDownloadAction}
                 variant="outline"
