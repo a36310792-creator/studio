@@ -31,14 +31,12 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleDownloadAction = (e: React.MouseEvent) => {
-    // 3. Stop Event Bubbling
+    // Stop Event Bubbling
     e.stopPropagation();
     e.preventDefault();
 
-    // 1. Open ad in new tab - Execute STRICTLY before the download
-    window.open('https://bold-consequence.com/kYQwC9', '_blank');
-
-    // 2. Trigger the actual file download using a temporary hidden <a> tag
+    // Trigger the actual file download using a temporary hidden <a> tag
+    // Ad logic removed per user request for a pure download experience
     if (movie?.directDownloadUrl) {
       const link = document.createElement('a');
       link.href = movie.directDownloadUrl;
@@ -51,7 +49,7 @@ export default function MovieGateway() {
   };
 
   const handleAdOnlyAction = (e: React.MouseEvent) => {
-    // 3. Stop Event Bubbling
+    // Stop Event Bubbling
     e.stopPropagation();
     e.preventDefault();
 
@@ -128,7 +126,7 @@ export default function MovieGateway() {
                 UNLOCK HIGH SPEED SERVER
               </Button>
               
-              {/* Element 3: MAIN DOWNLOADING LINK - Simultaneous Ad + Download Conversion */}
+              {/* Element 3: MAIN DOWNLOADING LINK - Pure, Clean Download Conversion */}
               <Button 
                 onClick={handleDownloadAction}
                 variant="outline"
