@@ -33,11 +33,13 @@ export default function MovieDetailsPage() {
 
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     router.push(`/watch/${movieId}`);
   };
 
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     router.push(`/movie/${movieId}`);
   };
 

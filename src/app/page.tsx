@@ -115,6 +115,7 @@ export default function Home() {
   }, [allFilteredMovies, visibleCount]);
 
   const handleMovieClick = (movie: Movie) => {
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     router.push(`/download/${movie.id}`);
   };
 

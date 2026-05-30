@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -17,11 +16,13 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
 
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     router.push(`/watch/${movie.id}`);
   };
 
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     router.push(`/movie/${movie.id}`);
   };
 

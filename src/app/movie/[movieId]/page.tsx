@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -32,6 +31,7 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleDownloadAction = () => {
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     if (movie?.directDownloadUrl) {
       window.open(movie.directDownloadUrl, '_blank');
     }
@@ -84,7 +84,7 @@ export default function MovieGateway() {
             <div className="space-y-4">
               <Button 
                 onClick={handleDownloadAction}
-                className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.2)] hover:scale-[1.01] transition-all"
+                className="w-full h-14 bg-primary text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,229,255,0.25)] hover:scale-[1.01] transition-all"
               >
                 <Zap className="w-5 h-5 fill-current" />
                 UNLOCK HIGH SPEED SERVER

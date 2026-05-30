@@ -62,6 +62,7 @@ export default function WatchPage() {
   }, []);
 
   const handleAction = () => {
+    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
     if (movie?.directDownloadUrl) {
       window.open(movie.directDownloadUrl, '_blank');
     }
