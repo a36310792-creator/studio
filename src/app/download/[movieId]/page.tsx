@@ -9,7 +9,6 @@ import {
   Calendar, 
   MonitorPlay, 
   ShieldCheck,
-  Globe,
   Film,
   AlertTriangle
 } from 'lucide-react';
@@ -19,6 +18,7 @@ import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
 import { SponsoredAd } from '@/components/ads/SponsoredAd';
+import { VideoAdPlayer } from '@/components/movie/VideoAdPlayer';
 
 export default function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -122,6 +122,9 @@ export default function MovieDetailsPage() {
 
         <div className="flex flex-col gap-4">
           <SponsoredAd type="ribbon" />
+          
+          {/* Dummy VAST Video Player */}
+          <VideoAdPlayer />
           
           <Button 
             type="button"
