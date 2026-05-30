@@ -94,7 +94,7 @@ export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderP
               </div>
 
               <div className="px-6 py-4">
-                <SponsoredAd />
+                <SponsoredAd type="ribbon" />
               </div>
 
               <div className="px-6 py-6 border-t border-white/5 mt-4">
@@ -116,11 +116,7 @@ export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderP
             </div>
 
             <div className="p-6">
-              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                <p className="text-[11px] font-bold text-[#8b95a5] leading-relaxed">
-                  Enjoy the latest 4K content with <span className="text-primary">MP4VEGA</span>. Fast downloads, premium speed.
-                </p>
-              </div>
+              <SponsoredAd type="glow" />
             </div>
           </SheetContent>
         </Sheet>

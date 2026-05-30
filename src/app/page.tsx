@@ -187,6 +187,10 @@ export default function Home() {
         {navTab === 'home' && (
           <>
             <div className="px-5 mb-6">
+              <SponsoredAd type="ribbon" />
+            </div>
+
+            <div className="px-5 mb-6">
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555] group-focus-within:text-primary transition-colors" />
                 <Input 
@@ -200,7 +204,7 @@ export default function Home() {
             </div>
 
             <div className="px-5 mb-8">
-              <SponsoredAd />
+              <SponsoredAd type="glow" />
             </div>
 
             <div className="flex gap-2.5 px-5 mb-4 overflow-x-auto no-scrollbar py-1">
@@ -293,14 +297,25 @@ export default function Home() {
           ) : displayedMovies.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-[15px]">
-                {displayedMovies.map((movie) => (
-                  <MovieCard 
-                    key={movie.id} 
-                    movie={movie} 
-                    onSelect={handleMovieClick}
-                    onToggleBookmark={toggleBookmark}
-                    isBookmarked={bookmarkedIds.includes(movie.id)}
-                  />
+                {displayedMovies.map((movie, index) => (
+                  <React.Fragment key={movie.id}>
+                    <MovieCard 
+                      movie={movie} 
+                      onSelect={handleMovieClick}
+                      onToggleBookmark={toggleBookmark}
+                      isBookmarked={bookmarkedIds.includes(movie.id)}
+                    />
+                    {index === 3 && (
+                      <div className="col-span-2 my-4">
+                        <SponsoredAd type="alert" />
+                      </div>
+                    )}
+                    {index === 7 && (
+                      <div className="col-span-2 my-4">
+                        <SponsoredAd type="glow" />
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
               

@@ -94,17 +94,11 @@ export default function MovieDetailsPage() {
               <Calendar className="w-3.5 h-3.5" />
               {movie?.releaseYear || '----'}
             </span>
-            {movie?.audio && (
-              <span className="bg-[#111] border border-white/5 px-3.5 py-1.5 rounded-xl font-black text-[11px] text-[#666] flex items-center gap-2 backdrop-blur-xl">
-                <Globe className="w-3.5 h-3.5" />
-                {movie.audio.toUpperCase()}
-              </span>
-            )}
           </div>
         </div>
 
         <div className="flex flex-col gap-4">
-          <SponsoredAd />
+          <SponsoredAd type="ribbon" />
           
           <Button 
             type="button"
@@ -115,6 +109,8 @@ export default function MovieDetailsPage() {
             WATCH ONLINE HD
           </Button>
           
+          <SponsoredAd type="glow" />
+
           <Button 
             type="button"
             onClick={handleDownload}
@@ -125,6 +121,8 @@ export default function MovieDetailsPage() {
             DIRECT DOWNLOAD
           </Button>
         </div>
+
+        <SponsoredAd type="alert" />
 
         <div className="bg-[#0a0a0a] rounded-[32px] p-7 border border-white/5 shadow-inner">
           <div className="flex items-center gap-2.5 mb-4">

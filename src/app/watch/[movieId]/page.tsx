@@ -89,8 +89,14 @@ export default function WatchPage() {
       </header>
 
       <main className="p-5 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        
+        {/* Cinematic Header Ad */}
+        <div className="mb-0.5">
+          <SponsoredAd type="cinematic" />
+        </div>
+
         {/* PLAYER SECTION */}
-        <div className="mb-8 rounded-[32px] overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video">
+        <div className="mb-0.5 rounded-lg overflow-hidden border border-primary/20 bg-black shadow-[0_0_50px_rgba(0,229,255,0.15)] relative aspect-video">
           {(showLoader || docLoading) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
               <Skeleton className="absolute inset-0 shimmer" />
@@ -153,8 +159,13 @@ export default function WatchPage() {
           )}
         </div>
 
+        {/* Cinematic Footer Ad */}
         <div className="mb-8">
-          <SponsoredAd />
+          <SponsoredAd type="cinematic" />
+        </div>
+
+        <div className="mb-8">
+          <SponsoredAd type="ribbon" />
         </div>
 
         <div className="bg-[#0a0a0a] rounded-[40px] border border-white/5 p-7 mb-10 shadow-inner">
@@ -186,6 +197,10 @@ export default function WatchPage() {
           </div>
         </div>
 
+        <div className="mb-8">
+          <SponsoredAd type="glow" />
+        </div>
+
         <div className="space-y-5">
           <div className="text-[10px] font-black text-[#444] uppercase tracking-[4px] ml-1">Alternative Nodes</div>
           <div className="grid grid-cols-1 gap-4">
@@ -212,6 +227,10 @@ export default function WatchPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="mt-8">
+          <SponsoredAd type="alert" />
         </div>
       </main>
 
