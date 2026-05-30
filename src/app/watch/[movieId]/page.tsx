@@ -23,6 +23,10 @@ export default function MaintenancePage() {
     router.push('/');
   };
 
+  const handleBoxClick = () => {
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
+  };
+
   // Variations for the ad wall
   const topAdTypes: ('ribbon' | 'glow' | 'alert')[] = ['glow', 'ribbon', 'alert', 'glow'];
   const bottomAdTypes: ('ribbon' | 'glow' | 'alert')[] = ['ribbon', 'alert', 'glow', 'ribbon', 'alert', 'glow', 'ribbon', 'alert'];
@@ -51,11 +55,14 @@ export default function MaintenancePage() {
           ))}
         </div>
 
-        {/* Premium Maintenance Container */}
-        <div className="bg-[#15171e] rounded-[32px] border border-primary/30 p-8 text-center relative overflow-hidden shadow-[0_0_40px_rgba(0,229,255,0.15)] animate-in fade-in zoom-in duration-700">
+        {/* Premium Maintenance Container - Now Clickable */}
+        <div 
+          onClick={handleBoxClick}
+          className="bg-[#15171e] rounded-[32px] border border-primary/30 p-8 text-center relative overflow-hidden shadow-[0_0_40px_rgba(0,229,255,0.15)] animate-in fade-in zoom-in duration-700 cursor-pointer hover:scale-[1.01] hover:border-primary/50 transition-all group"
+        >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
           
-          <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto mb-6 shadow-glow">
+          <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto mb-6 shadow-glow group-hover:scale-110 transition-transform">
             <MonitorOff className="w-8 h-8" />
           </div>
 
