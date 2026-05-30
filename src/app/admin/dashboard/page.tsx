@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe, ShieldAlert, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe, ShieldAlert, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,9 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata';
-import { useAuth, useFirestore, useStorage, useCollection, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -28,12 +27,10 @@ const FALLBACK_ADMIN_EMAIL = 'admin@gmail.com';
 const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'Cartoon', 'Drama', 'Comedy', 'Thriller', 'Mystery'];
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 export default function AdminDashboard() {
   const auth = useAuth();
   const db = useFirestore();
-  const storage = useStorage();
   const router = useRouter();
   
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -41,7 +38,6 @@ export default function AdminDashboard() {
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const localSession = localStorage.getItem('admin_session');
@@ -114,30 +110,12 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!db) return;
     
-    // Safety check for file size
-    if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
-      alert('File size is too large! Please upload a poster smaller than 2MB.');
-      return;
-    }
-
     setIsSubmitting(true);
     
     try {
-      let finalPosterUrl = formData.posterUrl;
-
-      // Handle Image Upload to Firebase Storage if a file is selected
-      if (selectedFile && storage) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${formData.title?.replace(/\s+/g, '_').toLowerCase()}.${fileExt}`;
-        const storageRef = ref(storage, `posters/${fileName}`);
-        
-        const snapshot = await uploadBytes(storageRef, selectedFile);
-        finalPosterUrl = await getDownloadURL(snapshot.ref);
-      }
-      
       const movieData = { 
         title: formData.title || 'Untitled',
-        posterUrl: finalPosterUrl || '',
+        posterUrl: formData.posterUrl || '',
         rating: Number(formData.rating) || 0,
         quality: formData.quality || 'HD',
         releaseYear: Number(formData.releaseYear) || new Date().getFullYear(),
@@ -151,30 +129,16 @@ export default function AdminDashboard() {
       
       if (editingMovie) {
         const movieRef = doc(db, 'movies', editingMovie.id);
-        updateDoc(movieRef, movieData).then(() => {
-          resetForm();
-        }).catch(async (err) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: movieRef.path,
-            operation: 'update',
-            requestResourceData: movieData
-          }));
-        });
+        await updateDoc(movieRef, movieData);
+        resetForm();
       } else {
         const moviesRef = collection(db, 'movies');
-        addDoc(moviesRef, movieData).then(() => {
-          resetForm();
-        }).catch(async (err) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: moviesRef.path,
-            operation: 'create',
-            requestResourceData: movieData
-          }));
-        });
+        await addDoc(moviesRef, movieData);
+        resetForm();
       }
     } catch (error: any) {
       console.error("Submission error:", error);
-      alert("Failed to save media: " + error.message);
+      alert("Failed to save media: " + (error.message || "Unknown error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +147,6 @@ export default function AdminDashboard() {
   const resetForm = () => {
     setIsAdding(false);
     setEditingMovie(null);
-    setSelectedFile(null);
     setFormData({ 
       title: '', posterUrl: '', rating: 0, quality: 'HD', 
       releaseYear: new Date().getFullYear(), audio: 'Hindi', 
@@ -353,42 +316,25 @@ export default function AdminDashboard() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-[#555] uppercase ml-1 flex items-center gap-2">
-                  <ImageIcon className="w-3 h-3" /> Poster Image
+                  <ImageIcon className="w-3 h-3" /> Poster Image URL
                 </label>
                 <div className="flex flex-col gap-3">
-                  {formData.posterUrl && !selectedFile && (
+                  {formData.posterUrl && (
                     <div className="w-20 h-28 rounded-xl overflow-hidden border border-white/10 self-start">
                       <img src={formData.posterUrl} className="w-full h-full object-cover" alt="Preview" />
                     </div>
                   )}
                   <div className="relative group">
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file && file.size > MAX_FILE_SIZE) {
-                          alert('File size is too large! Please upload a poster smaller than 2MB.');
-                          e.target.value = ''; // Clear selection
-                          setSelectedFile(null);
-                        } else {
-                          setSelectedFile(file || null);
-                        }
-                      }}
-                      className="hidden" 
-                      id="poster-upload"
+                    <Input 
+                      type="url"
+                      placeholder="https://example.com/poster.jpg"
+                      value={formData.posterUrl}
+                      onChange={e => setFormData({...formData, posterUrl: e.target.value})}
+                      className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
+                      required
                     />
-                    <label 
-                      htmlFor="poster-upload"
-                      className="flex items-center justify-center gap-3 w-full h-14 bg-black border border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 transition-all text-[#8b95a5] hover:text-white"
-                    >
-                      <Upload className="w-5 h-5" />
-                      <span className="text-[12px] font-bold uppercase">
-                        {selectedFile ? selectedFile.name : 'Upload Poster File'}
-                      </span>
-                    </label>
                   </div>
-                  <p className="text-[9px] text-[#444] font-bold uppercase italic">* Max 2MB. Selection overrides AI placeholders.</p>
+                  <p className="text-[9px] text-[#444] font-bold uppercase italic">* AI metadata usually provides a placeholder. Paste a custom URL to override.</p>
                 </div>
               </div>
               
