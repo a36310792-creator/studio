@@ -10,7 +10,8 @@ import {
   MonitorPlay, 
   ShieldCheck,
   Globe,
-  Film
+  Film,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,11 +49,28 @@ export default function MovieDetailsPage() {
     router.push(`/movie/${movieId}`);
   };
 
+  const handleAdClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
+  };
+
   const resolvedPoster = movie?.posterUrl || movie?.imageUrl || movie?.image;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative font-body overflow-x-hidden">
       
+      {/* 2. Page 2 Sticky Bottom Offer Ad */}
+      <div 
+        onClick={handleAdClick}
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9998] w-[90%] max-w-md bg-black/80 backdrop-blur-xl border border-red-500 rounded-full py-3.5 px-6 flex justify-between items-center shadow-[0_0_20px_rgba(239,68,68,0.4)] cursor-pointer group animate-in slide-in-from-bottom-10"
+      >
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
+          <span className="text-[11px] font-black uppercase tracking-tight text-white italic">⚠️ Watch in 4K - Premium Server Active</span>
+        </div>
+        <span className="text-[10px] font-black text-red-500 group-hover:underline">ACTIVATE</span>
+      </div>
+
       <div className="absolute top-6 left-6 z-[2010]">
         <button 
           onClick={() => router.push('/')}

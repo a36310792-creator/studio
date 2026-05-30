@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { MovieCard, type Movie } from '@/components/movie/MovieCard';
 import { NewReleaseToast } from '@/components/movie/NewReleaseToast';
-import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow, Loader2 } from 'lucide-react';
+import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDown, ArrowDownWideNarrow, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -119,21 +119,10 @@ export default function Home() {
     router.push(`/download/${movie.id}`);
   };
 
-  const viewTitle = useMemo(() => {
-    if (navTab === 'saved') return { label: 'Saved Collection', icon: <BookmarkIcon className="w-5 h-5 text-primary" /> };
-    if (navTab === 'discover') return { label: 'Pick for You', icon: <Sparkles className="w-5 h-5 text-primary" /> };
-    
-    let label = 'Trending Content';
-    if (activeGenre !== 'All' && activeCategory !== 'All') {
-      label = `${activeGenre} in ${activeCategory}`;
-    } else if (activeGenre !== 'All') {
-      label = `${activeGenre} Highlights`;
-    } else if (activeCategory !== 'All') {
-      label = `${activeCategory} Collection`;
-    }
-
-    return { label, icon: <TrendingUp className="w-5 h-5 text-primary" /> };
-  }, [navTab, activeGenre, activeCategory]);
+  const handleAdClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
+  };
 
   const handleSearchIconClick = () => {
     if (navTab !== 'home') {
@@ -168,6 +157,22 @@ export default function Home() {
 
   const loadMore = () => setVisibleCount(prev => prev + 10);
 
+  const viewTitle = useMemo(() => {
+    if (navTab === 'saved') return { label: 'Saved Collection', icon: <BookmarkIcon className="w-5 h-5 text-primary" /> };
+    if (navTab === 'discover') return { label: 'Pick for You', icon: <Sparkles className="w-5 h-5 text-primary" /> };
+    
+    let label = 'Trending Content';
+    if (activeGenre !== 'All' && activeCategory !== 'All') {
+      label = `${activeGenre} in ${activeCategory}`;
+    } else if (activeGenre !== 'All') {
+      label = `${activeGenre} Highlights`;
+    } else if (activeCategory !== 'All') {
+      label = `${activeCategory} Collection`;
+    }
+
+    return { label, icon: <TrendingUp className="w-5 h-5 text-primary" /> };
+  }, [navTab, activeGenre, activeCategory]);
+
   return (
     <div className="relative min-h-screen bg-[#050505] pb-32 max-w-[420px] mx-auto shadow-2xl overflow-x-hidden border-x border-white/5 font-body">
       <Header 
@@ -176,6 +181,20 @@ export default function Home() {
         onHomeClick={handleSidebarHomeClick}
       />
       
+      {/* 1. Page 1 Floating 'Live Chat' Style Ad */}
+      <div 
+        onClick={handleAdClick}
+        className="fixed bottom-6 right-6 z-[9998] w-14 h-14 bg-primary rounded-full shadow-[0_8px_30px_rgba(0,229,255,0.4)] flex items-center justify-center cursor-pointer group active:scale-90 transition-all"
+      >
+        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-30"></div>
+        <div className="relative z-10">
+          <MessageCircle className="w-7 h-7 text-black" />
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-primary">
+            1
+          </div>
+        </div>
+      </div>
+
       {navTab === 'home' && firestoreMovies && firestoreMovies.length > 0 && (
         <NewReleaseToast 
           movieName={`${firestoreMovies[0].title} - Now Streaming!`} 

@@ -14,7 +14,8 @@ import {
   Lock,
   X,
   MessageCircle,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore } from '@/firebase';
@@ -87,6 +88,23 @@ export default function MovieGateway() {
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl relative overflow-x-hidden font-body">
       
+      {/* 3. Page 3 Floating 'Gift Box / Alert' Style Ad (Bottom-Left) */}
+      <div 
+        onClick={handleAdOnlyAction}
+        className="fixed bottom-6 left-6 z-[9998] w-64 bg-[#0a0b0f] border border-green-500 rounded-2xl shadow-[0_0_25px_rgba(34,197,94,0.2)] overflow-hidden cursor-pointer group active:scale-95 transition-all animate-in slide-in-from-left-10 duration-500"
+      >
+        <div className="bg-green-500/10 p-4 flex items-center gap-4">
+          <div className="relative">
+            <Info className="w-6 h-6 text-green-500" />
+            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></div>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-black text-white uppercase italic">System Alert</span>
+            <span className="text-[9px] font-bold text-green-500 uppercase tracking-tighter mt-0.5">Fast Node Ready. Click to Connect</span>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Sticky Top Banner Ad */}
       <div 
         onClick={handleAdOnlyAction}
@@ -97,7 +115,7 @@ export default function MovieGateway() {
         </span>
       </div>
 
-      {/* 2. Floating Corner Message Ad */}
+      {/* 2. Floating Corner Message Ad (Bottom-Right) */}
       {showFloatingAd && (
         <div 
           onClick={handleAdOnlyAction}
