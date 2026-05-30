@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -41,9 +42,9 @@ export const VideoAdPlayer = () => {
           playerInstanceRef.current.destroy();
         } catch (e) {}
       }
-      document.head.removeChild(link);
+      if (link.parentNode) document.head.removeChild(link);
       const existingScript = document.querySelector('script[src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"]');
-      if (existingScript) document.head.removeChild(existingScript);
+      if (existingScript && existingScript.parentNode) document.head.removeChild(existingScript);
     };
   }, []);
 
@@ -69,9 +70,9 @@ export const VideoAdPlayer = () => {
         }
       });
 
-      // State transitions based on ad lifecycle
+      // State transitions based on ad and video lifecycle
+      // Note: Removed generic 'error' event as it's not supported by Fluid Player v3 .on() method
       myPlayer.on('ended', () => setAdFinished(true));
-      myPlayer.on('error', () => setAdFinished(true));
       myPlayer.on('adError', () => setAdFinished(true));
       myPlayer.on('adFinished', () => setAdFinished(true));
 
