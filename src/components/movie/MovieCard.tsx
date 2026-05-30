@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Star, Bookmark, Play } from 'lucide-react';
+import { Star, Bookmark, Play, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface Movie {
@@ -29,19 +29,25 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie, onSelect, onToggleBookmark, isBookmarked }: MovieCardProps) => {
-  const resolvedPoster = movie.posterUrl || movie.imageUrl || movie.image || `https://picsum.photos/seed/${movie.id}/400/600`;
+  const resolvedPoster = movie.posterUrl || movie.imageUrl || movie.image;
 
   return (
     <div 
       onClick={() => onSelect(movie)}
       className="group relative flex flex-col bg-[#0a0a0a] rounded-[24px] overflow-hidden transition-all duration-500 hover:scale-[1.03] hover:z-10 aspect-[2/3.2] cursor-pointer shadow-2xl border border-white/5 hover:border-primary/40 hover:shadow-primary/10"
     >
-      <img
-        src={resolvedPoster}
-        alt={movie.title}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        loading="lazy"
-      />
+      {resolvedPoster ? (
+        <img
+          src={resolvedPoster}
+          alt={movie.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          loading="lazy"
+        />
+      ) : (
+        <div className="w-full h-full bg-[#111] flex items-center justify-center">
+          <Film className="w-12 h-12 text-[#222]" />
+        </div>
+      )}
       
       {/* Top Badges */}
       <div className="absolute top-3 left-3 z-30 flex flex-col gap-1">

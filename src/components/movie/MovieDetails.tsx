@@ -1,8 +1,7 @@
-
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Star, Download, Calendar, Globe, MonitorPlay, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Star, Download, Calendar, Globe, MonitorPlay, ShieldCheck, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Movie } from './MovieCard';
 import { AdBanner } from '@/components/ads/AdBanner';
@@ -22,7 +21,6 @@ const ROTATION_LINKS = [
 export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
   const router = useRouter();
 
-  // FIXED: Strictly navigate to the internal watch route
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push(`/watch/${movie.id}`);
@@ -32,6 +30,8 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
     e.preventDefault();
     router.push(`/movie/${movie.id}`);
   };
+
+  const resolvedPoster = movie.posterUrl || movie.imageUrl || movie.image;
 
   return (
     <div className="fixed inset-0 bg-[#050505] z-[2000] overflow-y-auto pb-32 animate-in fade-in slide-in-from-right duration-500">
@@ -48,11 +48,17 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
       </div>
 
       <div className="w-full h-[60vh] relative">
-        <img 
-          src={movie.posterUrl} 
-          className="w-full h-full object-cover" 
-          alt={movie.title} 
-        />
+        {resolvedPoster ? (
+          <img 
+            src={resolvedPoster} 
+            className="w-full h-full object-cover" 
+            alt={movie.title} 
+          />
+        ) : (
+          <div className="w-full h-full bg-[#111] flex items-center justify-center">
+            <Film className="w-20 h-20 text-[#222]" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-[#050505]"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
       </div>
@@ -87,7 +93,6 @@ export const MovieDetails = ({ movie, onClose }: MovieDetailsProps) => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 mb-8">
-              {/* WATCH ONLINE BUTTON - Fixed Navigation */}
               <Button 
                 type="button"
                 onClick={handleWatch}

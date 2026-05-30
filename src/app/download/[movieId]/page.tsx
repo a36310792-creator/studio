@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -11,7 +10,7 @@ import {
   MonitorPlay, 
   ShieldCheck,
   Globe,
-  Loader2
+  Film
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,7 +34,6 @@ export default function MovieDetailsPage() {
 
   const { data: movie, loading } = useDoc<Movie>(movieRef);
 
-  // FIXED: Strictly navigate to the internal watch route
   const handleWatch = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push(`/watch/${movieId}`);
@@ -47,7 +45,7 @@ export default function MovieDetailsPage() {
     router.push(`/movie/${movieId}`);
   };
 
-  const resolvedPoster = movie?.posterUrl || movie?.imageUrl || movie?.image || `https://picsum.photos/seed/${movieId}/1200/800`;
+  const resolvedPoster = movie?.posterUrl || movie?.imageUrl || movie?.image;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-48 shadow-2xl relative font-body overflow-x-hidden">
@@ -66,12 +64,17 @@ export default function MovieDetailsPage() {
       <div className="w-full h-[60vh] relative">
         {loading ? (
           <Skeleton className="w-full h-full shimmer" />
-        ) : (
+        ) : resolvedPoster ? (
           <img 
             src={resolvedPoster} 
             className="w-full h-full object-cover animate-in fade-in duration-1000" 
             alt={movie?.title || 'Movie Poster'} 
           />
+        ) : (
+          <div className="w-full h-full bg-[#0a0a0a] flex flex-col items-center justify-center text-[#151515] gap-4">
+            <Film className="w-20 h-20" />
+            <span className="text-[10px] font-black uppercase tracking-[5px]">No Media Asset</span>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/40 to-[#050505]"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent"></div>
@@ -79,7 +82,7 @@ export default function MovieDetailsPage() {
 
       <main className="px-6 -mt-20 relative z-[2005] flex flex-col gap-8 animate-in slide-in-from-bottom-10 duration-700">
         <div className="space-y-4">
-          <div role="heading" aria-level={1} className="text-[34px] font-black text-white leading-[1.1] uppercase italic tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
+          <div className="text-[34px] font-black text-white leading-[1.1] uppercase italic tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
             {movie?.title || (loading ? <Skeleton className="h-10 w-64 shimmer" /> : 'MEDIA ENTRY')}
           </div>
           
@@ -105,7 +108,6 @@ export default function MovieDetailsPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* WATCH ONLINE BUTTON - Fixed Navigation */}
           <Button 
             type="button"
             onClick={handleWatch}
