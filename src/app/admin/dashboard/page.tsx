@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe, ShieldAlert, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, Edit3, LogOut, Check, X, ArrowLeft, Calendar, Sparkles, Loader2, Film, Globe, ShieldAlert, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,7 +23,6 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 const MASTER_ADMIN_EMAIL = 'a36310792@gmail.com';
-const FALLBACK_ADMIN_EMAIL = 'admin@gmail.com';
 const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'Cartoon', 'Drama', 'Comedy', 'Thriller', 'Mystery'];
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
@@ -42,10 +41,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     const localSession = localStorage.getItem('admin_session');
     
+    // Strict Guard: Redirect immediately if no session exists
+    if (localSession !== 'true') {
+      router.push('/admin/login');
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user && localSession !== 'true') {
         router.push('/admin/login');
-      } else if (user && user.email !== MASTER_ADMIN_EMAIL && user.email !== FALLBACK_ADMIN_EMAIL && localSession !== 'true') {
+      } else if (user && user.email !== MASTER_ADMIN_EMAIL && localSession !== 'true') {
         await signOut(auth);
         router.push('/admin/login');
       } else {
@@ -156,28 +161,12 @@ export default function AdminDashboard() {
 
   const deleteMovie = async (id: string) => {
     if (!id) return;
-    if (!confirm('Are you sure you want to delete this movie permanently from the library?')) return;
+    if (!confirm('Are you sure you want to delete this movie permanently?')) return;
     
     if (db) {
       const movieRef = doc(db, 'movies', id);
       deleteDoc(movieRef)
         .catch(async (error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: movieRef.path,
-            operation: 'delete'
-          }));
-        });
-    }
-  };
-
-  const forceDeleteMovie = async (id: string) => {
-    if (!id) return;
-    if (!window.confirm('CRITICAL ACTION: Permanently remove this entry from the database?')) return;
-
-    if (db) {
-      const movieRef = doc(db, 'movies', id);
-      deleteDoc(movieRef)
-        .catch((error) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: movieRef.path,
             operation: 'delete'
@@ -238,7 +227,6 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[12px] font-black text-[#555] uppercase tracking-[2px]">Library Management</h3>
-                <span className="text-[10px] font-bold text-primary/50 uppercase">{(firestoreMovies?.length || 0)} Items</span>
               </div>
               
               <div className="space-y-3">
@@ -269,13 +257,6 @@ export default function AdminDashboard() {
                               className="p-1.5 text-white/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => forceDeleteMovie(movie.id)}
-                              className="ml-1 px-2 py-1 bg-red-500/10 border border-red-500/30 rounded-md text-[8px] font-black text-red-500 uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"
-                            >
-                              <ShieldAlert className="w-2.5 h-2.5" />
-                              Force Delete
                             </button>
                           </div>
                         </div>
@@ -324,17 +305,14 @@ export default function AdminDashboard() {
                       <img src={formData.posterUrl} className="w-full h-full object-cover" alt="Preview" />
                     </div>
                   )}
-                  <div className="relative group">
-                    <Input 
-                      type="url"
-                      placeholder="https://example.com/poster.jpg"
-                      value={formData.posterUrl}
-                      onChange={e => setFormData({...formData, posterUrl: e.target.value})}
-                      className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
-                      required
-                    />
-                  </div>
-                  <p className="text-[9px] text-[#444] font-bold uppercase italic">* AI metadata usually provides a placeholder. Paste a custom URL to override.</p>
+                  <Input 
+                    type="url"
+                    placeholder="https://example.com/poster.jpg"
+                    value={formData.posterUrl}
+                    onChange={e => setFormData({...formData, posterUrl: e.target.value})}
+                    className="bg-black border-white/5 h-12 rounded-xl text-white font-bold"
+                    required
+                  />
                 </div>
               </div>
               

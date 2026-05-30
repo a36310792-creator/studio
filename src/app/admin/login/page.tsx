@@ -10,12 +10,10 @@ import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const FALLBACK_ADMIN = {
-  email: 'admin@gmail.com',
-  password: 'admin123'
+const MASTER_ADMIN = {
+  email: 'a36310792@gmail.com',
+  password: '45652515##'
 };
-
-const MASTER_ADMIN_EMAIL = 'a36310792@gmail.com';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -27,12 +25,10 @@ export default function AdminLogin() {
   const [authChecking, setAuthChecking] = useState(true);
 
   useEffect(() => {
-    // Safety timer for auth check
     const safetyTimer = setTimeout(() => {
       if (authChecking) setAuthChecking(false);
-    }, 2500);
+    }, 1500);
 
-    // Check local session first
     const localSession = localStorage.getItem('admin_session');
     if (localSession === 'true') {
       router.push('/admin/dashboard');
@@ -40,7 +36,8 @@ export default function AdminLogin() {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && (user.email === MASTER_ADMIN_EMAIL || user.email === FALLBACK_ADMIN.email)) {
+      if (user && user.email === MASTER_ADMIN.email) {
+        localStorage.setItem('admin_session', 'true');
         router.push('/admin/dashboard');
       } else {
         setAuthChecking(false);
@@ -58,26 +55,18 @@ export default function AdminLogin() {
     setError(null);
     setIsLoading(true);
 
-    // 1. Try Local Fallback Mode First
-    if (email === FALLBACK_ADMIN.email && password === FALLBACK_ADMIN.password) {
+    // 1. Hardcoded Credential Check (Highest Priority)
+    if (email === MASTER_ADMIN.email && password === MASTER_ADMIN.password) {
       localStorage.setItem('admin_session', 'true');
       router.push('/admin/dashboard');
       return;
     }
 
-    // 2. Try Firebase Authentication
+    // 2. Fallback to Firebase (Optional, but kept for infrastructure integrity)
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Redirection is handled by the useEffect listener
     } catch (err: any) {
-      // 3. Graceful error handling - bypass Firebase UI popups
-      if (err.code === 'auth/invalid-api-key' || err.code === 'auth/network-request-failed') {
-        setError('Connection issues detected. Please check credentials or use fallback mode.');
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Invalid admin credentials. Please try again.');
-      } else {
-        setError('Authentication error. Please use fallback credentials.');
-      }
+      setError('Invalid admin credentials. Please verify your email and password.');
     } finally {
       setIsLoading(false);
     }
