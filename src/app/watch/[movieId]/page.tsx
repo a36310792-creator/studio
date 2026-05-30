@@ -23,7 +23,8 @@ export default function MaintenancePage() {
   const handleFakePlayClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    window.open('https://elderlygoal.com/dOm.Fwz/d/GtN-vrZMGSUs/heXmf9pufZsUrlmkRPVTScxwGOrT/I/xFN/jBkMtGNgzFAH5IMHjlED3/MWwx', '_blank');
+    // Replaced raw VAST XML link with a Direct Link placeholder for better conversion
+    window.open('YAHAN_APNA_NAYA_DIRECT_LINK_PASTE_KAR_DENA', '_blank');
   };
 
   // Variations for the ad wall
