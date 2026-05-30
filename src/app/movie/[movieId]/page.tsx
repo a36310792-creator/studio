@@ -30,7 +30,11 @@ export default function MovieGateway() {
 
   const { data: movie } = useDoc<Movie>(movieRef);
 
-  const handleDownloadAction = () => {
+  const handleDownloadAction = (e: React.MouseEvent) => {
+    // 3. Stop Event Bubbling
+    e.stopPropagation();
+    e.preventDefault();
+
     // 1. Open ad in new tab - Execute STRICTLY before the download
     window.open('https://bold-consequence.com/kYQwC9', '_blank');
 
@@ -46,7 +50,17 @@ export default function MovieGateway() {
     }
   };
 
-  const handleBack = () => {
+  const handleAdOnlyAction = (e: React.MouseEvent) => {
+    // 3. Stop Event Bubbling
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Just trigger the ad popup
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
+  };
+
+  const handleBack = (e: React.MouseEvent) => {
+    e.stopPropagation();
     // Navigate specifically back to Page 2 (Movie Details view)
     router.push(`/download/${movieId}`);
   };
@@ -72,7 +86,7 @@ export default function MovieGateway() {
       </header>
 
       <main className="p-5">
-        {/* Status Card */}
+        {/* Status Card - 1. Remove Parent Clicks */}
         <div className="bg-[#0a0a0a] rounded-[32px] border border-primary/20 p-6 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
@@ -99,6 +113,7 @@ export default function MovieGateway() {
               </h3>
             </div>
 
+            {/* 2. Isolate Button Logic */}
             <div className="space-y-4">
               <Button 
                 onClick={handleDownloadAction}
@@ -132,7 +147,7 @@ export default function MovieGateway() {
             ].map((node, i) => (
               <button 
                 key={i}
-                onClick={handleDownloadAction}
+                onClick={handleAdOnlyAction}
                 className="flex items-center justify-between p-4 rounded-2xl bg-[#121212] border border-white/5 hover:border-primary/30 transition-all group"
               >
                 <div className="flex items-center gap-4">
