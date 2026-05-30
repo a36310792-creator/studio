@@ -1,100 +1,84 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
 import { MonitorOff, AlertTriangle, Play, Loader2 } from 'lucide-react';
 
 /**
- * @fileOverview A realistic dummy video player that plays a VAST ad and then 
- * shows a maintenance message.
+ * @fileOverview A realistic dummy video player using Fluid Player to play a VAST ad 
+ * and then show a maintenance message.
  */
 
 declare global {
   interface Window {
-    google: any;
-    videojs: any;
+    fluidPlayer: any;
   }
 }
 
 export const VideoAdPlayer = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerInstanceRef = useRef<any>(null);
   const [adFinished, setAdFinished] = useState(false);
-  const [isImaLoaded, setIsImaLoaded] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    // Dynamically load Google IMA SDK
+    // Load Fluid Player CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.fluidplayer.com/v3/current/fluidplayer.min.css';
+    document.head.appendChild(link);
+
+    // Load Fluid Player JS
     const script = document.createElement('script');
-    script.src = "//imasdk.googleapis.com/js/sdkloader/ima3.js";
+    script.src = 'https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js';
     script.async = true;
-    script.onload = () => setIsImaLoaded(true);
+    script.onload = () => setScriptLoaded(true);
     document.head.appendChild(script);
 
     return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
+      if (playerInstanceRef.current) {
+        try {
+          playerInstanceRef.current.destroy();
+        } catch (e) {}
       }
-      const existingScript = document.querySelector('script[src="//imasdk.googleapis.com/js/sdkloader/ima3.js"]');
+      document.head.removeChild(link);
+      const existingScript = document.querySelector('script[src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"]');
       if (existingScript) document.head.removeChild(existingScript);
     };
   }, []);
 
   const handlePlay = () => {
-    if (!videoRef.current || !isImaLoaded || isInitializing) return;
+    if (!videoRef.current || !scriptLoaded || isInitializing || !window.fluidPlayer) return;
 
     setIsInitializing(true);
 
-    // Initialize Video.js and IMA strictly on client interaction
     try {
-      // @ts-ignore - Required for videojs-ima to attach correctly
-      window.videojs = videojs;
-      require('videojs-contrib-ads');
-      require('videojs-ima');
-
-      const player = videojs(videoRef.current, {
-        controls: true,
-        autoplay: false,
-        preload: 'auto',
-        fluid: true,
-        sources: [{
-          src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-          type: 'video/mp4'
-        }]
+      const myPlayer = window.fluidPlayer(videoRef.current.id, {
+        layoutControls: {
+          fillToContainer: true,
+          autoPlay: true,
+          mute: false,
+          allowDownload: false,
+          playButtonShowing: false,
+        },
+        vastOptions: {
+          adList: [{
+            roll: 'preRoll',
+            vastTag: 'https://elderlygoal.com/dOm.Fwz/d/GtN-vrZMGSUs/heXmf9pufZsUrlmkRPVTScxwGOrT/I/xFN/jBkMtGNgzFAH5IMHjlED3/MWwx'
+          }]
+        }
       });
 
-      const options = {
-        id: videoRef.current.id,
-        adTagUrl: 'Https://elderlygoal.com/dOm.Fwz/d/GtN-vrZMGSUs/heXmf9pufZsUrlmkRPVTScxwGOrT/I/xFN/jBkMtGNgzFAH5IMHjlED3/MWwx'
-      };
+      // State transitions based on ad lifecycle
+      myPlayer.on('ended', () => setAdFinished(true));
+      myPlayer.on('error', () => setAdFinished(true));
+      myPlayer.on('adError', () => setAdFinished(true));
+      myPlayer.on('adFinished', () => setAdFinished(true));
 
-      // @ts-ignore
-      player.ima(options);
-
-      player.on('ads-ad-started', () => {
-        setIsInitializing(false);
-      });
-
-      player.on('ads-allpods-completed', () => {
-        setAdFinished(true);
-      });
-
-      player.on('aderror', () => {
-        setAdFinished(true);
-        setIsInitializing(false);
-      });
-
-      playerRef.current = player;
-      
-      // Request and play ad
-      // @ts-ignore
-      player.ima.initializeAdDisplayContainer();
-      // @ts-ignore
-      player.ima.requestAds();
-      player.play();
+      playerInstanceRef.current = myPlayer;
+      setIsInitializing(false);
     } catch (error) {
-      console.error('Player Initialization Failed:', error);
+      console.error('Fluid Player Initialization Failed:', error);
       setAdFinished(true);
       setIsInitializing(false);
     }
@@ -118,12 +102,15 @@ export const VideoAdPlayer = () => {
       ) : (
         <div className="w-full h-full relative">
           <video
-            id="dummy-video-player"
+            id="vast-dummy-player"
             ref={videoRef}
-            className="video-js vjs-big-play-centered w-full h-full"
+            className="w-full h-full"
             playsInline
-          />
-          {!playerRef.current && (
+          >
+             <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+          </video>
+          
+          {!playerInstanceRef.current && (
             <div 
               onClick={handlePlay}
               className="absolute inset-0 z-40 bg-black/70 backdrop-blur-[6px] flex flex-col items-center justify-center cursor-pointer group-hover:bg-black/50 transition-all"
