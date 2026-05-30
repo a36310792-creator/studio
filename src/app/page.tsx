@@ -184,7 +184,7 @@ export default function Home() {
       {/* 1. Page 1 Floating 'Live Chat' Style Ad */}
       <div 
         onClick={handleAdClick}
-        className="fixed bottom-6 right-6 z-[9998] w-14 h-14 bg-primary rounded-full shadow-[0_8px_30px_rgba(0,229,255,0.4)] flex items-center justify-center cursor-pointer group active:scale-90 transition-all"
+        className="fixed bottom-24 right-6 z-[9998] w-14 h-14 bg-primary rounded-full shadow-[0_8px_30px_rgba(0,229,255,0.4)] flex items-center justify-center cursor-pointer group active:scale-90 transition-all"
       >
         <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-30"></div>
         <div className="relative z-10">
