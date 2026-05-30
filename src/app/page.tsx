@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -11,6 +10,7 @@ import { TrendingUp, Film, Search, Sparkles, Bookmark as BookmarkIcon, ChevronDo
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SponsoredAd } from '@/components/ads/SponsoredAd';
 import {
   Select,
   SelectContent,
@@ -196,6 +196,10 @@ export default function Home() {
                   className="bg-[#0a0a0a] border-white/5 h-14 rounded-2xl pl-12 text-white placeholder:text-[#444] focus-visible:ring-primary/30 transition-all text-sm font-bold"
                 />
               </div>
+            </div>
+
+            <div className="px-5 mb-8">
+              <SponsoredAd />
             </div>
 
             <div className="flex gap-2.5 px-5 mb-4 overflow-x-auto no-scrollbar py-1">

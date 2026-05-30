@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -19,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
+import { SponsoredAd } from '@/components/ads/SponsoredAd';
 
 const FALLBACK_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
@@ -40,6 +40,7 @@ export default function WatchPage() {
   
   const [showLoader, setShowLoader] = useState(true);
   const [playerError, setPlayerError] = useState<string | null>(null);
+  const [showAdOverlay, setShowAdOverlay] = useState(true);
 
   const movieRef = useMemo(() => {
     if (!db || !movieId) return null;
@@ -64,6 +65,11 @@ export default function WatchPage() {
     if (movie?.directDownloadUrl) {
       window.open(movie.directDownloadUrl, '_blank');
     }
+  };
+
+  const handleAdClick = () => {
+    window.open('https://bold-consequence.com/kYQwC9', '_blank');
+    setShowAdOverlay(false);
   };
 
   return (
@@ -107,6 +113,18 @@ export default function WatchPage() {
 
           {watchUrl && !docLoading && (
             <div className="relative w-full h-full">
+              {/* Ad Overlay */}
+              {showAdOverlay && !showLoader && (
+                <div 
+                  onClick={handleAdClick}
+                  className="absolute inset-0 z-40 cursor-pointer flex items-center justify-center bg-transparent"
+                >
+                  <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[10px] font-black text-white uppercase italic">Click to Start Stream</span>
+                  </div>
+                </div>
+              )}
+
               {useIframe ? (
                 <iframe 
                   src={watchUrl}
@@ -132,6 +150,10 @@ export default function WatchPage() {
               )}
             </div>
           )}
+        </div>
+
+        <div className="mb-8">
+          <SponsoredAd />
         </div>
 
         <div className="bg-[#0a0a0a] rounded-[40px] border border-white/5 p-7 mb-10 shadow-inner">

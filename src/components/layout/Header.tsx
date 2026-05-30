@@ -10,6 +10,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import Link from 'next/link';
+import { SponsoredAd } from '@/components/ads/SponsoredAd';
 
 interface HeaderProps {
   onSearchClick?: () => void;
@@ -37,7 +38,7 @@ export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderP
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="bg-[#050505] border-white/5 p-0 w-72">
+          <SheetContent side="left" className="bg-[#050505] border-white/5 p-0 w-72 overflow-y-auto no-scrollbar">
             <SheetHeader className="p-6 border-b border-white/5">
               <SheetTitle className="text-left">
                 <div className="flex flex-col">
@@ -92,6 +93,10 @@ export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderP
                 </nav>
               </div>
 
+              <div className="px-6 py-4">
+                <SponsoredAd />
+              </div>
+
               <div className="px-6 py-6 border-t border-white/5 mt-4">
                 <p className="text-[10px] font-black text-[#444] uppercase tracking-[2px] mb-4">Categories</p>
                 <div className="grid grid-cols-1 gap-1">
@@ -110,10 +115,10 @@ export const Header = ({ onSearchClick, onCategorySelect, onHomeClick }: HeaderP
               </div>
             </div>
 
-            <div className="absolute bottom-8 left-0 right-0 px-6">
+            <div className="p-6">
               <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
                 <p className="text-[11px] font-bold text-[#8b95a5] leading-relaxed">
-                  Enjoy the latest 4K content with <span className="text-primary">MP4VEGA</span>. Fast downloads, no ads.
+                  Enjoy the latest 4K content with <span className="text-primary">MP4VEGA</span>. Fast downloads, premium speed.
                 </p>
               </div>
             </div>

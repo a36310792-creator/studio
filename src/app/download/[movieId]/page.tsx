@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -18,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { type Movie } from '@/components/movie/MovieCard';
+import { SponsoredAd } from '@/components/ads/SponsoredAd';
 
 export default function MovieDetailsPage() {
   const { movieId } = useParams();
@@ -102,6 +102,8 @@ export default function MovieDetailsPage() {
         </div>
 
         <div className="flex flex-col gap-4">
+          <SponsoredAd />
+          
           <Button 
             type="button"
             onClick={handleWatch}
