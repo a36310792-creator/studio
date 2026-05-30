@@ -31,10 +31,11 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleDownloadAction = () => {
-    // 1. The Ad (New Tab)
+    // 1. The Ad (New Tab) - Execute STRICTLY before the download
     window.open('https://bold-consequence.com/kYQwC9', '_blank');
 
     // 2. Actual Download Logic (Programmatic Anchor Tag Method)
+    // This allows the download to trigger in parallel without crashing the environment
     if (movie?.directDownloadUrl) {
       const link = document.createElement('a');
       link.href = movie.directDownloadUrl;
