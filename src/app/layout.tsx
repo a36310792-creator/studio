@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
+import { GlobalAdScript } from '@/components/ads/GlobalAdScript';
 
 export const metadata: Metadata = {
   title: 'MP4VEGA - Premium Movie Downloads',
@@ -25,6 +26,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
+          {/* CRITICAL: Global Ad Injection Logic */}
+          <GlobalAdScript />
           {children}
           <Toaster />
         </FirebaseClientProvider>
