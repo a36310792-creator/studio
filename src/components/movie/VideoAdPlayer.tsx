@@ -70,11 +70,12 @@ export const VideoAdPlayer = () => {
         }
       });
 
-      // State transitions based on ad and video lifecycle
-      // Note: Removed generic 'error' event as it's not supported by Fluid Player v3 .on() method
-      myPlayer.on('ended', () => setAdFinished(true));
-      myPlayer.on('adError', () => setAdFinished(true));
-      myPlayer.on('adFinished', () => setAdFinished(true));
+      // State transitions based on video lifecycle
+      // Note: Removed 'adError' and 'adFinished' as they are causing "not recognized" errors in some environments.
+      // The 'ended' event will trigger once the dummy video finishes after the ad.
+      myPlayer.on('ended', () => {
+        setAdFinished(true);
+      });
 
       playerInstanceRef.current = myPlayer;
       setIsInitializing(false);
