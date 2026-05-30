@@ -47,11 +47,19 @@ export default function MovieGateway() {
     }
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] text-white max-w-[420px] mx-auto border-x border-white/5 pb-20 shadow-2xl relative overflow-x-hidden font-body">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl p-5 border-b border-white/5 flex items-center justify-between">
-        <button onClick={() => router.back()} className="text-[#8b95a5] hover:text-white transition-colors">
+        <button 
+          onClick={handleBack} 
+          className="text-[#8b95a5] hover:text-white transition-colors p-2 rounded-full hover:bg-white/5"
+          aria-label="Go back"
+        >
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex flex-col items-center">
