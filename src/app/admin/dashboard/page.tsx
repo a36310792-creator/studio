@@ -28,6 +28,7 @@ const FALLBACK_ADMIN_EMAIL = 'admin@gmail.com';
 const AVAILABLE_GENRES = ['Action', 'Horror', 'Anime', 'Sci-Fi', 'Animation', 'Cartoon', 'Drama', 'Comedy', 'Thriller', 'Mystery'];
 const INDUSTRIES = ['Bollywood', 'Hollywood', 'South', 'Web Series'];
 const QUALITIES = ['HD', '4K', 'CAM'];
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 export default function AdminDashboard() {
   const auth = useAuth();
@@ -112,6 +113,13 @@ export default function AdminDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
+    
+    // Safety check for file size
+    if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
+      alert('File size is too large! Please upload a poster smaller than 2MB.');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -143,7 +151,6 @@ export default function AdminDashboard() {
       
       if (editingMovie) {
         const movieRef = doc(db, 'movies', editingMovie.id);
-        // We do not await Firestore mutations to allow background sync and optimistic UI
         updateDoc(movieRef, movieData).then(() => {
           resetForm();
         }).catch(async (err) => {
@@ -155,7 +162,6 @@ export default function AdminDashboard() {
         });
       } else {
         const moviesRef = collection(db, 'movies');
-        // We do not await Firestore mutations to allow background sync and optimistic UI
         addDoc(moviesRef, movieData).then(() => {
           resetForm();
         }).catch(async (err) => {
@@ -170,7 +176,6 @@ export default function AdminDashboard() {
       console.error("Submission error:", error);
       alert("Failed to save media: " + error.message);
     } finally {
-      // The finally block ensures the loading state is reset even if an error occurs
       setIsSubmitting(false);
     }
   };
@@ -360,7 +365,16 @@ export default function AdminDashboard() {
                     <input 
                       type="file" 
                       accept="image/*"
-                      onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file && file.size > MAX_FILE_SIZE) {
+                          alert('File size is too large! Please upload a poster smaller than 2MB.');
+                          e.target.value = ''; // Clear selection
+                          setSelectedFile(null);
+                        } else {
+                          setSelectedFile(file || null);
+                        }
+                      }}
                       className="hidden" 
                       id="poster-upload"
                     />
@@ -374,7 +388,7 @@ export default function AdminDashboard() {
                       </span>
                     </label>
                   </div>
-                  <p className="text-[9px] text-[#444] font-bold uppercase italic">* Selection overrides AI generated metadata</p>
+                  <p className="text-[9px] text-[#444] font-bold uppercase italic">* Max 2MB. Selection overrides AI placeholders.</p>
                 </div>
               </div>
               
