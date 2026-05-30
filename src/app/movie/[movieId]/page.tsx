@@ -35,7 +35,6 @@ export default function MovieGateway() {
     window.open('https://bold-consequence.com/kYQwC9', '_blank');
 
     // 2. Actual Download Logic (Programmatic Anchor Tag Method)
-    // This allows the download to trigger in parallel without crashing the environment
     if (movie?.directDownloadUrl) {
       const link = document.createElement('a');
       link.href = movie.directDownloadUrl;
@@ -48,7 +47,8 @@ export default function MovieGateway() {
   };
 
   const handleBack = () => {
-    router.back();
+    // Copying the EXACT logic from Page 2 (Details) to ensure reliability
+    router.push('/');
   };
 
   return (
