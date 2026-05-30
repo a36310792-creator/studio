@@ -22,8 +22,6 @@ export const VideoAdPlayer = () => {
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    if (playerInitRef.current) return;
-
     // Load Fluid Player CSS
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -74,8 +72,7 @@ export const VideoAdPlayer = () => {
         }
       });
 
-      // State transitions based on ad/video lifecycle
-      // We rely on 'ended' of the main (dummy) video which plays after the pre-roll
+      // Transition to blocked state after ad finishes or ends
       myPlayer.on('ended', () => {
         setAdFinished(true);
       });
@@ -127,11 +124,11 @@ export const VideoAdPlayer = () => {
                 )}
               </div>
               <div className="flex flex-col items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                <span className="text-[10px] font-black text-white uppercase tracking-[5px] italic">
-                  Initialize Secure Stream
+                <span className="text-[10px] font-black text-white uppercase tracking-[5px] italic text-center px-4">
+                  Initialize Secure 4K Stream
                 </span>
-                <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">
-                  Encrypted Player v4.2
+                <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest mt-2">
+                  Encrypted Player v4.5 Active
                 </span>
               </div>
             </div>
