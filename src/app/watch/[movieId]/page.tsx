@@ -9,12 +9,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SponsoredAd } from '@/components/ads/SponsoredAd';
+import { VideoAdPlayer } from '@/components/movie/VideoAdPlayer';
 
 export default function MaintenancePage() {
   const router = useRouter();
 
   const handleAction = () => {
-    // Click-intercept ad pop-under (preserved as part of general monetization strategy)
+    // Click-intercept ad pop-under
     setTimeout(() => { 
       window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
     }, 50);
@@ -22,8 +23,8 @@ export default function MaintenancePage() {
   };
 
   // Variations for the ad wall
-  const topAdTypes: ('ribbon' | 'glow' | 'alert')[] = ['glow', 'ribbon', 'alert', 'glow'];
-  const bottomAdTypes: ('ribbon' | 'glow' | 'alert')[] = ['ribbon', 'alert', 'glow', 'ribbon', 'alert', 'glow', 'ribbon', 'alert'];
+  const topAdTypes: ('ribbon' | 'glow' | 'alert')[] = ['glow', 'ribbon'];
+  const bottomAdTypes: ('ribbon' | 'glow' | 'alert')[] = ['ribbon', 'alert', 'glow', 'ribbon'];
 
   return (
     <div className="min-h-screen bg-[#0a0b0f] text-white max-w-[420px] mx-auto border-x border-white/5 pb-32 shadow-2xl relative overflow-x-hidden font-body">
@@ -42,15 +43,18 @@ export default function MaintenancePage() {
       </header>
 
       <main className="p-5 flex flex-col gap-4">
-        {/* Top Ad Stack (4 Ads) */}
+        {/* Top Ad Stack */}
         <div className="flex flex-col gap-3">
           {topAdTypes.map((type, idx) => (
             <SponsoredAd key={`top-ad-${idx}`} type={type} />
           ))}
         </div>
 
-        {/* Normal Maintenance Notice (No Video Player/VAST Logic) */}
-        <div className="py-16 text-center animate-in fade-in duration-700">
+        {/* YouTube-styled Dummy Player */}
+        <VideoAdPlayer />
+
+        {/* Normal Maintenance Notice */}
+        <div className="py-8 text-center animate-in fade-in duration-700">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto mb-6 shadow-glow">
             <AlertTriangle className="w-8 h-8 animate-pulse" />
           </div>
@@ -58,12 +62,12 @@ export default function MaintenancePage() {
             Streaming Unavailable
           </h1>
           <p className="text-[#8b95a5] text-[12px] font-bold uppercase tracking-tight leading-relaxed max-w-[280px] mx-auto">
-            Online streaming nodes are currently undergoing maintenance. Please use the Direct Download options on the movie page for instant access.
+            High-speed streaming nodes are currently undergoing maintenance. Please use the Direct Download options on the movie page for instant access.
           </p>
         </div>
 
-        {/* Bottom Ad Grid (8 Ads) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Bottom Ad Grid */}
+        <div className="grid grid-cols-1 gap-3">
           {bottomAdTypes.map((type, idx) => (
             <div key={`bottom-ad-${idx}`} className="w-full">
               <SponsoredAd type={type} />

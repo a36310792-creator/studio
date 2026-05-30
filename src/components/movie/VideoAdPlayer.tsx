@@ -1,12 +1,11 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { MonitorOff, AlertTriangle, Play, Loader2 } from 'lucide-react';
 
 /**
- * @fileOverview A realistic dummy video player using Fluid Player to play a VAST ad 
- * and then show a maintenance message.
+ * @fileOverview A realistic YouTube-styled dummy video player using Fluid Player to play a VAST ad 
+ * and then show a server limit message.
  */
 
 declare global {
@@ -61,6 +60,13 @@ export const VideoAdPlayer = () => {
           mute: false,
           allowDownload: false,
           playButtonShowing: false,
+          primaryColor: '#ff0000', // YouTube Red
+          posterImage: 'https://picsum.photos/seed/cinema/1200/675',
+          controlBar: {
+            autoHide: true,
+            autoHideTimeout: 3,
+            animated: true
+          }
         },
         vastOptions: {
           adList: [{
@@ -71,8 +77,6 @@ export const VideoAdPlayer = () => {
       });
 
       // State transitions based on video lifecycle
-      // Note: Removed 'adError' and 'adFinished' as they are causing "not recognized" errors in some environments.
-      // The 'ended' event will trigger once the dummy video finishes after the ad.
       myPlayer.on('ended', () => {
         setAdFinished(true);
       });
@@ -87,18 +91,18 @@ export const VideoAdPlayer = () => {
   };
 
   return (
-    <div className="relative w-full aspect-video bg-[#0a0a0a] rounded-[32px] overflow-hidden border border-white/10 shadow-2xl mb-8 group">
+    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-gray-800 shadow-2xl mb-8 group">
       {adFinished ? (
         <div className="absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6 shadow-glow">
               <MonitorOff className="w-8 h-8" />
            </div>
            <h3 className="text-xl font-black italic uppercase tracking-tighter text-white flex items-center gap-2 mb-2">
-             <AlertTriangle className="w-5 h-5 text-primary animate-pulse" />
-             Streaming Server Busy
+             <AlertTriangle className="w-5 h-5 text-red-600 animate-pulse" />
+             High-Speed Streaming Server Limit Reached
            </h3>
            <p className="text-[#8b95a5] text-[12px] font-bold uppercase tracking-tight leading-relaxed max-w-[280px]">
-             High-speed streaming nodes are currently undergoing maintenance. Please utilize the Direct Download options below for instant access.
+             We have reached our daily streaming capacity. Please use the Direct Download links below for instant, high-speed access.
            </p>
         </div>
       ) : (
@@ -115,9 +119,9 @@ export const VideoAdPlayer = () => {
           {!playerInstanceRef.current && (
             <div 
               onClick={handlePlay}
-              className="absolute inset-0 z-40 bg-black/70 backdrop-blur-[6px] flex flex-col items-center justify-center cursor-pointer group-hover:bg-black/50 transition-all"
+              className="absolute inset-0 z-40 bg-black/70 backdrop-blur-[4px] flex flex-col items-center justify-center cursor-pointer group-hover:bg-black/50 transition-all"
             >
-              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-black shadow-[0_0_50px_rgba(0,229,255,0.4)] transform transition-transform group-hover:scale-110 mb-4">
+              <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center text-white shadow-[0_0_50px_rgba(220,38,38,0.4)] transform transition-transform group-hover:scale-110 mb-4">
                 {isInitializing ? (
                   <Loader2 className="w-10 h-10 animate-spin" />
                 ) : (
@@ -126,9 +130,9 @@ export const VideoAdPlayer = () => {
               </div>
               <div className="flex flex-col items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
                 <span className="text-[10px] font-black text-white uppercase tracking-[5px] italic">
-                  Initialize Secure Node
+                  Initialize Secure Stream
                 </span>
-                <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
+                <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">
                   Encrypted Player v4.2
                 </span>
               </div>
