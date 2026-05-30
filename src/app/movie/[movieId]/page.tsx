@@ -31,9 +31,16 @@ export default function MovieGateway() {
   const { data: movie } = useDoc<Movie>(movieRef);
 
   const handleDownloadAction = () => {
-    setTimeout(() => { window.open('https://bold-consequence.com/kYQwC9', '_blank'); }, 50);
+    // 1. Ad Click-Intercept (New Tab)
+    setTimeout(() => { 
+      window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
+    }, 50);
+
+    // 2. Actual Download Logic (Current Tab)
+    // Using window.location.assign ensures the download starts in the current window
+    // without being blocked as a second popup.
     if (movie?.directDownloadUrl) {
-      window.open(movie.directDownloadUrl, '_blank');
+      window.location.assign(movie.directDownloadUrl);
     }
   };
 
