@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   Home,
-  MonitorOff,
-  Activity,
   AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,15 +14,11 @@ export default function MaintenancePage() {
   const router = useRouter();
 
   const handleAction = () => {
-    // Click-intercept ad pop-under
+    // Click-intercept ad pop-under (preserved as part of general monetization strategy)
     setTimeout(() => { 
       window.open('https://bold-consequence.com/kYQwC9', '_blank'); 
     }, 50);
     router.push('/');
-  };
-
-  const handleBoxClick = () => {
-    window.open('https://bold-consequence.com/kYQwC9', '_blank');
   };
 
   // Variations for the ad wall
@@ -55,40 +49,17 @@ export default function MaintenancePage() {
           ))}
         </div>
 
-        {/* Premium Maintenance Container - Now Clickable */}
-        <div 
-          onClick={handleBoxClick}
-          className="bg-[#15171e] rounded-[32px] border border-primary/30 p-8 text-center relative overflow-hidden shadow-[0_0_40px_rgba(0,229,255,0.15)] animate-in fade-in zoom-in duration-700 cursor-pointer hover:scale-[1.01] hover:border-primary/50 transition-all group"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
-          
-          <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto mb-6 shadow-glow group-hover:scale-110 transition-transform">
-            <MonitorOff className="w-8 h-8" />
+        {/* Normal Maintenance Notice (No Video Player/VAST Logic) */}
+        <div className="py-16 text-center animate-in fade-in duration-700">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto mb-6 shadow-glow">
+            <AlertTriangle className="w-8 h-8 animate-pulse" />
           </div>
-
-          <div className="flex items-center justify-center gap-2 mb-4">
-             <AlertTriangle className="w-4 h-4 text-primary animate-pulse" />
-             <h1 className="text-xl font-black italic uppercase tracking-tighter text-white">
-               ⚠️ ONLINE SERVER NOTICE
-             </h1>
-          </div>
-
-          <p className="text-[#8b95a5] text-[12px] font-bold uppercase tracking-tight leading-relaxed">
-            High-speed streaming nodes are currently undergoing maintenance. 
-            Online watching is temporarily inactive. Please utilize the Direct Download options.
+          <h1 className="text-xl font-black italic uppercase tracking-tighter text-white mb-3">
+            Streaming Unavailable
+          </h1>
+          <p className="text-[#8b95a5] text-[12px] font-bold uppercase tracking-tight leading-relaxed max-w-[280px] mx-auto">
+            Online streaming nodes are currently undergoing maintenance. Please use the Direct Download options on the movie page for instant access.
           </p>
-
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <div className="w-1 h-1 rounded-full bg-primary animate-ping"></div>
-              <span className="text-[8px] font-black text-primary uppercase tracking-widest">Optimizing Node 4</span>
-            </div>
-            <div className="w-px h-3 bg-white/10"></div>
-            <div className="flex items-center gap-1.5">
-              <Activity className="w-2.5 h-2.5 text-[#555]" />
-              <span className="text-[8px] font-black text-[#555] uppercase tracking-widest">98.2% Sync</span>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Ad Grid (8 Ads) */}
