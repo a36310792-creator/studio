@@ -16,12 +16,14 @@ declare global {
 
 export const VideoAdPlayer = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const playerInstanceRef = useRef<any>(null);
+  const playerInitRef = useRef<boolean>(false);
   const [adFinished, setAdFinished] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
+    if (playerInitRef.current) return;
+
     // Load Fluid Player CSS
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -36,11 +38,6 @@ export const VideoAdPlayer = () => {
     document.head.appendChild(script);
 
     return () => {
-      if (playerInstanceRef.current) {
-        try {
-          playerInstanceRef.current.destroy();
-        } catch (e) {}
-      }
       if (link.parentNode) document.head.removeChild(link);
       const existingScript = document.querySelector('script[src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"]');
       if (existingScript && existingScript.parentNode) document.head.removeChild(existingScript);
@@ -48,11 +45,12 @@ export const VideoAdPlayer = () => {
   }, []);
 
   const handlePlay = () => {
-    if (!videoRef.current || !scriptLoaded || isInitializing || !window.fluidPlayer) return;
+    if (!videoRef.current || !scriptLoaded || isInitializing || !window.fluidPlayer || playerInitRef.current) return;
 
     setIsInitializing(true);
 
     try {
+      playerInitRef.current = true;
       const myPlayer = window.fluidPlayer(videoRef.current.id, {
         layoutControls: {
           fillToContainer: true,
@@ -76,12 +74,12 @@ export const VideoAdPlayer = () => {
         }
       });
 
-      // State transitions based on video lifecycle
+      // State transitions based on ad/video lifecycle
+      // We rely on 'ended' of the main (dummy) video which plays after the pre-roll
       myPlayer.on('ended', () => {
         setAdFinished(true);
       });
 
-      playerInstanceRef.current = myPlayer;
       setIsInitializing(false);
     } catch (error) {
       console.error('Fluid Player Initialization Failed:', error);
@@ -116,7 +114,7 @@ export const VideoAdPlayer = () => {
              <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
           </video>
           
-          {!playerInstanceRef.current && (
+          {!playerInitRef.current && (
             <div 
               onClick={handlePlay}
               className="absolute inset-0 z-40 bg-black/70 backdrop-blur-[4px] flex flex-col items-center justify-center cursor-pointer group-hover:bg-black/50 transition-all"
